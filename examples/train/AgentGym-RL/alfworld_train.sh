@@ -22,7 +22,7 @@ export WANDB_BASE_URL=https://api.bandw.top
 env_server_url="http://127.0.0.1:36001"
 
 pure_agent_model_name="Qwen2.5-7B-Instruct"
-agent_model_path="AgentGym-RL/models/${pure_agent_model_name}"
+agent_model_path="${AGENT_MODEL_PATH:-models/${pure_agent_model_name}}"
 
 kl_coef=0.001
 policy_learning_rate=1e-6
@@ -46,7 +46,9 @@ HYDRA_FULL_ERROR=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True WANDB_MODE=o
     algorithm.adv_estimator=grpo \
     algorithm.rounds_ctrl.type=fixed \
     algorithm.rounds_ctrl.rounds=30 \
-    data.train_file=AgentGym-RL/AgentItemId/${task_name}_train.json \
+    trainer.nnodes=1 \
+    trainer.n_gpus_per_node="${N_GPUS_PER_NODE:-8}" \
+    data.train_file="${DATA_ROOT:-data}/AgentItemId/${task_name}_train.json" \
     data.train_batch_size=${train_batch_size} \
     data.max_prompt_length=1024 \
     data.max_response_length=8192 \
