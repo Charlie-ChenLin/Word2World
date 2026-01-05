@@ -33,6 +33,7 @@ export WANDB_DIR="./wandb"
 env_server_url="http://127.0.0.1:36001"
 
 # pure_agent_model_name="Qwen2.5-7B-Instruct"
+n_gpus_per_node=4
 pure_agent_model_name="Qwen2.5-3B-Instruct"
 agent_model_path="/mnt/shared-storage-user/formalverification-shared/openai-community/Qwen/${pure_agent_model_name}"
 train_file="${DATA_ROOT:-data}/train/${task_name}_train.json"
@@ -52,6 +53,8 @@ kl_coef=0.001
 policy_learning_rate=1e-6
 rollout_sample_num=8
 train_batch_size=16
+# train_batch_size=8
+
 ppo_mini_batch_size=8
 ppo_micro_batch_size_per_gpu=1
 ppo_inner_epochs=1
@@ -71,7 +74,7 @@ HYDRA_FULL_ERROR=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True WANDB_MODE=o
     algorithm.rounds_ctrl.type=fixed \
     algorithm.rounds_ctrl.rounds=30 \
     trainer.nnodes=1 \
-    trainer.n_gpus_per_node="${N_GPUS_PER_NODE:-8}" \
+    trainer.n_gpus_per_node="${n_gpus_per_node}" \
     data.train_file="${train_file}" \
     data.train_batch_size=${train_batch_size} \
     data.max_prompt_length=1024 \
