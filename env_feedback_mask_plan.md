@@ -137,3 +137,53 @@ rollout 输出的 `DataProto.batch` 里将同时包含：
 - `env_feedback_mask`：只标记 env obs 的 **content token**（user 段），并且 prompt=0、模板=0、padding=0
 
 后续你就可以在 actor/critic 或额外 loss 中用 `env_feedback_mask` 做 mask（例如只对 env token 做 WM-style 的辅助目标）。
+
+## 7. 后续：把 `env_feedback_mask` 用到 loss（训练侧需要额外改动）
+
+> 这部分不是“生成 mask”必须的，但你后面要在算 loss 时用它，所以需要提前规划训练侧的接入点。
+
+### 7.1 让 mask 进入 actor 的更新逻辑
+
+修改 `AgentGym-RL/verl/workers/agent_actor/dp_actor.py`：
+
+- 在 `update_policy()` 的 `select_keys` 里加入 `env_feedback_mask`
+- 在 micro-batch 里取出：`env_mask = data['env_feedback_mask']`
+
+### 7.2 定义 env-feedback 的辅助目标（两种常见做法）
+
+**A) WM-SFT / PPL 风格（直接做 NLL）**
+
+- actor forward 已经会得到 `log_prob`（shape `[bs, response_length]`，每个 response token 的 log p）
+- 用 `env_mask` 做 masked mean：
+  - `env_nll = -masked_mean(log_prob, env_mask)`
+- 合并：`total_loss = policy_loss + env_aux_coef * env_nll`
+
+**B) PPO/GRPO-style 的 “SFT” 目标（对 old policy 做 trust region）**
+
+- 利用现成的 `old_log_probs`（同样是 `[bs, response_length]`，当前实现里 env token 也包含）
+- 构造常数优势（例如全 1），并用 `env_mask` 作为 `eos_mask`：
+  - `env_pg_loss, _, env_ppo_kl = compute_policy_loss(old_log_prob, log_prob, advantages=ones, eos_mask=env_mask, cliprange=env_clip_ratio)`
+- 合并：`total_loss = policy_loss + env_aux_coef * env_pg_loss`
+
+**（可选）再加 reference policy 的约束（对 ref 做 trust region）**
+
+- 当前 pipeline 里 `ref_log_prob` 也是对所有 response token 计算的（env token 也有），可直接复用。
+- 对 env token 计算 KL 并加权：
+  - `env_kl = masked_mean(kl_penalty(log_prob, ref_log_prob, ...), env_mask)`
+  - `total_loss += env_kl_coef * env_kl`
+
+### 7.3 训练侧注意事项（避免“融入训练”时踩坑）
+
+- `env_feedback_mask` 与 `response_mask` **不需要严格互补**：模板 token / padding token 通常两者都为 0 是正常的；但建议保证两者 **不重叠**（内容 token 层面）。
+- 建议先把 env 辅助项做成 **纯 actor 的 auxiliary loss**，不要改 `apply_kl_penalty()` / `compute_advantage()`（它们目前完全基于 `response_mask`），避免把 env token 意外当作 RL 奖励序列的一部分。
+- env observation 往往很长，aux loss 可能压过 RL：
+  - 用 `masked_mean`（按 token 数归一化）
+  - 控制 `env_aux_coef`（从很小开始）
+  - 必要时对 obs 做截断或只挑选关键信息
+
+### 7.4 建议新增/暴露的超参
+
+- `use_env_aux`：是否启用 env 辅助项
+- `env_aux_coef`：aux loss 系数
+- `env_clip_ratio`：PPO-style aux 的 clip
+- `env_kl_coef`：对 ref 的 KL 系数（可选）
