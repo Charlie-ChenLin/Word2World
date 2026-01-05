@@ -149,13 +149,35 @@ class vLLMRollout(BaseRollout):
             setattr(self.sampling_params, key, value)
 
     def convert_alfworld_item_id(self, item_id: str) -> int:
+        if isinstance(item_id, int):
+            return item_id
+        if isinstance(item_id, str) and item_id.isdigit():
+            return int(item_id)
+        if isinstance(item_id, str) and item_id.startswith("alfworld_"):
+            suffix = item_id.rsplit("_", 1)[-1]
+            if suffix.isdigit():
+                return int(suffix)
         if not hasattr(self, "alfworld_item_id_mapping"):
-            mapping_file = "AgentGym/agentenv-alfworld/configs/mappings_train.json"
-            with open(mapping_file, "r") as f:
-                mapping = json.load(f)
+            mapping_files = [
+                "AgentGym/agentenv-alfworld/configs/mappings_train.json",
+                "AgentGym/agentenv-alfworld/configs/mappings_test.json",
+                "AgentGym/agentenv-alfworld/configs/mappings_valid_seen.json",
+                "AgentGym/agentenv-alfworld/configs/mappings_valid_unseen.json",
+            ]
             self.alfworld_item_id_mapping = {}
-            for m in mapping:
-                self.alfworld_item_id_mapping[m["task_type"]+"_"+m["task_id"]] = m["item_id"]
+            for mapping_file in mapping_files:
+                if not os.path.exists(mapping_file):
+                    continue
+                with open(mapping_file, "r") as f:
+                    mapping = json.load(f)
+                for m in mapping:
+                    self.alfworld_item_id_mapping[m["task_type"] + "_" + m["task_id"]] = m["item_id"]
+
+        if item_id not in self.alfworld_item_id_mapping:
+            raise KeyError(
+                f"Unknown alfworld item_id: {item_id}. Expected one of: "
+                f"(1) numeric string, (2) 'alfworld_<id>', (3) '<task_type>_<task_id>' from AgentGym mappings."
+            )
         return self.alfworld_item_id_mapping[item_id]
 
     def preprocess_prompt_to_rollout_handler(self, prompts: DataProto, n: int) -> List[RolloutHandler]:
