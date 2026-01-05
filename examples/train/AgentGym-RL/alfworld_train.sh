@@ -35,7 +35,7 @@ env_server_url="http://127.0.0.1:36001"
 # pure_agent_model_name="Qwen2.5-7B-Instruct"
 pure_agent_model_name="Qwen2.5-3B-Instruct"
 agent_model_path="/mnt/shared-storage-user/formalverification-shared/openai-community/Qwen/${pure_agent_model_name}"
-train_file="${DATA_ROOT:-data}/AgentItemId/${task_name}_train.json"
+train_file="${DATA_ROOT:-data}/train/${task_name}_train.json"
 
 if [ ! -f "${agent_model_path}/config.json" ]; then
     echo "[alfworld_train.sh] Missing local model at: ${agent_model_path}" 1>&2
