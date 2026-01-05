@@ -2,10 +2,18 @@
 set -ex
 
 curl -LsSf https://astral.sh/uv/install.sh | sh
-export PATH="$HOME/.local/bin:$PATH"
-uv venv uv_agentgym_rl --python 3.10
-source uv_agentgym_rl/bin/activate
+
+# export PATH="$HOME/.local/bin:$PATH"
+# uv venv uv_agentgym_rl --python 3.10
+# source uv_agentgym_rl/bin/activate
+# uv pip install --upgrade pip
+
+export VENV_DIR=/mnt/shared-storage-user/formalverification-shared/chenlin1/uv_agentgym_rl
+mkdir -p "$(dirname "$VENV_DIR")"
+uv venv "$VENV_DIR" --python 3.10
+source "$VENV_DIR/bin/activate"
 uv pip install --upgrade pip
+
 export UV_LINK_MODE=copy
 
 uv pip install torch==2.4.0 --index-url https://download.pytorch.org/whl/cu124

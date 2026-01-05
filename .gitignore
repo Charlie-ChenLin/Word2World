@@ -42,3 +42,4 @@ outputs
 outputs_old
 
 data/
+.cache/

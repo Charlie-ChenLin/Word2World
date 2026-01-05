@@ -1,11 +1,16 @@
 # !/bin/bash
 set -ex
 
-curl -LsSf https://astral.sh/uv/install.sh | sh
-export PATH="$HOME/.local/bin:$PATH"
-uv venv uv_alfworld --python 3.9
-source uv_alfworld/bin/activate
-uv pip install --upgrade pip
+# curl -LsSf https://astral.sh/uv/install.sh | sh
+# export PATH="$HOME/.local/bin:$PATH"
+# uv venv uv_alfworld --python 3.9
+# source uv_alfworld/bin/activate
+# uv pip install --upgrade pip
+
+export VENV_DIR=/mnt/shared-storage-user/formalverification-shared/chenlin1/uv_alfworld
+mkdir -p "$(dirname "$VENV_DIR")"
+uv venv "$VENV_DIR" --python 3.9
+# source uv_alfworld/bin/activate
 export UV_LINK_MODE=copy
 
 # Ref: AgentGym/agentenv-alfworld/setup.sh
