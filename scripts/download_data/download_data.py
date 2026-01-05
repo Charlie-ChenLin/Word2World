@@ -61,12 +61,14 @@ def main(argv=None):
     # rm -rf ~/.cache/alfworld
     # unzip data/alfworld.zip -d ~/.cache
     os.system("rm -rf ~/.cache/alfworld")
-    os.system("unzip -o data/alfworld.zip -d ~/.cache")
-    # unzip data/textworld.zip
+    os.system("unzip -o data/alfworld.zip -d ./.cache")
+    os.system("""ln -sfn "$PWD/.cache/alfworld" ~/.cache/alfworld""")
+    os.system("ls -ld ~/.cache/alfworld")
+    # # unzip data/textworld.zip
     os.system("unzip -o data/textworld.zip -d data/textworld/")
-    # unzip data/webshop.zip
+    # # unzip data/webshop.zip
     os.system("unzip -o data/webshop.zip -d AgentGym/agentenv-webshop/webshop/")
-    # unzip data/webshop_index.zip
+    # # unzip data/webshop_index.zip
     os.system("unzip -o data/webshop_index.zip -d AgentGym/agentenv-webshop/webshop/")
 
 
