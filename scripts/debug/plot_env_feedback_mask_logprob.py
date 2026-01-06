@@ -477,7 +477,9 @@ def main() -> None:
     # Always place figure outputs under the timestamped run_dir unless the user provided an absolute path.
     figures_dir = run_dir / "figures"
     figures_dir.mkdir(parents=True, exist_ok=True)
-    out_base = out_base_cli if out_base_cli.is_absolute() else (figures_dir / out_base_cli.name)
+    # Note: callers (e.g., bash scripts) often pass an absolute path like `${REPO_ROOT}/debug/foo.png`.
+    # We still force figures into `run_dir/figures` for easy run isolation; only the filename is respected.
+    out_base = figures_dir / out_base_cli.name
 
     n_samples = int(batch.batch["responses"].shape[0])
     if args.sample_idx is not None and args.sample_idx >= 0 and args.n_rollouts <= 1:
