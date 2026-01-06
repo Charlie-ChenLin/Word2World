@@ -190,6 +190,11 @@ def _plot_wrapped_token_logprobs(
                 label.set_color("0.5")
 
         if row_idx == 0:
+            # Ensure the legend shows all mask categories even if the first row contains none of them.
+            if env_total > 0 and not row_env.any():
+                ax.scatter([], [], s=10, color="red", label=env_label)
+            if resp_total > 0 and not row_resp.any():
+                ax.scatter([], [], s=10, color="blue", label=resp_label)
             ax.legend(loc="best")
             ax.set_ylabel(ylabel)
         if row_idx == n_rows - 1:
