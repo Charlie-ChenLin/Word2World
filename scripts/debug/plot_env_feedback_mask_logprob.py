@@ -79,9 +79,19 @@ def _parse_args() -> argparse.Namespace:
         help="Wrap plots into multiple rows; each row shows at most N tokens (use 0 to disable wrapping).",
     )
     parser.add_argument(
+        "--lp_threshold",
+        type=float,
+        default=-1.0,
+        help="Log-prob threshold for highlighting (log_prob < threshold), legend stats, and y-floor plots.",
+    )
+    parser.add_argument(
         "--out_png",
         default="env_feedback_mask_logprob.png",
-        help="Output png path base. Two files will be written: '<stem>_old_log_probs.png' and '<stem>_log_probs_train.png'.",
+        help=(
+            "Output png path base. Four files will be written: "
+            "'<stem>_old_log_probs.png', '<stem>_log_probs_train.png', "
+            "'<stem>_old_log_probs_clip_<thr>.png', '<stem>_log_probs_train_clip_<thr>.png'."
+        ),
     )
     parser.add_argument("--dump_jsonl", default=None, help="Optional dump jsonl path for token/logprob/masks.")
     return parser.parse_args()
@@ -111,15 +121,18 @@ def _plot_wrapped_token_logprobs(
     plt,
     token_strs: list[str],
     y: np.ndarray,
+    raw_y: np.ndarray | None,
     response_mask: np.ndarray,
     env_feedback_mask: np.ndarray,
     tokens_per_row: int,
+    low_logprob_threshold: float,
     title: str,
     ylabel: str,
     out_path: Path,
 ) -> None:
-    low_logprob_threshold = -1.0
-    below_threshold = y < low_logprob_threshold
+    if raw_y is None:
+        raw_y = y
+    below_threshold = raw_y < low_logprob_threshold
 
     env_feedback_mask = env_feedback_mask.astype(bool)
     response_mask = response_mask.astype(bool)
@@ -130,15 +143,17 @@ def _plot_wrapped_token_logprobs(
 
     if env_total > 0:
         env_ratio = env_below / env_total
-        env_label = f"env_feedback_mask=1 (lp<-1: {env_below}/{env_total}={env_ratio:.1%})"
+        env_label = (
+            f"env_feedback_mask=1 (lp<{low_logprob_threshold:g}: {env_below}/{env_total}={env_ratio:.1%})"
+        )
     else:
-        env_label = "env_feedback_mask=1 (lp<-1: n/a)"
+        env_label = f"env_feedback_mask=1 (lp<{low_logprob_threshold:g}: n/a)"
 
     if resp_total > 0:
         resp_ratio = resp_below / resp_total
-        resp_label = f"response_mask=1 (lp<-1: {resp_below}/{resp_total}={resp_ratio:.1%})"
+        resp_label = f"response_mask=1 (lp<{low_logprob_threshold:g}: {resp_below}/{resp_total}={resp_ratio:.1%})"
     else:
-        resp_label = "response_mask=1 (lp<-1: n/a)"
+        resp_label = f"response_mask=1 (lp<{low_logprob_threshold:g}: n/a)"
     n_tokens = len(token_strs)
     if tokens_per_row <= 0:
         tokens_per_row = n_tokens
@@ -156,6 +171,7 @@ def _plot_wrapped_token_logprobs(
         x = np.arange(end - start)
 
         row_y = y[start:end]
+        row_y_raw = raw_y[start:end]
         row_token_strs = token_strs[start:end]
         row_env = env_feedback_mask[start:end]
         row_resp = response_mask[start:end]
@@ -180,7 +196,7 @@ def _plot_wrapped_token_logprobs(
         ax.set_xticks(x)
         ax.set_xticklabels(row_token_strs, rotation=90, fontsize=6)
         for i, label in enumerate(ax.get_xticklabels()):
-            if row_y[i] >= low_logprob_threshold:
+            if row_y_raw[i] >= low_logprob_threshold:
                 continue
             if row_resp[i]:
                 label.set_color("blue")
@@ -410,9 +426,11 @@ def main() -> None:
         plt=plt,
         token_strs=token_strs,
         y=old_log_probs.numpy(),
+        raw_y=None,
         response_mask=response_mask.numpy(),
         env_feedback_mask=env_feedback_mask.numpy(),
         tokens_per_row=int(args.tokens_per_row),
+        low_logprob_threshold=float(args.lp_threshold),
         title=title,
         ylabel="old_log_probs",
         out_path=out_old_path,
@@ -421,16 +439,51 @@ def main() -> None:
         plt=plt,
         token_strs=token_strs,
         y=log_probs.numpy(),
+        raw_y=None,
         response_mask=response_mask.numpy(),
         env_feedback_mask=env_feedback_mask.numpy(),
         tokens_per_row=int(args.tokens_per_row),
+        low_logprob_threshold=float(args.lp_threshold),
         title=title,
         ylabel="log_probs (train mode)",
         out_path=out_train_path,
     )
 
+    # Additional plots with y floored at the threshold to emphasize high-prob token variations.
+    thr_tag = f"{float(args.lp_threshold):g}"
+    out_old_clip_path = _derive_png_path(out_base, f"_old_log_probs_clip_{thr_tag}")
+    out_train_clip_path = _derive_png_path(out_base, f"_log_probs_train_clip_{thr_tag}")
+    _plot_wrapped_token_logprobs(
+        plt=plt,
+        token_strs=token_strs,
+        y=np.maximum(old_log_probs.numpy(), float(args.lp_threshold)),
+        raw_y=old_log_probs.numpy(),
+        response_mask=response_mask.numpy(),
+        env_feedback_mask=env_feedback_mask.numpy(),
+        tokens_per_row=int(args.tokens_per_row),
+        low_logprob_threshold=float(args.lp_threshold),
+        title=f"{title} | y_floored@{thr_tag}",
+        ylabel=f"old_log_probs (floored @ {thr_tag})",
+        out_path=out_old_clip_path,
+    )
+    _plot_wrapped_token_logprobs(
+        plt=plt,
+        token_strs=token_strs,
+        y=np.maximum(log_probs.numpy(), float(args.lp_threshold)),
+        raw_y=log_probs.numpy(),
+        response_mask=response_mask.numpy(),
+        env_feedback_mask=env_feedback_mask.numpy(),
+        tokens_per_row=int(args.tokens_per_row),
+        low_logprob_threshold=float(args.lp_threshold),
+        title=f"{title} | y_floored@{thr_tag}",
+        ylabel=f"log_probs (train mode, floored @ {thr_tag})",
+        out_path=out_train_clip_path,
+    )
+
     print(f"[plot_env_feedback_mask_logprob] Saved old_log_probs plot to: {out_old_path}")
     print(f"[plot_env_feedback_mask_logprob] Saved log_probs (train mode) plot to: {out_train_path}")
+    print(f"[plot_env_feedback_mask_logprob] Saved clipped old_log_probs plot to: {out_old_clip_path}")
+    print(f"[plot_env_feedback_mask_logprob] Saved clipped log_probs (train mode) plot to: {out_train_clip_path}")
     if args.dump_jsonl:
         print(f"[plot_env_feedback_mask_logprob] Saved dump to: {args.dump_jsonl}")
 
