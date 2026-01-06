@@ -28,6 +28,7 @@ build/
 .debug/
 # debug*
 AgentGym-RL/saves/
+debug/
 
 .outputs/
 .idea/
