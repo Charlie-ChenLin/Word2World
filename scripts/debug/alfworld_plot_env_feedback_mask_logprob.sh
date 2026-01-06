@@ -58,9 +58,9 @@ fi
 n_gpus_per_node="${N_GPUS_PER_NODE:-1}"
 tp_size="${TENSOR_MODEL_PARALLEL_SIZE:-1}"
 rollout_n="${ROLLOUT_N:-1}"
-max_rounds="${MAX_ROUNDS:-5}"
+max_rounds="${MAX_ROUNDS:-30}"
 max_new_tokens_per_turn="${MAX_NEW_TOKENS_PER_TURN:-200}"
-plot_max_tokens="${PLOT_MAX_TOKENS:-256}"
+plot_max_tokens="${PLOT_MAX_TOKENS:-1024}"
 sample_idx="${SAMPLE_IDX:-0}"
 item_id="${ITEM_ID:-}"
 
