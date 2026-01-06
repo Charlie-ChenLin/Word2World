@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import sys
 import uuid
@@ -65,8 +66,23 @@ def _parse_args() -> argparse.Namespace:
         help="Max new tokens per turn (align with actor_rollout_ref.rollout.max_tokens).",
     )
     parser.add_argument("--sample_idx", type=int, default=0, help="Which sample in the (possibly repeated) batch to plot.")
-    parser.add_argument("--plot_max_tokens", type=int, default=256, help="Only plot first N valid response tokens.")
-    parser.add_argument("--out_png", default="env_feedback_mask_logprob.png", help="Output png path.")
+    parser.add_argument(
+        "--plot_max_tokens",
+        type=int,
+        default=0,
+        help="Only plot first N valid response tokens. Use 0 to plot all tokens.",
+    )
+    parser.add_argument(
+        "--tokens_per_row",
+        type=int,
+        default=200,
+        help="Wrap plots into multiple rows; each row shows at most N tokens (use 0 to disable wrapping).",
+    )
+    parser.add_argument(
+        "--out_png",
+        default="env_feedback_mask_logprob.png",
+        help="Output png path base. Two files will be written: '<stem>_old_log_probs.png' and '<stem>_log_probs_train.png'.",
+    )
     parser.add_argument("--dump_jsonl", default=None, help="Optional dump jsonl path for token/logprob/masks.")
     return parser.parse_args()
 
@@ -82,6 +98,74 @@ def _load_cfg(config_path: str, overrides: list[str]) -> Any:
 def _decode_token(tokenizer, token_id: int) -> str:
     s = tokenizer.decode([token_id], clean_up_tokenization_spaces=False, skip_special_tokens=False)
     return s.replace("\n", "\\n").replace("\t", "\\t")
+
+
+def _derive_png_path(base_png: Path, suffix: str) -> Path:
+    if base_png.suffix.lower() != ".png":
+        raise ValueError(f"--out_png must end with .png, got: {base_png}")
+    return base_png.with_name(f"{base_png.stem}{suffix}{base_png.suffix}")
+
+
+def _plot_wrapped_token_logprobs(
+    *,
+    plt,
+    token_strs: list[str],
+    y: np.ndarray,
+    response_mask: np.ndarray,
+    env_feedback_mask: np.ndarray,
+    tokens_per_row: int,
+    title: str,
+    ylabel: str,
+    out_path: Path,
+) -> None:
+    n_tokens = len(token_strs)
+    if tokens_per_row <= 0:
+        tokens_per_row = n_tokens
+    n_rows = max(1, math.ceil(n_tokens / tokens_per_row))
+
+    fig_w = max(12.0, tokens_per_row * 0.08)
+    fig_h = max(4.0, n_rows * 2.8)
+    fig, axes = plt.subplots(nrows=n_rows, ncols=1, sharey=True, figsize=(fig_w, fig_h))
+    if n_rows == 1:
+        axes = [axes]
+
+    for row_idx in range(n_rows):
+        start = row_idx * tokens_per_row
+        end = min(n_tokens, (row_idx + 1) * tokens_per_row)
+        x = np.arange(end - start)
+
+        row_y = y[start:end]
+        row_token_strs = token_strs[start:end]
+        row_env = env_feedback_mask[start:end]
+        row_resp = response_mask[start:end]
+
+        ax = axes[row_idx]
+        ax.plot(x, row_y, color="0.6", linewidth=1.0, alpha=0.8)
+        ax.grid(True, axis="y", alpha=0.2)
+
+        if row_env.any():
+            env_idx = np.nonzero(row_env)[0]
+            ax.scatter(env_idx, row_y[env_idx], s=10, color="red", label="env_feedback_mask=1" if row_idx == 0 else None)
+        if row_resp.any():
+            resp_idx = np.nonzero(row_resp)[0]
+            ax.scatter(resp_idx, row_y[resp_idx], s=10, color="blue", label="response_mask=1" if row_idx == 0 else None)
+
+        ax.set_xticks(x)
+        ax.set_xticklabels(row_token_strs, rotation=90, fontsize=6)
+
+        if row_idx == 0:
+            ax.legend(loc="best")
+            ax.set_ylabel(ylabel)
+        if row_idx == n_rows - 1:
+            ax.set_xlabel("decoded token (per-token)")
+
+        ax.set_title(f"tokens {start}..{end - 1} ({end - start} tokens)")
+
+    fig.suptitle(title, y=1.0)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=200, bbox_inches="tight")
+    plt.close(fig)
 
 
 def main() -> None:
@@ -224,7 +308,7 @@ def main() -> None:
     old_log_probs = old_lp.batch["old_log_probs"][sample_idx, :valid_len].cpu()
     log_probs = lp_train_mode.batch["log_probs"][sample_idx, :valid_len].cpu()
 
-    if args.plot_max_tokens is not None and valid_len > args.plot_max_tokens:
+    if args.plot_max_tokens is not None and args.plot_max_tokens > 0 and valid_len > args.plot_max_tokens:
         responses = responses[: args.plot_max_tokens]
         response_mask = response_mask[: args.plot_max_tokens]
         env_feedback_mask = env_feedback_mask[: args.plot_max_tokens]
@@ -273,43 +357,39 @@ def main() -> None:
     except Exception as e:
         raise RuntimeError("matplotlib is required for plotting. Install it or use --dump_jsonl.") from e
 
-    x = np.arange(len(token_ids))
-    y_old = old_log_probs.numpy()
-    y = log_probs.numpy()
-    fig_w = max(12.0, len(token_ids) * 0.08)
-    fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True, figsize=(fig_w, 7.5))
+    out_base = Path(args.out_png)
+    out_old_path = _derive_png_path(out_base, "_old_log_probs")
+    out_train_path = _derive_png_path(out_base, "_log_probs_train")
 
-    axes[0].plot(x, y_old, color="0.6", linewidth=1.0, alpha=0.8)
-    axes[0].set_ylabel("old_log_probs")
-    axes[0].grid(True, axis="y", alpha=0.2)
-    axes[0].set_title(f"{cfg.actor_rollout_ref.agentgym.task_name} | item_id={item_id} | valid_tokens={valid_len}")
+    title = (
+        f"{cfg.actor_rollout_ref.agentgym.task_name} | item_id={item_id} | valid_tokens={valid_len} "
+        "(prompt excluded)"
+    )
+    _plot_wrapped_token_logprobs(
+        plt=plt,
+        token_strs=token_strs,
+        y=old_log_probs.numpy(),
+        response_mask=response_mask.numpy(),
+        env_feedback_mask=env_feedback_mask.numpy(),
+        tokens_per_row=int(args.tokens_per_row),
+        title=title,
+        ylabel="old_log_probs",
+        out_path=out_old_path,
+    )
+    _plot_wrapped_token_logprobs(
+        plt=plt,
+        token_strs=token_strs,
+        y=log_probs.numpy(),
+        response_mask=response_mask.numpy(),
+        env_feedback_mask=env_feedback_mask.numpy(),
+        tokens_per_row=int(args.tokens_per_row),
+        title=title,
+        ylabel="log_probs (train mode)",
+        out_path=out_train_path,
+    )
 
-    axes[1].plot(x, y, color="0.6", linewidth=1.0, alpha=0.8)
-    axes[1].set_ylabel("log_probs (train mode)")
-    axes[1].set_xlabel("decoded token (per-token)")
-    axes[1].grid(True, axis="y", alpha=0.2)
-
-    if env_feedback_mask.any():
-        env_idx = env_feedback_mask.nonzero().flatten().numpy()
-        axes[0].scatter(env_idx, y_old[env_idx], s=10, color="red", label="env_feedback_mask=1")
-        axes[1].scatter(env_idx, y[env_idx], s=10, color="red", label="env_feedback_mask=1")
-    if response_mask.any():
-        resp_idx = response_mask.nonzero().flatten().numpy()
-        axes[0].scatter(resp_idx, y_old[resp_idx], s=10, color="blue", label="response_mask=1")
-        axes[1].scatter(resp_idx, y[resp_idx], s=10, color="blue", label="response_mask=1")
-
-    axes[1].set_xticks(x)
-    axes[1].set_xticklabels(token_strs, rotation=90, fontsize=6)
-    axes[0].legend(loc="best")
-    axes[1].legend(loc="best")
-
-    out_path = Path(args.out_png)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.tight_layout()
-    fig.savefig(out_path, dpi=200)
-    plt.close(fig)
-
-    print(f"[plot_env_feedback_mask_logprob] Saved plot to: {out_path}")
+    print(f"[plot_env_feedback_mask_logprob] Saved old_log_probs plot to: {out_old_path}")
+    print(f"[plot_env_feedback_mask_logprob] Saved log_probs (train mode) plot to: {out_train_path}")
     if args.dump_jsonl:
         print(f"[plot_env_feedback_mask_logprob] Saved dump to: {args.dump_jsonl}")
 

@@ -60,7 +60,8 @@ tp_size="${TENSOR_MODEL_PARALLEL_SIZE:-1}"
 rollout_n="${ROLLOUT_N:-1}"
 max_rounds="${MAX_ROUNDS:-30}"
 max_new_tokens_per_turn="${MAX_NEW_TOKENS_PER_TURN:-200}"
-plot_max_tokens="${PLOT_MAX_TOKENS:-1024}"
+plot_max_tokens="${PLOT_MAX_TOKENS:-0}"
+tokens_per_row="${TOKENS_PER_ROW:-200}"
 sample_idx="${SAMPLE_IDX:-0}"
 item_id="${ITEM_ID:-}"
 
@@ -98,6 +99,7 @@ python3 scripts/debug/plot_env_feedback_mask_logprob.py \
   --max_new_tokens_per_turn "${max_new_tokens_per_turn}" \
   --sample_idx "${sample_idx}" \
   --plot_max_tokens "${plot_max_tokens}" \
+  --tokens_per_row "${tokens_per_row}" \
   --out_png "${out_png}" \
   --dump_jsonl "${dump_jsonl}" \
   "${extra_args[@]}"
