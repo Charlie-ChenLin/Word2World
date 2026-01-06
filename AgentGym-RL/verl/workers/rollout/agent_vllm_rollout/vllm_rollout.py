@@ -212,10 +212,13 @@ class vLLMRollout(BaseRollout):
                     loss_mask=[0] * len(input_ids),
                     prompt_loss_mask=[0] * len(input_ids),
                     response_loss_mask=[],
+                    env_mask=[0] * len(input_ids),
+                    prompt_env_mask=[0] * len(input_ids),
+                    response_env_mask=[],
                     max_response_len=self.config.response_length,
                     max_model_len=min(self.config.max_model_len, self.config.prompt_length + self.config.response_length)
                 )
-                assert len(handler.input_ids) == len(handler.attention_mask) == len(handler.position_ids) == len(handler.loss_mask), f"RolloutHandler has mismatched length: input_ids={len(handler.input_ids)}, attention_mask={len(handler.attention_mask)}, position_ids={len(handler.position_ids)}, loss_mask={len(handler.loss_mask)}"
+                assert len(handler.input_ids) == len(handler.attention_mask) == len(handler.position_ids) == len(handler.loss_mask) == len(handler.env_mask), f"RolloutHandler has mismatched length: input_ids={len(handler.input_ids)}, attention_mask={len(handler.attention_mask)}, position_ids={len(handler.position_ids)}, loss_mask={len(handler.loss_mask)}, env_mask={len(handler.env_mask)}"
                 handler_list.append(handler)
         return handler_list
 
@@ -310,20 +313,21 @@ class vLLMRollout(BaseRollout):
 
         # process ids
         rollout_bar.close()
-        response_ids, response_attention_mask, response_position_ids, response_loss_mask = [], [], [], []
+        response_ids, response_attention_mask, response_position_ids, response_loss_mask, response_env_mask = [], [], [], [], []
         scores, messages = [], []
 
         for rollout_handler in rollout_handler_ls:
             # check length
             rollout_handler.truncate_output_ids()
-            assert len(rollout_handler.input_ids) == len(rollout_handler.attention_mask) == len(rollout_handler.position_ids) == len(rollout_handler.loss_mask), f"""Rollout Handler has different length of {len(rollout_handler.input_ids)=},
-            {len(rollout_handler.attention_mask)=}, {len(rollout_handler.position_ids)=}, {len(rollout_handler.loss_mask)=}"""
+            assert len(rollout_handler.input_ids) == len(rollout_handler.attention_mask) == len(rollout_handler.position_ids) == len(rollout_handler.loss_mask) == len(rollout_handler.env_mask), f"""Rollout Handler has different length of {len(rollout_handler.input_ids)=},
+            {len(rollout_handler.attention_mask)=}, {len(rollout_handler.position_ids)=}, {len(rollout_handler.loss_mask)=}, {len(rollout_handler.env_mask)=}"""
             assert len(rollout_handler.input_ids) <= self.config.max_model_len, f"Rollout Handler has sequence length {len(rollout_handler.input_ids)} > max_sequence_length {self.config.max_model_len}"
 
             response_ids.append(torch.tensor(rollout_handler.response_ids, dtype=torch.int, device=cur_device))
             response_attention_mask.append(torch.tensor(rollout_handler.response_attention_mask, dtype=torch.int, device=cur_device))
             response_position_ids.append(torch.tensor(rollout_handler.response_position_ids, dtype=torch.int, device=cur_device))
             response_loss_mask.append(torch.tensor(rollout_handler.response_loss_mask, dtype=torch.int, device=cur_device))
+            response_env_mask.append(torch.tensor(rollout_handler.response_env_mask, dtype=torch.int, device=cur_device))
             scores.append(rollout_handler.score)
             messages.append(rollout_handler.messages)
 
@@ -337,6 +341,9 @@ class vLLMRollout(BaseRollout):
         response_loss_mask = pad_sequence(response_loss_mask, batch_first=True, padding_value=0)
         if response_loss_mask.shape[1] < self.config.response_length:
             response_loss_mask = pad_sequence_to_length(response_loss_mask, self.config.response_length, 0)
+        response_env_mask = pad_sequence(response_env_mask, batch_first=True, padding_value=0)
+        if response_env_mask.shape[1] < self.config.response_length:
+            response_env_mask = pad_sequence_to_length(response_env_mask, self.config.response_length, 0)
         response_length = response_ids.size(1)
         delta_position_ids = torch.arange(1, response_length + 1, device=cur_device)
         delta_position_ids = delta_position_ids.unsqueeze(0).repeat(batch_size, 1)
@@ -354,6 +361,7 @@ class vLLMRollout(BaseRollout):
         attention_mask = torch.cat((attention_mask, response_attention_mask), dim=-1)
         position_ids = torch.cat((position_ids, response_position_ids), dim=-1)
         response_mask = response_loss_mask
+        env_feedback_mask = response_env_mask
 
         reward_tensor = torch.zeros_like(response_ids, dtype=torch.float32) # (bs, response_length)
         valid_response_length = attention_mask[:, prompt_length:].sum(dim=-1)
@@ -391,6 +399,7 @@ class vLLMRollout(BaseRollout):
                 'attention_mask': attention_mask,
                 'position_ids': position_ids,
                 'response_mask': response_mask,
+                'env_feedback_mask': env_feedback_mask,
                 'scores': reward_tensor,
                 'task_rounds': torch.tensor(task_rounds, dtype=torch.float32).to(input_ids.device),
                 'task_scores': reward_tensor

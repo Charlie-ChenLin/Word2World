@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Literal
+from typing import List, Literal, Optional
 from transformers import PreTrainedTokenizer
 import torch
 
@@ -42,6 +42,9 @@ class RolloutHandler:
         loss_mask: List[int],
         prompt_loss_mask: List[int],
         response_loss_mask: List[int],
+        env_mask: Optional[List[int]] = None,
+        prompt_env_mask: Optional[List[int]] = None,
+        response_env_mask: Optional[List[int]] = None,
         max_response_len: int = 8192,
         max_model_len: int = 32768   
     ):
@@ -62,6 +65,9 @@ class RolloutHandler:
         self.loss_mask = loss_mask
         self.prompt_loss_mask = prompt_loss_mask
         self.response_loss_mask = response_loss_mask
+        self.env_mask = env_mask if env_mask is not None else [0] * len(input_ids)
+        self.prompt_env_mask = prompt_env_mask if prompt_env_mask is not None else [0] * len(prompt_ids)
+        self.response_env_mask = response_env_mask if response_env_mask is not None else []
         self.max_response_len = max_response_len
         self.max_model_len = max_model_len  
         self.format_config: dict = {
@@ -108,6 +114,7 @@ class RolloutHandler:
             )
         append_token_ids += suffix_token_ids
         _loss_mask += [1] * len(suffix_token_ids)
+        _env_mask = [0] * len(append_token_ids)
         self.input_ids += append_token_ids
         _attention_mask = [1] * len(append_token_ids)
         self.attention_mask += _attention_mask
@@ -116,8 +123,9 @@ class RolloutHandler:
         _position_ids = [pos_id + last_position_ids for pos_id in _delta_position_ids]
         self.loss_mask += _loss_mask
         self.position_ids += _position_ids
-        assert len(self.input_ids) == len(self.attention_mask) == len(self.position_ids) == len(self.loss_mask), f"""Rollout Handler has different length of {len(self.input_ids)=}, 
-            {len(self.attention_mask)=}, {len(self.position_ids)=}, {len(self.loss_mask)=}"""
+        self.env_mask += _env_mask
+        assert len(self.input_ids) == len(self.attention_mask) == len(self.position_ids) == len(self.loss_mask) == len(self.env_mask), f"""Rollout Handler has different length of {len(self.input_ids)=}, 
+            {len(self.attention_mask)=}, {len(self.position_ids)=}, {len(self.loss_mask)=}, {len(self.env_mask)=}"""
         
     def add_user_message(
         self,
@@ -137,9 +145,11 @@ class RolloutHandler:
         if self.input_ids[-len(prefix_token_ids) :] == prefix_token_ids:
             append_token_ids = content_token_ids
             _loss_mask = [0] * len(content_token_ids)
+            _env_mask = [1] * len(content_token_ids)
         elif self.input_ids[-len(suffix_token_ids) :] == suffix_token_ids:
             append_token_ids = prefix_token_ids + content_token_ids
             _loss_mask = [0] * len(prefix_token_ids) + [0] * len(content_token_ids)
+            _env_mask = [0] * len(prefix_token_ids) + [1] * len(content_token_ids)
         else:
             max_len = max(len(prefix_token_ids), len(suffix_token_ids))
             raise ValueError(
@@ -149,6 +159,7 @@ class RolloutHandler:
 
         append_token_ids += suffix_token_ids
         _loss_mask += [0] * len(suffix_token_ids)
+        _env_mask += [0] * len(suffix_token_ids)
         self.input_ids += append_token_ids
         _attention_mask = [1] * len(append_token_ids)
         self.attention_mask += _attention_mask
@@ -157,15 +168,18 @@ class RolloutHandler:
         _position_ids = [pos_id + last_position_ids for pos_id in _delta_position_ids]
         self.loss_mask += _loss_mask
         self.position_ids += _position_ids
-        assert len(self.input_ids) == len(self.attention_mask) == len(self.position_ids) == len(self.loss_mask), f"""Rollout Handler has different length of {len(self.input_ids)=},
-            {len(self.attention_mask)=}, {len(self.position_ids)=}, {len(self.loss_mask)=}"""
+        self.env_mask += _env_mask
+        assert len(self.input_ids) == len(self.attention_mask) == len(self.position_ids) == len(self.loss_mask) == len(self.env_mask), f"""Rollout Handler has different length of {len(self.input_ids)=},
+            {len(self.attention_mask)=}, {len(self.position_ids)=}, {len(self.loss_mask)=}, {len(self.env_mask)=}"""
         
     def truncate_output_ids(self) -> None:
         self.input_ids = self.input_ids[: self.max_model_len]
         self.attention_mask = self.attention_mask[: self.max_model_len]
         self.position_ids = self.position_ids[: self.max_model_len]
         self.loss_mask = self.loss_mask[: self.max_model_len]
+        self.env_mask = self.env_mask[: self.max_model_len]
         self.response_ids = self.input_ids[len(self.prompt_ids) :][: self.max_response_len]
         self.response_attention_mask = self.attention_mask[len(self.prompt_attention_mask) :][: self.max_response_len]
         self.response_position_ids = self.position_ids[len(self.prompt_position_ids) :][: self.max_response_len]
         self.response_loss_mask = self.loss_mask[len(self.prompt_loss_mask) :][: self.max_response_len]
+        self.response_env_mask = self.env_mask[len(self.prompt_env_mask) :][: self.max_response_len]
