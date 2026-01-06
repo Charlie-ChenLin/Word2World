@@ -187,3 +187,137 @@ rollout 输出的 `DataProto.batch` 里将同时包含：
 - `env_aux_coef`：aux loss 系数
 - `env_clip_ratio`：PPO-style aux 的 clip
 - `env_kl_coef`：对 ref 的 KL 系数（可选）
+
+## 8. 测试脚本设计：可视化单条轨迹的 token `log_prob` + `env_feedback_mask` / `response_mask`
+
+> 目标：在完成 `env_feedback_mask` 相关改动后，提供一个“可复现 + 可视化”的 debug 脚本：
+> - 跑出 **一条真实 rollout 轨迹**（包含多轮 env feedback + assistant action）
+> - 计算这条轨迹在 **actor policy 下**的逐 token `log_prob`（与优化器使用的 token-level `log_prob` 对齐）
+> - 同时拿到对应的 `env_feedback_mask` 与 `response_mask`
+> - 画一张图：y=每个 token 的 `log_prob`，x=每个 token decode 后的字符串；用不同颜色标注 `env_feedback_mask==1` 和 `response_mask==1`
+
+### 8.1 输入/输出约定
+
+建议脚本放在：`scripts/debug/plot_env_feedback_mask_logprob.py`（debug 工具，不参与训练逻辑）。
+
+**输入参数（建议）**
+
+- `--mode`：`pipeline|transformers`（默认 `pipeline`；`pipeline` 会尽量复用训练的 Ray + vLLM + log_prob 计算）
+- `--model_path`：本地 HF 模型目录（训练/评测用的 actor）
+- `--env_server`：如 `http://127.0.0.1:36001`
+- `--item_id`：从 `data/train/alfworld_train.json` 里选一个 `item_id`（`<task_type>_<task_id>` 格式），脚本内部用 AgentGym mappings 转成 env 所需的 int id
+- `--max_rounds`：轨迹最大 turn（建议默认 5~10，避免图太长）
+- `--max_new_tokens_per_turn`：单 turn 最大生成（对齐 `actor_rollout_ref.rollout.max_tokens`，例如 200）
+- `--max_prompt_length` / `--max_response_length`：对齐训练配置（用于最终 truncate，与训练一致）
+- `--plot_max_tokens`：最多画多少个 response token（例如默认 256；否则 x 轴不可读）
+- `--out_png`：输出图路径
+- （可选）`--dump_jsonl/--dump_pt`：把 token、log_prob、mask dump 下来便于复查
+
+> 备注：若 `--mode pipeline`，更推荐脚本本身做成 hydra entrypoint（类似 `AgentGym-RL/verl/agent_trainer/main_generation.py`），直接复用训练的 config/override；此时 `--model_path/--env_server/...` 可由 hydra 配置接管，只在你做 `--mode transformers` 时需要显式传参。
+
+**输出**
+
+- `out_png`：一张图（token-level log_prob + mask 颜色）
+- （可选）`dump`：保存用于画图的中间数据（含 token_id、token_str、log_prob、mask）
+
+### 8.2 轨迹采样（如何得到“一条 rollout 轨迹”）
+
+为了尽可能 **复用现有训练/推理 pipeline**，建议脚本提供两种模式（通过 `--mode {pipeline,transformers}` 切换）：
+
+#### 8.2.1 `--mode pipeline`（推荐）：复用训练的 Ray + `ActorRolloutRefWorker` + vLLM rollout
+
+目标：复用训练时的 **同一套 token 拼接 / mask 逻辑 / log_prob 计算**，避免自己手写一套导致对齐偏差。
+
+实现要点（参考 `AgentGym-RL/verl/agent_trainer/main_generation.py` 的写法）：
+
+1) 用与训练一致的 hydra 配置初始化 worker group（建议直接复用 `examples/train/AgentGym-RL/alfworld_train.sh` 的参数），并把 batch 相关参数缩到最小：
+   - `trainer.n_gpus_per_node=1`（debug 用一张卡即可）
+   - batch size 相关配置设为 1（不同 entrypoint 可能是 `data.train_batch_size=1` 或 `data.batch_size=1`）
+   - `actor_rollout_ref.rollout.n=1`
+   - `actor_rollout_ref.rollout.max_tokens=<max_new_tokens_per_turn>`
+2) 构造一条样本的 `DataProto`（与训练一致）：
+   - `data.non_tensor_batch["item_id"] = np.array([<item_id>], dtype=object)`（ALFWorld 用 `<task_type>_<task_id>`）
+   - `data.non_tensor_batch["raw_prompt"] = np.array([<messages>], dtype=object)`（用 `init_env_client(config.agentgym).conversation_start` 生成两条固定开场）
+   - `data.meta_info["max_rounds"] = <max_rounds>`
+   - （可选）若 `dp_size>1` 且 `batch_size % dp_size != 0`，按 `main_generation.py` 的方式补齐 dummy data，避免分布式拆分时报错
+3) rollout：
+   - `output = wg.generate_sequences(data)`  
+   - 期待 `output.batch` 里有：`responses`、`response_mask`、`env_feedback_mask`（完成接入后新增）、`prompts`、`attention_mask`、`input_ids`
+4) 计算“传给优化器”的 token-level 概率（与训练一致）：
+   - `lp = wg.compute_log_prob(output).batch["old_log_probs"]`
+   - 这就是 PPO/GRPO 里用于 policy loss 的 `old_log_probs`（与训练对齐，无需在脚本里手写 gather）
+5) 只画有效的 response token（排除 padding）：
+   - `prompt_len = output.batch["prompts"].shape[-1]`
+   - `valid_len = output.batch["attention_mask"][:, prompt_len:].sum(dim=-1).item()`
+   - 取 `responses[0, :valid_len]`、`old_log_probs[0, :valid_len]`、`response_mask[0, :valid_len]`、`env_feedback_mask[0, :valid_len]`
+
+#### 8.2.2 `--mode transformers`（fallback）：纯 `transformers` 最小 rollout
+
+当 Ray/vLLM 初始化太重，或你希望在本地快速验证时，可用纯 `transformers` 做一个最小 rollout（逻辑与训练 rollout 一致即可）：
+
+1) 用 `item_id` 找到 env 的 int index：
+   - 读取 `AgentGym/agentenv-alfworld/configs/mappings_{train,test,valid_*}.json`
+   - key 为 `task_type + "_" + task_id`（与你 `data/train/alfworld_train.json` 的 `item_id` 一致）
+2) 初始化 env client：`AlfWorldEnvClient(env_server_base=..., timeout=...)`，`reset(game=<int_id>)`
+3) 初始化会话：
+   - 复用 `AlfWorldAdapter.conversation_start_dict[ActionFormat.REACT]` 的两条固定开场（system/user + assistant ack）
+4) 循环 `t in [1..max_rounds]`：
+   - 用 tokenizer 的 chat template 把当前 messages 转为 `input_ids`
+   - 调用 `model.generate(max_new_tokens=max_new_tokens_per_turn, ...)` 生成本轮 assistant 文本
+   - 追加 assistant message，并从 env 拿到 feedback：`env.step(action_text)`，再追加 user message
+   - done 则提前结束
+
+> 注意：测试的关键不是 “生成质量”，而是 “token 拼接 + mask 对齐 + log_prob 计算一致”。因此只要和训练使用同一个 tokenizer/chat_template，并复用同样的 `add_user_message/add_assistant_message` 规则即可。
+
+### 8.3 对齐训练：生成 `response_mask` 与 `env_feedback_mask`
+
+建议 **不要** 在测试脚本里再手写一套 mask 规则：
+
+- `--mode pipeline`：直接使用 rollout 输出的 `response_mask` 与 `env_feedback_mask`（这两条 mask 必须与 `responses` 同步 slice/pad）。
+- `--mode transformers`：复用/调用你已经改造过的 `RolloutHandler` 逻辑：
+
+- 构建一个 `RolloutHandler`，每次追加消息都走：
+  - `add_assistant_message()`：维护 `loss_mask`（用于 `response_mask`）
+  - `add_user_message()`：维护 `env_mask`（用于 `env_feedback_mask`）
+- 结束后调用 `truncate_output_ids()`：
+  - 得到 `response_ids`（response-side token）
+  - 得到 `response_loss_mask`（=`response_mask`）
+  - 得到 `response_env_mask`（=`env_feedback_mask`）
+
+### 8.4 计算 token-level `log_prob`（“传给优化器”的那条概率）
+
+对齐 PPO/GRPO 里 actor 侧的 token log_prob 定义：
+
+- `--mode pipeline`：使用 `wg.compute_log_prob(output)` 得到 `old_log_probs`，这是训练里真正用来做 policy loss 的那条概率。
+- （可选）若你想在 **FSDP 重算侧** 对比 `log_probs` vs `old_log_probs`（排查 train/eval 差异），可以对同一条 batch：
+  - 正常调用一次 `compute_log_prob`（得到 `old_log_probs`）
+  - 再设置 `batch.meta_info['log_prob_train_mode']=True` 调一次 `compute_log_prob`，并把输出 rename 成 `log_probs`
+- `--mode transformers`：按下述方式手动计算（可作为 pipeline 的 cross-check）。
+
+- 用模型对 **完整序列**前向：`full_input_ids = prompt_ids + response_ids`（包含 env feedback token）
+- 取 `logits` 做 `log_softmax`，对每个位置 gather 下一 token 的 log prob：
+  - 对 response 第 j 个 token（full index = `prompt_len + j`），使用 `logits[prompt_len + j - 1]`
+  - 得到 `log_prob[j]`，shape `[response_len]`
+- 用 `response_mask` / `env_feedback_mask` 作为 overlay（不改变 log_prob 本身，只影响标注/统计）
+
+（可选）同时输出几个 sanity check：
+
+- `assert (response_mask & env_feedback_mask).sum() == 0`（内容 token 层面应互斥；模板/pad 允许都为 0）
+- 打印：
+  - `masked_mean(log_prob, response_mask)`
+  - `masked_mean(log_prob, env_feedback_mask)`
+
+### 8.5 画图（x=token 字符串，y=log_prob，用颜色标注 mask）
+
+建议用 `matplotlib`：
+
+- x 轴：token index（绘图坐标），tick label：`tokenizer.decode([token_id], clean_up_tokenization_spaces=False)` 的字符串
+- y 轴：对应 token 的 `log_prob`
+- 颜色规则（优先级）：
+  - `env_feedback_mask==1`：红色
+  - `response_mask==1`：蓝色
+  - 其他（模板 token / padding / 未参与）：灰色
+  - 若出现 overlap（不应出现）：紫色并 raise/报警
+- 为避免图不可读：
+  - 默认只画前 `--plot_max_tokens` 个 response token
+  - 或支持 `--plot_start` / `--plot_end` 选一个窗口
