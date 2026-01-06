@@ -88,6 +88,7 @@ python3 scripts/debug/plot_env_feedback_mask_logprob.py \
   --override actor_rollout_ref.agentgym.task_name="${task_name}" \
   --override actor_rollout_ref.agentgym.env_addr="${env_server_url}" \
   --override actor_rollout_ref.model.path="${agent_model_path}" \
+  --override actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=1 \
   --override actor_rollout_ref.rollout.tensor_model_parallel_size="${tp_size}" \
   --override actor_rollout_ref.rollout.n="${rollout_n}" \
   --max_rounds "${max_rounds}" \
