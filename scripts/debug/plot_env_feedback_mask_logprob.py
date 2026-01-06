@@ -119,6 +119,26 @@ def _plot_wrapped_token_logprobs(
     out_path: Path,
 ) -> None:
     low_logprob_threshold = -1.0
+    below_threshold = y < low_logprob_threshold
+
+    env_feedback_mask = env_feedback_mask.astype(bool)
+    response_mask = response_mask.astype(bool)
+    env_total = int(env_feedback_mask.sum())
+    resp_total = int(response_mask.sum())
+    env_below = int((env_feedback_mask & below_threshold).sum())
+    resp_below = int((response_mask & below_threshold).sum())
+
+    if env_total > 0:
+        env_ratio = env_below / env_total
+        env_label = f"env_feedback_mask=1 (lp<-1: {env_below}/{env_total}={env_ratio:.1%})"
+    else:
+        env_label = "env_feedback_mask=1 (lp<-1: n/a)"
+
+    if resp_total > 0:
+        resp_ratio = resp_below / resp_total
+        resp_label = f"response_mask=1 (lp<-1: {resp_below}/{resp_total}={resp_ratio:.1%})"
+    else:
+        resp_label = "response_mask=1 (lp<-1: n/a)"
     n_tokens = len(token_strs)
     if tokens_per_row <= 0:
         tokens_per_row = n_tokens
@@ -152,10 +172,10 @@ def _plot_wrapped_token_logprobs(
             ax.scatter(neither_idx, row_y[neither_idx], s=10, color="0.5", label="mask=0" if row_idx == 0 else None)
         if row_env.any():
             env_idx = np.nonzero(row_env)[0]
-            ax.scatter(env_idx, row_y[env_idx], s=10, color="red", label="env_feedback_mask=1" if row_idx == 0 else None)
+            ax.scatter(env_idx, row_y[env_idx], s=10, color="red", label=env_label if row_idx == 0 else None)
         if row_resp.any():
             resp_idx = np.nonzero(row_resp)[0]
-            ax.scatter(resp_idx, row_y[resp_idx], s=10, color="blue", label="response_mask=1" if row_idx == 0 else None)
+            ax.scatter(resp_idx, row_y[resp_idx], s=10, color="blue", label=resp_label if row_idx == 0 else None)
 
         ax.set_xticks(x)
         ax.set_xticklabels(row_token_strs, rotation=90, fontsize=6)
