@@ -118,6 +118,7 @@ def _plot_wrapped_token_logprobs(
     ylabel: str,
     out_path: Path,
 ) -> None:
+    low_logprob_threshold = -1.0
     n_tokens = len(token_strs)
     if tokens_per_row <= 0:
         tokens_per_row = n_tokens
@@ -138,11 +139,15 @@ def _plot_wrapped_token_logprobs(
         row_token_strs = token_strs[start:end]
         row_env = env_feedback_mask[start:end]
         row_resp = response_mask[start:end]
+        row_neither = ~(row_env | row_resp)
 
         ax = axes[row_idx]
         ax.plot(x, row_y, color="0.6", linewidth=1.0, alpha=0.8)
         ax.grid(True, axis="y", alpha=0.2)
 
+        if row_neither.any():
+            neither_idx = np.nonzero(row_neither)[0]
+            ax.scatter(neither_idx, row_y[neither_idx], s=10, color="0.5", label="mask=0" if row_idx == 0 else None)
         if row_env.any():
             env_idx = np.nonzero(row_env)[0]
             ax.scatter(env_idx, row_y[env_idx], s=10, color="red", label="env_feedback_mask=1" if row_idx == 0 else None)
@@ -152,6 +157,15 @@ def _plot_wrapped_token_logprobs(
 
         ax.set_xticks(x)
         ax.set_xticklabels(row_token_strs, rotation=90, fontsize=6)
+        for i, label in enumerate(ax.get_xticklabels()):
+            if row_y[i] >= low_logprob_threshold:
+                continue
+            if row_resp[i]:
+                label.set_color("blue")
+            elif row_env[i]:
+                label.set_color("red")
+            else:
+                label.set_color("0.5")
 
         if row_idx == 0:
             ax.legend(loc="best")

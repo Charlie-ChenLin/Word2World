@@ -26,8 +26,9 @@
   - 新增 `env_mask / prompt_env_mask / response_env_mask` 三个字段（与 `loss_mask` 的组织方式一致）。
   - 初始化时 `env_mask` 默认全 0（prompt 部分不标记 env）。
 - `RolloutHandler.add_user_message()`：
-  - 在原本只维护 `loss_mask`（全 0）的基础上，同步维护 `_env_mask`：
-    - **仅 content token** 标记为 1
+  - 新增参数 `mark_env_feedback: bool=True`，用于控制本条 user message 的 **content token** 是否计入 env feedback：
+    - `mark_env_feedback=True`：**仅 content token** 标记为 1
+    - `mark_env_feedback=False`：content token 标记为 0（用于 **初始任务 prompt / S0**，避免把“问题本身”算作 env feedback）
     - `user_prefix_msg` / `user_suffix_msg`（模板 token）标记为 0
   - 这样 `env_mask` 精确对应 “环境反馈文本内容 token”，而不是整段 user message 的模板/分隔符。
 - `RolloutHandler.add_assistant_message()`：
@@ -48,6 +49,7 @@
   2) 构造一个 `RolloutHandler`（prompt 部分随意，只要能触发 prefix/suffix 分支）
   3) 调用：
      - `add_user_message(tokenizer, "OBS_TEXT")` → 期望 env_mask 对应 `OBS_TEXT` 的 token 为 1
+     - `add_user_message(tokenizer, "S0_TEXT", mark_env_feedback=False)` → 期望 env_mask 对应 `S0_TEXT` 的 token 全为 0
      - `add_assistant_message(tokenizer, "ACTION_TEXT")` → 期望 env_mask 全 0
   4) 调 `truncate_output_ids()` 检查 `response_env_mask` 与 `response_ids` 同长
 
@@ -65,6 +67,9 @@
     - `prompt_env_mask=[0]*len(input_ids)`
     - `response_env_mask=[]`
 - `generate_sequences()`：
+  - env reset 后第一次 `observe()` 得到的 `task` 视为 **初始任务 prompt（S0）**：
+    - 调 `rollout_handler.add_user_message(..., mark_env_feedback=False)`，避免把“问题本身”标成 env feedback
+  - 后续每轮 `env.step()` 得到的 `state` 仍用默认 `mark_env_feedback=True` 标成 env feedback
   - 在收集 `response_ids/response_loss_mask` 的同时，收集 `rollout_handler.response_env_mask`
   - 使用同样的 `pad_sequence` + `pad_sequence_to_length(..., self.config.response_length, 0)` pad 到固定长度
   - 最终写入：
@@ -113,14 +118,16 @@
 脚本里会：
 1) 正常调用一次 `compute_log_prob` 产出 `old_log_probs`
 2) 设置 `batch.meta_info['log_prob_train_mode']=True` 再调一次 `compute_log_prob`，并把输出 rename 成 `log_probs`
-3) 画图时上下两个子图分别展示 `old_log_probs` 与 `log_probs`
+3) 画图时分别输出两张图：`<stem>_old_log_probs.png` 与 `<stem>_log_probs_train.png`（`--out_png` 传 base），并支持用 `--tokens_per_row` 将完整轨迹自动换行绘制
 
 **脚本输出**
-- `--out_png`：token-level `log_prob` 图
+- `--out_png`：token-level `log_prob` 图（会输出两张 png）
   - y 轴：每个 token 的 `log_prob`
   - x 轴：逐 token decode 字符串（过长时建议用 `--plot_max_tokens` 控制）
   - 红色点：`env_feedback_mask==1`
   - 蓝色点：`response_mask==1`
+  - 灰色点：`response_mask==0 && env_feedback_mask==0`（主要是模板/分隔符 token，以及 S0 的 prompt token）
+  - 当 `log_prob < -1` 时，对应 x 轴 token label 会染成其 mask 颜色（红/蓝/灰），便于定位低概率 token
 - （可选）`--dump_jsonl`：逐 token dump（token_id/token_str/log_prob/masks），便于二次分析
 
 **补充：如何控制每轮生成长度**
@@ -152,7 +159,7 @@ python scripts/debug/plot_env_feedback_mask_logprob.py \
 ```
 
 若脚本成功：
-- 会生成 `./debug/env_feedback_mask_logprob.png`
+- 会生成 `./debug/env_feedback_mask_logprob_old_log_probs.png` 与 `./debug/env_feedback_mask_logprob_log_probs_train.png`
 - 并在终端打印保存路径
 - 若 mask/shape 对齐失败，会直接 `assert` 报错（用于快速定位对齐问题）
 

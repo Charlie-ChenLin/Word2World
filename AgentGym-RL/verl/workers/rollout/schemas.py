@@ -131,6 +131,7 @@ class RolloutHandler:
         self,
         tokenizer: PreTrainedTokenizer,
         content: str,
+        mark_env_feedback: bool = True,
         format: Literal["qwen"] = "qwen",
     ) -> None:
         msg = Message(role='user', content=content)
@@ -141,15 +142,16 @@ class RolloutHandler:
         suffix_msg = self.format_config[format]["user_suffix_msg"]
         suffix_token_ids = tokenizer.encode(suffix_msg, add_special_tokens=False)
         content_token_ids = tokenizer.encode(content, add_special_tokens=False)
+        content_env_mask_value = 1 if mark_env_feedback else 0
 
         if self.input_ids[-len(prefix_token_ids) :] == prefix_token_ids:
             append_token_ids = content_token_ids
             _loss_mask = [0] * len(content_token_ids)
-            _env_mask = [1] * len(content_token_ids)
+            _env_mask = [content_env_mask_value] * len(content_token_ids)
         elif self.input_ids[-len(suffix_token_ids) :] == suffix_token_ids:
             append_token_ids = prefix_token_ids + content_token_ids
             _loss_mask = [0] * len(prefix_token_ids) + [0] * len(content_token_ids)
-            _env_mask = [0] * len(prefix_token_ids) + [1] * len(content_token_ids)
+            _env_mask = [0] * len(prefix_token_ids) + [content_env_mask_value] * len(content_token_ids)
         else:
             max_len = max(len(prefix_token_ids), len(suffix_token_ids))
             raise ValueError(

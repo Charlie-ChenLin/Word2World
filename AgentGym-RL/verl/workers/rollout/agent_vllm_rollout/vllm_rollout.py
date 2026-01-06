@@ -255,7 +255,7 @@ class vLLMRollout(BaseRollout):
             try:
                 env_clients[idx].reset(rollout_handler.item_id)
                 task = env_clients[idx].observe()
-                rollout_handler.add_user_message(self.tokenizer, task)
+                rollout_handler.add_user_message(self.tokenizer, task, mark_env_feedback=False)
             except TimeoutError:
                 print(f"Reset Timeout: Webarena Env Timeout. item id = {rollout_handler.item_id}")
                 rollout_handler.done = True
