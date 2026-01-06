@@ -143,7 +143,9 @@ def _plot_wrapped_token_logprobs(
 
         ax = axes[row_idx]
         ax.plot(x, row_y, color="0.6", linewidth=1.0, alpha=0.8)
-        ax.grid(True, axis="y", alpha=0.2)
+        ax.set_axisbelow(True)
+        ax.grid(False)
+        ax.grid(True, axis="x", color="0.9", linewidth=0.5, alpha=0.6)
 
         if row_neither.any():
             neither_idx = np.nonzero(row_neither)[0]
