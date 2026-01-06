@@ -15,6 +15,7 @@ import json
 import math
 import os
 import sys
+from datetime import datetime
 import uuid
 from pathlib import Path
 from typing import Any
@@ -60,12 +61,23 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--max_rounds", type=int, default=None, help="Max env interaction rounds (turns).")
     parser.add_argument(
+        "--n_rollouts",
+        type=int,
+        default=1,
+        help="How many rollouts to sample for the same prompt (sets actor_rollout_ref.rollout.n).",
+    )
+    parser.add_argument(
         "--max_new_tokens_per_turn",
         type=int,
         default=None,
         help="Max new tokens per turn (align with actor_rollout_ref.rollout.max_tokens).",
     )
     parser.add_argument("--sample_idx", type=int, default=0, help="Which sample in the (possibly repeated) batch to plot.")
+    parser.add_argument(
+        "--run_dir",
+        default=None,
+        help="Output directory under which to save executer_logs and plots. Default: ./debug/<timestamp>.",
+    )
     parser.add_argument(
         "--plot_max_tokens",
         type=int,
@@ -114,6 +126,16 @@ def _derive_png_path(base_png: Path, suffix: str) -> Path:
     if base_png.suffix.lower() != ".png":
         raise ValueError(f"--out_png must end with .png, got: {base_png}")
     return base_png.with_name(f"{base_png.stem}{suffix}{base_png.suffix}")
+
+
+def _derive_per_rollout_base(base_png: Path, *, rollout_idx: int) -> Path:
+    if base_png.suffix.lower() != ".png":
+        raise ValueError(f"--out_png must end with .png, got: {base_png}")
+    return base_png.with_name(f"{base_png.stem}_rollout{rollout_idx}{base_png.suffix}")
+
+
+def _sanitize_for_filename(s: str) -> str:
+    return "".join(c if (c.isalnum() or c in ("-", "_", ".")) else "_" for c in str(s))
 
 
 def _plot_wrapped_token_logprobs(
@@ -229,6 +251,17 @@ def main() -> None:
     args = _parse_args()
     cfg = _load_cfg(args.config, args.override)
 
+    run_tag = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_dir = Path(args.run_dir) if args.run_dir else (REPO_ROOT / "debug" / run_tag)
+    run_dir.mkdir(parents=True, exist_ok=True)
+
+    # Save rollout conversations the same way as training does (vllm_rollout writes json when meta_info['global_steps'] is set).
+    cfg.actor_rollout_ref.rollout.rollout_log_dir = str(run_dir / "executer_logs")
+
+    # Number of rollouts for the same prompt.
+    if int(args.n_rollouts) > 0:
+        cfg.actor_rollout_ref.rollout.n = int(args.n_rollouts)
+
     if args.max_new_tokens_per_turn is not None:
         cfg.actor_rollout_ref.rollout.max_tokens = int(args.max_new_tokens_per_turn)
 
@@ -317,7 +350,7 @@ def main() -> None:
         batch_keys=["input_ids", "attention_mask", "position_ids"],
         non_tensor_batch_keys=["item_id", "raw_prompt"],
     )
-    gen_batch.meta_info["global_steps"] = "debug_single"
+    gen_batch.meta_info["global_steps"] = run_tag
     if args.max_rounds is not None:
         gen_batch.meta_info["max_rounds"] = int(args.max_rounds)
     else:
@@ -414,78 +447,148 @@ def main() -> None:
     except Exception as e:
         raise RuntimeError("matplotlib is required for plotting. Install it or use --dump_jsonl.") from e
 
-    out_base = Path(args.out_png)
-    out_old_path = _derive_png_path(out_base, "_old_log_probs")
-    out_train_path = _derive_png_path(out_base, "_log_probs_train")
+    out_base_cli = Path(args.out_png)
+    out_base_default = run_dir / out_base_cli.name
+    out_base = out_base_default if (out_base_cli.parent == Path(".")) else out_base_cli
 
-    title = (
-        f"{cfg.actor_rollout_ref.agentgym.task_name} | item_id={item_id} | valid_tokens={valid_len} "
-        "(prompt excluded)"
-    )
-    _plot_wrapped_token_logprobs(
-        plt=plt,
-        token_strs=token_strs,
-        y=old_log_probs.numpy(),
-        raw_y=None,
-        response_mask=response_mask.numpy(),
-        env_feedback_mask=env_feedback_mask.numpy(),
-        tokens_per_row=int(args.tokens_per_row),
-        low_logprob_threshold=float(args.lp_threshold),
-        title=title,
-        ylabel="old_log_probs",
-        out_path=out_old_path,
-    )
-    _plot_wrapped_token_logprobs(
-        plt=plt,
-        token_strs=token_strs,
-        y=log_probs.numpy(),
-        raw_y=None,
-        response_mask=response_mask.numpy(),
-        env_feedback_mask=env_feedback_mask.numpy(),
-        tokens_per_row=int(args.tokens_per_row),
-        low_logprob_threshold=float(args.lp_threshold),
-        title=title,
-        ylabel="log_probs (train mode)",
-        out_path=out_train_path,
-    )
+    n_samples = int(batch.batch["responses"].shape[0])
+    if args.sample_idx is not None and args.sample_idx >= 0 and args.n_rollouts <= 1:
+        sample_indices = [int(args.sample_idx)]
+    else:
+        sample_indices = list(range(n_samples))
 
-    # Additional plots with y floored at the threshold to emphasize high-prob token variations.
-    thr_tag = f"{float(args.lp_threshold):g}"
-    out_old_clip_path = _derive_png_path(out_base, f"_old_log_probs_clip_{thr_tag}")
-    out_train_clip_path = _derive_png_path(out_base, f"_log_probs_train_clip_{thr_tag}")
-    _plot_wrapped_token_logprobs(
-        plt=plt,
-        token_strs=token_strs,
-        y=np.maximum(old_log_probs.numpy(), float(args.lp_threshold)),
-        raw_y=old_log_probs.numpy(),
-        response_mask=response_mask.numpy(),
-        env_feedback_mask=env_feedback_mask.numpy(),
-        tokens_per_row=int(args.tokens_per_row),
-        low_logprob_threshold=float(args.lp_threshold),
-        title=f"{title} | y_floored@{thr_tag}",
-        ylabel=f"old_log_probs (floored @ {thr_tag})",
-        out_path=out_old_clip_path,
-    )
-    _plot_wrapped_token_logprobs(
-        plt=plt,
-        token_strs=token_strs,
-        y=np.maximum(log_probs.numpy(), float(args.lp_threshold)),
-        raw_y=log_probs.numpy(),
-        response_mask=response_mask.numpy(),
-        env_feedback_mask=env_feedback_mask.numpy(),
-        tokens_per_row=int(args.tokens_per_row),
-        low_logprob_threshold=float(args.lp_threshold),
-        title=f"{title} | y_floored@{thr_tag}",
-        ylabel=f"log_probs (train mode, floored @ {thr_tag})",
-        out_path=out_train_clip_path,
-    )
+    print(f"[plot_env_feedback_mask_logprob] run_dir: {run_dir}")
+    print(f"[plot_env_feedback_mask_logprob] executer_logs: {run_dir / 'executer_logs'}")
+    print(f"[plot_env_feedback_mask_logprob] plotting {len(sample_indices)} rollout(s) (batch_size={n_samples})")
 
-    print(f"[plot_env_feedback_mask_logprob] Saved old_log_probs plot to: {out_old_path}")
-    print(f"[plot_env_feedback_mask_logprob] Saved log_probs (train mode) plot to: {out_train_path}")
-    print(f"[plot_env_feedback_mask_logprob] Saved clipped old_log_probs plot to: {out_old_clip_path}")
-    print(f"[plot_env_feedback_mask_logprob] Saved clipped log_probs (train mode) plot to: {out_train_clip_path}")
-    if args.dump_jsonl:
-        print(f"[plot_env_feedback_mask_logprob] Saved dump to: {args.dump_jsonl}")
+    for rollout_i, sample_idx in enumerate(sample_indices):
+        prompt_len = batch.batch["prompts"].shape[-1]
+        valid_len = int(batch.batch["attention_mask"][sample_idx, prompt_len:].sum().item())
+        item_id = batch.non_tensor_batch["item_id"][sample_idx]
+
+        responses = batch.batch["responses"][sample_idx, :valid_len].cpu()
+        response_mask = batch.batch["response_mask"][sample_idx, :valid_len].to(torch.bool).cpu()
+        env_feedback_mask = batch.batch["env_feedback_mask"][sample_idx, :valid_len].to(torch.bool).cpu()
+        old_log_probs = old_lp.batch["old_log_probs"][sample_idx, :valid_len].cpu()
+        log_probs = lp_train_mode.batch["log_probs"][sample_idx, :valid_len].cpu()
+
+        if args.plot_max_tokens is not None and args.plot_max_tokens > 0 and valid_len > args.plot_max_tokens:
+            responses = responses[: args.plot_max_tokens]
+            response_mask = response_mask[: args.plot_max_tokens]
+            env_feedback_mask = env_feedback_mask[: args.plot_max_tokens]
+            old_log_probs = old_log_probs[: args.plot_max_tokens]
+            log_probs = log_probs[: args.plot_max_tokens]
+
+        assert responses.shape == response_mask.shape == env_feedback_mask.shape == old_log_probs.shape == log_probs.shape
+        overlap = (response_mask & env_feedback_mask)
+        assert not overlap.any(), f"env_feedback_mask overlaps response_mask at {overlap.nonzero().flatten().tolist()}"
+
+        token_ids = responses.tolist()
+        token_strs = [_decode_token(tokenizer, tid) for tid in token_ids]
+
+        dump_jsonl = None
+        if args.dump_jsonl:
+            dump_root = run_dir / "dumps"
+            dump_root.mkdir(parents=True, exist_ok=True)
+            dump_jsonl = dump_root / f"{out_base.stem}_rollout{rollout_i}_{_sanitize_for_filename(item_id)}.jsonl"
+            with dump_jsonl.open("w", encoding="utf-8") as f:
+                for i, (tid, tstr, lp_old, lp_new, rm, em) in enumerate(
+                    zip(
+                        token_ids,
+                        token_strs,
+                        old_log_probs.tolist(),
+                        log_probs.tolist(),
+                        response_mask.tolist(),
+                        env_feedback_mask.tolist(),
+                    )
+                ):
+                    f.write(
+                        json.dumps(
+                            {
+                                "i": i,
+                                "token_id": tid,
+                                "token_str": tstr,
+                                "old_log_prob": lp_old,
+                                "log_prob": lp_new,
+                                "response_mask": int(rm),
+                                "env_feedback_mask": int(em),
+                            },
+                            ensure_ascii=False,
+                        )
+                        + "\n"
+                    )
+
+        out_base_i = _derive_per_rollout_base(out_base, rollout_idx=rollout_i)
+        out_old_path = _derive_png_path(out_base_i, "_old_log_probs")
+        out_train_path = _derive_png_path(out_base_i, "_log_probs_train")
+
+        title = (
+            f"{cfg.actor_rollout_ref.agentgym.task_name} | item_id={item_id} | rollout={rollout_i} | "
+            f"valid_tokens={valid_len} (prompt excluded)"
+        )
+        _plot_wrapped_token_logprobs(
+            plt=plt,
+            token_strs=token_strs,
+            y=old_log_probs.numpy(),
+            raw_y=None,
+            response_mask=response_mask.numpy(),
+            env_feedback_mask=env_feedback_mask.numpy(),
+            tokens_per_row=int(args.tokens_per_row),
+            low_logprob_threshold=float(args.lp_threshold),
+            title=title,
+            ylabel="old_log_probs",
+            out_path=out_old_path,
+        )
+        _plot_wrapped_token_logprobs(
+            plt=plt,
+            token_strs=token_strs,
+            y=log_probs.numpy(),
+            raw_y=None,
+            response_mask=response_mask.numpy(),
+            env_feedback_mask=env_feedback_mask.numpy(),
+            tokens_per_row=int(args.tokens_per_row),
+            low_logprob_threshold=float(args.lp_threshold),
+            title=title,
+            ylabel="log_probs (train mode)",
+            out_path=out_train_path,
+        )
+
+        thr_tag = f"{float(args.lp_threshold):g}"
+        out_old_floor_path = _derive_png_path(out_base_i, f"_old_log_probs_clip_{thr_tag}")
+        out_train_floor_path = _derive_png_path(out_base_i, f"_log_probs_train_clip_{thr_tag}")
+        _plot_wrapped_token_logprobs(
+            plt=plt,
+            token_strs=token_strs,
+            y=np.maximum(old_log_probs.numpy(), float(args.lp_threshold)),
+            raw_y=old_log_probs.numpy(),
+            response_mask=response_mask.numpy(),
+            env_feedback_mask=env_feedback_mask.numpy(),
+            tokens_per_row=int(args.tokens_per_row),
+            low_logprob_threshold=float(args.lp_threshold),
+            title=f"{title} | y_floored@{thr_tag}",
+            ylabel=f"old_log_probs (floored @ {thr_tag})",
+            out_path=out_old_floor_path,
+        )
+        _plot_wrapped_token_logprobs(
+            plt=plt,
+            token_strs=token_strs,
+            y=np.maximum(log_probs.numpy(), float(args.lp_threshold)),
+            raw_y=log_probs.numpy(),
+            response_mask=response_mask.numpy(),
+            env_feedback_mask=env_feedback_mask.numpy(),
+            tokens_per_row=int(args.tokens_per_row),
+            low_logprob_threshold=float(args.lp_threshold),
+            title=f"{title} | y_floored@{thr_tag}",
+            ylabel=f"log_probs (train mode, floored @ {thr_tag})",
+            out_path=out_train_floor_path,
+        )
+
+        print(f"[plot_env_feedback_mask_logprob] Saved old_log_probs plot to: {out_old_path}")
+        print(f"[plot_env_feedback_mask_logprob] Saved log_probs (train mode) plot to: {out_train_path}")
+        print(f"[plot_env_feedback_mask_logprob] Saved floored old_log_probs plot to: {out_old_floor_path}")
+        print(f"[plot_env_feedback_mask_logprob] Saved floored log_probs (train mode) plot to: {out_train_floor_path}")
+        if dump_jsonl is not None:
+            print(f"[plot_env_feedback_mask_logprob] Saved dump to: {dump_jsonl}")
 
 
 if __name__ == "__main__":
