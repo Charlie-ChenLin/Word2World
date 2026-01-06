@@ -79,6 +79,14 @@ def _parse_args() -> argparse.Namespace:
         help="Output directory under which to save executer_logs and plots. Default: ./debug/<timestamp>.",
     )
     parser.add_argument(
+        "--verl_ckpt",
+        default=None,
+        help=(
+            "Optional VERL checkpoint path to load before rollout/logprob. "
+            "Accepts either a `global_step_*/` folder (containing `actor/`) or an `actor/` folder."
+        ),
+    )
+    parser.add_argument(
         "--plot_max_tokens",
         type=int,
         default=0,
@@ -136,6 +144,20 @@ def _derive_per_rollout_base(base_png: Path, *, rollout_idx: int) -> Path:
 
 def _sanitize_for_filename(s: str) -> str:
     return "".join(c if (c.isalnum() or c in ("-", "_", ".")) else "_" for c in str(s))
+
+
+def _resolve_verl_ckpt_actor_path(path: str) -> str:
+    p = Path(path).expanduser()
+    if not p.exists():
+        raise FileNotFoundError(f"--verl_ckpt not found: {p}")
+
+    # Accept either .../global_step_x/actor or .../global_step_x
+    if p.is_dir() and p.name == "actor":
+        return str(p)
+    actor = p / "actor"
+    if actor.is_dir():
+        return str(actor)
+    raise ValueError(f"--verl_ckpt must point to `.../global_step_*/` or `.../global_step_*/actor/`, got: {p}")
 
 
 def _plot_wrapped_token_logprobs(
@@ -304,6 +326,10 @@ def main() -> None:
         ray_worker_group_cls=RayWorkerGroup,
     )
     trainer.init_workers()
+    if args.verl_ckpt:
+        actor_ckpt = _resolve_verl_ckpt_actor_path(args.verl_ckpt)
+        print(f"[plot_env_feedback_mask_logprob] Loading VERL actor checkpoint: {actor_ckpt}")
+        trainer.actor_rollout_wg.load_checkpoint(actor_ckpt, del_local_after_load=False)
 
     # Prepare one batch of prompts (either from dataloader, or a user-provided item_id).
     if args.item_id is None:
@@ -448,8 +474,10 @@ def main() -> None:
         raise RuntimeError("matplotlib is required for plotting. Install it or use --dump_jsonl.") from e
 
     out_base_cli = Path(args.out_png)
-    # Always place outputs under the timestamped run_dir unless the user provided an absolute path.
-    out_base = out_base_cli if out_base_cli.is_absolute() else (run_dir / out_base_cli.name)
+    # Always place figure outputs under the timestamped run_dir unless the user provided an absolute path.
+    figures_dir = run_dir / "figures"
+    figures_dir.mkdir(parents=True, exist_ok=True)
+    out_base = out_base_cli if out_base_cli.is_absolute() else (figures_dir / out_base_cli.name)
 
     n_samples = int(batch.batch["responses"].shape[0])
     if args.sample_idx is not None and args.sample_idx >= 0 and args.n_rollouts <= 1:
