@@ -187,6 +187,10 @@ def main() -> None:
 
     gen_batch_output = trainer.actor_rollout_wg.generate_sequences(gen_batch)
 
+    # Keep `item_id` on the driver side for plotting/debugging (training pops it into `gen_batch`).
+    if "item_id" in gen_batch.non_tensor_batch:
+        batch.non_tensor_batch["item_id"] = gen_batch.non_tensor_batch["item_id"]
+
     batch.non_tensor_batch["uid"] = np.array([str(uuid.uuid4()) for _ in range(len(batch))], dtype=object)
     batch = batch.repeat(repeat_times=cfg.actor_rollout_ref.rollout.n, interleave=True)
     batch = batch.union(gen_batch_output)
