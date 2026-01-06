@@ -64,11 +64,13 @@ plot_max_tokens="${PLOT_MAX_TOKENS:-1024}"
 sample_idx="${SAMPLE_IDX:-0}"
 item_id="${ITEM_ID:-}"
 
-out_dir="${OUT_DIR:-./debug}"
+out_dir="${OUT_DIR:-${REPO_ROOT}/debug}"
 mkdir -p "${out_dir}"
 
 out_png="${OUT_PNG:-${out_dir}/env_feedback_mask_logprob.png}"
 dump_jsonl="${DUMP_JSONL:-${out_dir}/env_feedback_mask_logprob.jsonl}"
+rollout_log_dir="${ROLLOUT_LOG_DIR:-${out_dir}/executer_logs}"
+mkdir -p "${rollout_log_dir}"
 
 extra_args=()
 if [[ -n "${item_id}" ]]; then
@@ -89,6 +91,7 @@ python3 scripts/debug/plot_env_feedback_mask_logprob.py \
   --override actor_rollout_ref.agentgym.env_addr="${env_server_url}" \
   --override actor_rollout_ref.model.path="${agent_model_path}" \
   --override actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=1 \
+  --override actor_rollout_ref.rollout.rollout_log_dir="${rollout_log_dir}" \
   --override actor_rollout_ref.rollout.tensor_model_parallel_size="${tp_size}" \
   --override actor_rollout_ref.rollout.n="${rollout_n}" \
   --max_rounds "${max_rounds}" \
