@@ -150,7 +150,7 @@ class DataParallelPPOActor(BasePPOActor):
         self.actor_optimizer.step()
         return grad_norm
 
-    def compute_log_prob(self, data: DataProto) -> torch.Tensor:
+    def compute_log_prob(self, data: DataProto, train_mode: bool = False) -> torch.Tensor:
         """Compute the log probability of the responses given input_ids, attention_mask and position_ids
 
         Args:
@@ -168,37 +168,39 @@ class DataParallelPPOActor(BasePPOActor):
         Returns:
             torch.Tensor: the log_prob tensor
         """
-        # set to eval
-        self.actor_module.eval()
+        prev_training = self.actor_module.training
+        self.actor_module.train(mode=train_mode)
+        try:
+            micro_batch_size = data.meta_info['micro_batch_size']
+            temperature = data.meta_info['temperature']  # temperature must be in the data.meta_info to avoid slient error
+            use_dynamic_bsz = data.meta_info['use_dynamic_bsz']
 
-        micro_batch_size = data.meta_info['micro_batch_size']
-        temperature = data.meta_info['temperature']  # temperature must be in the data.meta_info to avoid slient error
-        use_dynamic_bsz = data.meta_info['use_dynamic_bsz']
+            select_keys = ['responses', 'input_ids', 'attention_mask', 'position_ids']
+            batch = data.select(batch_keys=select_keys).batch
 
-        select_keys = ['responses', 'input_ids', 'attention_mask', 'position_ids']
-        batch = data.select(batch_keys=select_keys).batch
+            if use_dynamic_bsz:
+                # split using dynamic bsz
+                max_token_len = data.meta_info['max_token_len'] * self.ulysses_sequence_parallel_size
+                micro_batches, indices = rearrange_micro_batches(batch=batch, max_token_len=max_token_len)
+            else:
+                micro_batches = batch.split(micro_batch_size)
 
-        if use_dynamic_bsz:
-            # split using dynamic bsz
-            max_token_len = data.meta_info['max_token_len'] * self.ulysses_sequence_parallel_size
-            micro_batches, indices = rearrange_micro_batches(batch=batch, max_token_len=max_token_len)
-        else:
-            micro_batches = batch.split(micro_batch_size)
+            log_probs_lst = []
+            for micro_batch in micro_batches:
+                with torch.no_grad():
+                    _, log_probs = self._forward_micro_batch(micro_batch, temperature=temperature)
+                log_probs_lst.append(log_probs)
+            log_probs = torch.concat(log_probs_lst, dim=0)
 
-        log_probs_lst = []
-        for micro_batch in micro_batches:
-            with torch.no_grad():
-                _, log_probs = self._forward_micro_batch(micro_batch, temperature=temperature)
-            log_probs_lst.append(log_probs)
-        log_probs = torch.concat(log_probs_lst, dim=0)
+            if use_dynamic_bsz:
+                indices = list(itertools.chain.from_iterable(indices))
+                assert len(indices) == log_probs.size(0), f"{len(indices)} vs. {log_probs.size()}"
+                revert_indices = torch.tensor(get_reverse_idx(indices), dtype=torch.long)
+                log_probs = log_probs[revert_indices]
 
-        if use_dynamic_bsz:
-            indices = list(itertools.chain.from_iterable(indices))
-            assert len(indices) == log_probs.size(0), f"{len(indices)} vs. {log_probs.size()}"
-            revert_indices = torch.tensor(get_reverse_idx(indices), dtype=torch.long)
-            log_probs = log_probs[revert_indices]
-
-        return log_probs
+            return log_probs
+        finally:
+            self.actor_module.train(mode=prev_training)
 
     def update_policy(self, data: DataProto):
         # make sure we are in training mode
