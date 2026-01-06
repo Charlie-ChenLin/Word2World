@@ -448,8 +448,8 @@ def main() -> None:
         raise RuntimeError("matplotlib is required for plotting. Install it or use --dump_jsonl.") from e
 
     out_base_cli = Path(args.out_png)
-    out_base_default = run_dir / out_base_cli.name
-    out_base = out_base_default if (out_base_cli.parent == Path(".")) else out_base_cli
+    # Always place outputs under the timestamped run_dir unless the user provided an absolute path.
+    out_base = out_base_cli if out_base_cli.is_absolute() else (run_dir / out_base_cli.name)
 
     n_samples = int(batch.batch["responses"].shape[0])
     if args.sample_idx is not None and args.sample_idx >= 0 and args.n_rollouts <= 1:
