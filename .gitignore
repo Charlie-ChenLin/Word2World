@@ -27,6 +27,7 @@ build/
 # Debug
 .debug/
 # debug*
+AgentGym-RL/saves/
 
 .outputs/
 .idea/
