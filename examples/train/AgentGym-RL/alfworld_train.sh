@@ -52,8 +52,8 @@ fi
 kl_coef=0.001
 policy_learning_rate=1e-6
 rollout_sample_num=8
-train_batch_size=16
-# train_batch_size=8
+# train_batch_size=16
+train_batch_size=8
 
 ppo_mini_batch_size=8
 ppo_micro_batch_size_per_gpu=1
