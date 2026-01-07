@@ -108,9 +108,8 @@ def _parse_args() -> argparse.Namespace:
         "--out_png",
         default="env_feedback_mask_logprob.png",
         help=(
-            "Output png path base. Four files will be written: "
-            "'<stem>_old_log_probs.png', '<stem>_log_probs_train.png', "
-            "'<stem>_old_log_probs_clip_<thr>.png', '<stem>_log_probs_train_clip_<thr>.png'."
+            "Output png path base. Two files will be written per rollout: "
+            "'<stem>_log_probs_train.png', '<stem>_log_probs_train_clip_<thr>.png'."
         ),
     )
     parser.add_argument("--dump_jsonl", default=None, help="Optional dump jsonl path for token/logprob/masks.")
@@ -395,11 +394,8 @@ def main() -> None:
     batch = batch.repeat(repeat_times=cfg.actor_rollout_ref.rollout.n, interleave=True)
     batch = batch.union(gen_batch_output)
 
-    # recompute old_log_probs (eval mode, as in training)
+    # Recompute log_probs in train mode (same FSDP path; useful to detect train/eval mismatches)
     batch.meta_info["global_token_num"] = torch.sum(batch.batch["attention_mask"], dim=-1).tolist()
-    old_lp = trainer.actor_rollout_wg.compute_log_prob(batch)
-
-    # recompute log_probs in train mode (same FSDP path; useful to detect train/eval mismatches)
     batch.meta_info["log_prob_train_mode"] = True
     lp_train_mode = trainer.actor_rollout_wg.compute_log_prob(batch).rename(
         old_keys="old_log_probs", new_keys="log_probs"
@@ -433,21 +429,20 @@ def main() -> None:
         prompt_len = batch.batch["prompts"].shape[-1]
         valid_len = int(batch.batch["attention_mask"][sample_idx, prompt_len:].sum().item())
         item_id = batch.non_tensor_batch["item_id"][sample_idx]
+        reward = float(batch.batch["scores"][sample_idx, :valid_len].sum().item())
 
         responses = batch.batch["responses"][sample_idx, :valid_len].cpu()
         response_mask = batch.batch["response_mask"][sample_idx, :valid_len].to(torch.bool).cpu()
         env_feedback_mask = batch.batch["env_feedback_mask"][sample_idx, :valid_len].to(torch.bool).cpu()
-        old_log_probs = old_lp.batch["old_log_probs"][sample_idx, :valid_len].cpu()
         log_probs = lp_train_mode.batch["log_probs"][sample_idx, :valid_len].cpu()
 
         if args.plot_max_tokens is not None and args.plot_max_tokens > 0 and valid_len > args.plot_max_tokens:
             responses = responses[: args.plot_max_tokens]
             response_mask = response_mask[: args.plot_max_tokens]
             env_feedback_mask = env_feedback_mask[: args.plot_max_tokens]
-            old_log_probs = old_log_probs[: args.plot_max_tokens]
             log_probs = log_probs[: args.plot_max_tokens]
 
-        assert responses.shape == response_mask.shape == env_feedback_mask.shape == old_log_probs.shape == log_probs.shape
+        assert responses.shape == response_mask.shape == env_feedback_mask.shape == log_probs.shape
         overlap = (response_mask & env_feedback_mask)
         assert not overlap.any(), f"env_feedback_mask overlaps response_mask at {overlap.nonzero().flatten().tolist()}"
 
@@ -464,7 +459,6 @@ def main() -> None:
                     zip(
                         token_ids,
                         token_strs,
-                        old_log_probs.tolist(),
                         log_probs.tolist(),
                         response_mask.tolist(),
                         env_feedback_mask.tolist(),
@@ -476,7 +470,6 @@ def main() -> None:
                                 "i": i,
                                 "token_id": tid,
                                 "token_str": tstr,
-                                "old_log_prob": lp_old,
                                 "log_prob": lp_new,
                                 "response_mask": int(rm),
                                 "env_feedback_mask": int(em),
@@ -487,25 +480,11 @@ def main() -> None:
                     )
 
         out_base_i = _derive_per_rollout_base(out_base, rollout_idx=rollout_i)
-        out_old_path = _derive_png_path(out_base_i, "_old_log_probs")
         out_train_path = _derive_png_path(out_base_i, "_log_probs_train")
 
         title = (
             f"{cfg.actor_rollout_ref.agentgym.task_name} | item_id={item_id} | rollout={rollout_i} | "
-            f"valid_tokens={valid_len} (prompt excluded)"
-        )
-        _plot_wrapped_token_logprobs(
-            plt=plt,
-            token_strs=token_strs,
-            y=old_log_probs.numpy(),
-            raw_y=None,
-            response_mask=response_mask.numpy(),
-            env_feedback_mask=env_feedback_mask.numpy(),
-            tokens_per_row=int(args.tokens_per_row),
-            low_logprob_threshold=float(args.lp_threshold),
-            title=title,
-            ylabel="old_log_probs",
-            out_path=out_old_path,
+            f"reward={reward:g} | valid_tokens={valid_len} (prompt excluded)"
         )
         _plot_wrapped_token_logprobs(
             plt=plt,
@@ -522,21 +501,7 @@ def main() -> None:
         )
 
         thr_tag = f"{float(args.lp_threshold):g}"
-        out_old_floor_path = _derive_png_path(out_base_i, f"_old_log_probs_clip_{thr_tag}")
         out_train_floor_path = _derive_png_path(out_base_i, f"_log_probs_train_clip_{thr_tag}")
-        _plot_wrapped_token_logprobs(
-            plt=plt,
-            token_strs=token_strs,
-            y=np.maximum(old_log_probs.numpy(), float(args.lp_threshold)),
-            raw_y=old_log_probs.numpy(),
-            response_mask=response_mask.numpy(),
-            env_feedback_mask=env_feedback_mask.numpy(),
-            tokens_per_row=int(args.tokens_per_row),
-            low_logprob_threshold=float(args.lp_threshold),
-            title=f"{title} | y_floored@{thr_tag}",
-            ylabel=f"old_log_probs (floored @ {thr_tag})",
-            out_path=out_old_floor_path,
-        )
         _plot_wrapped_token_logprobs(
             plt=plt,
             token_strs=token_strs,
@@ -551,9 +516,7 @@ def main() -> None:
             out_path=out_train_floor_path,
         )
 
-        print(f"[plot_env_feedback_mask_logprob] Saved old_log_probs plot to: {out_old_path}")
         print(f"[plot_env_feedback_mask_logprob] Saved log_probs (train mode) plot to: {out_train_path}")
-        print(f"[plot_env_feedback_mask_logprob] Saved floored old_log_probs plot to: {out_old_floor_path}")
         print(f"[plot_env_feedback_mask_logprob] Saved floored log_probs (train mode) plot to: {out_train_floor_path}")
         if dump_jsonl is not None:
             print(f"[plot_env_feedback_mask_logprob] Saved dump to: {dump_jsonl}")

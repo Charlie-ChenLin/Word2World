@@ -78,8 +78,30 @@ extra_args=()
 if [[ -n "${item_id}" ]]; then
   extra_args+=(--item_id "${item_id}")
 fi
+
+# If a VERL checkpoint is provided, merge FSDP shards to a single HF checkpoint first
+# (so we can load on a different world size, e.g., single GPU) and point the actor
+# model path to the merged weights.
 if [[ -n "${verl_ckpt}" ]]; then
-  extra_args+=(--verl_ckpt "${verl_ckpt}")
+  actor_dir="${verl_ckpt}"
+  if [[ "$(basename "${actor_dir}")" != "actor" ]]; then
+    actor_dir="${actor_dir%/}/actor"
+  fi
+
+  if [[ ! -d "${actor_dir}" ]]; then
+    echo "[alfworld_plot_env_feedback_mask_logprob.sh] VERL_CKPT not found: ${actor_dir}" 1>&2
+    exit 1
+  fi
+
+  hf_dir="${actor_dir%/}/huggingface"
+  if [[ ! -f "${hf_dir}/pytorch_model.bin" && ! -f "${hf_dir}/model.safetensors" ]]; then
+    echo "[alfworld_plot_env_feedback_mask_logprob.sh] Merging FSDP shards under ${actor_dir} -> ${hf_dir}" 1>&2
+    python3 AgentGym-RL/scripts/model_merger.py --local_dir "${actor_dir}"
+  else
+    echo "[alfworld_plot_env_feedback_mask_logprob.sh] Found merged HF weights at ${hf_dir}; skip merge." 1>&2
+  fi
+
+  agent_model_path="${hf_dir}"
 fi
 
 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \

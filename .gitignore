@@ -28,7 +28,7 @@ build/
 .debug/
 # debug*
 AgentGym-RL/saves/
-debug/
+./debug/
 
 .outputs/
 .idea/
@@ -45,3 +45,5 @@ outputs_old
 
 data/
 .cache/
+
+codex-config-backup.toml
