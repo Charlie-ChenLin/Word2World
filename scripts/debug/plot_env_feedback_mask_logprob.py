@@ -289,7 +289,9 @@ def _plot_wrapped_token_logprobs(
         y_base_band = y_min + 0.05 * y_span
         annotate_gap = 0.10 * y_span
 
-        def _annotate_segments(stats, overall_mean, color, label_prefix, offset_mult, nn_mean=None):
+        band_idx = [0]  # shared stack counter per subplot row (env + resp)
+
+        def _annotate_segments(stats, overall_mean, color, label_prefix, nn_mean=None):
             if not stats or overall_mean in (None, 0):
                 return
             for seg in stats:
@@ -303,9 +305,11 @@ def _plot_wrapped_token_logprobs(
                     continue
                 ratio = seg["mean"] / overall_mean if overall_mean else float("nan")
                 ratio_nn = seg["mean"] / nn_mean if nn_mean not in (None, 0) else None
+                y_pos = y_base_band + annotate_gap * band_idx[0]
+                band_idx[0] += 1
                 ax.text(
                     mid,
-                    y_base_band + annotate_gap * offset_mult,
+                    y_pos,
                     f"{label_prefix} mu={seg['mean']:.3f} r={ratio:.2f}x",
                     color=color,
                     fontsize=7,
@@ -314,9 +318,11 @@ def _plot_wrapped_token_logprobs(
                     bbox=dict(facecolor="1.0", alpha=0.7, edgecolor="none"),
                 )
                 if ratio_nn is not None:
+                    y_pos_nn = y_base_band + annotate_gap * band_idx[0]
+                    band_idx[0] += 1
                     ax.text(
                         mid,
-                        y_base_band + annotate_gap * (offset_mult + 1.0),
+                        y_pos_nn,
                         f"{label_prefix} rNN={ratio_nn:.2f}x",
                         color=color,
                         fontsize=7,
@@ -325,9 +331,8 @@ def _plot_wrapped_token_logprobs(
                         bbox=dict(facecolor="1.0", alpha=0.7, edgecolor="none"),
                     )
 
-        resp_offset = 2.0 if env_overall_mean_no_nothing not in (None, 0) else 1.0
-        _annotate_segments(env_segment_stats, env_overall_mean, "darkred", "env", 0.0, nn_mean=env_overall_mean_no_nothing)
-        _annotate_segments(resp_segment_stats, resp_overall_mean, "navy", "resp", resp_offset)
+        _annotate_segments(env_segment_stats, env_overall_mean, "darkred", "env", nn_mean=env_overall_mean_no_nothing)
+        _annotate_segments(resp_segment_stats, resp_overall_mean, "navy", "resp", nn_mean=None)
 
         if row_idx == 0:
             # Ensure the legend shows all mask categories even if the first row contains none of them.
