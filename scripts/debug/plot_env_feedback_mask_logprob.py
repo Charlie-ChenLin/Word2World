@@ -597,22 +597,22 @@ def main() -> None:
             f"reward={reward:g} | valid_tokens={valid_len} (prompt excluded)"
         )
         if env_overall_mean is not None:
-            title += f" | env_turn_avg={env_overall_mean:.3f}"
+            title += f" | env_mu={env_overall_mean:.3f}"
         if env_overall_mean_no_nothing is not None:
-            title += f" | env_turn_avg_noNothing={env_overall_mean_no_nothing:.3f}"
+            title += f" | env_muNN={env_overall_mean_no_nothing:.3f}"
         if resp_overall_mean is not None:
-            title += f" | resp_turn_avg={resp_overall_mean:.3f}"
+            title += f" | resp_mu={resp_overall_mean:.3f}"
         footnote_parts = [
             "mu=seg mean logp (mask==1)",
-            "r=seg mu / overall mu (same mask)",
-            "rNN=seg mu / env mu without 'Nothing happens.' turns",
-            "env_mu_noNH excludes 'Nothing happens.' env turns",
+            "r=seg mu / mu_all (same mask)",
+            "rNN=seg mu / env_muNN",
+            "NN=exclude 'Nothing happens.' env turns",
         ]
         avg_summary = []
         if env_overall_mean is not None:
             avg_summary.append(f"env_mu={env_overall_mean:.3f}")
         if env_overall_mean_no_nothing is not None:
-            avg_summary.append(f"env_mu_noNH={env_overall_mean_no_nothing:.3f}")
+            avg_summary.append(f"env_muNN={env_overall_mean_no_nothing:.3f}")
         if resp_overall_mean is not None:
             avg_summary.append(f"resp_mu={resp_overall_mean:.3f}")
         if avg_summary:
