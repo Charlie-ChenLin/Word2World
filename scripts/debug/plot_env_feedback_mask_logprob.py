@@ -455,7 +455,7 @@ def main() -> None:
             dump_root.mkdir(parents=True, exist_ok=True)
             dump_jsonl = dump_root / f"{out_base.stem}_rollout{rollout_i}_{_sanitize_for_filename(item_id)}.jsonl"
             with dump_jsonl.open("w", encoding="utf-8") as f:
-                for i, (tid, tstr, lp_old, lp_new, rm, em) in enumerate(
+                for i, (tid, tstr, lp_new, rm, em) in enumerate(
                     zip(
                         token_ids,
                         token_strs,
