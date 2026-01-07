@@ -63,8 +63,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--n_rollouts",
         type=int,
-        default=1,
-        help="How many rollouts to sample for the same prompt (sets actor_rollout_ref.rollout.n).",
+        default=None,
+        help="How many rollouts to sample for the same prompt (sets actor_rollout_ref.rollout.n). If omitted, keep config value.",
     )
     parser.add_argument(
         "--max_new_tokens_per_turn",
@@ -281,7 +281,7 @@ def main() -> None:
     cfg.actor_rollout_ref.rollout.rollout_log_dir = str(run_dir / "executer_logs")
 
     # Number of rollouts for the same prompt.
-    if int(args.n_rollouts) > 0:
+    if args.n_rollouts is not None:
         cfg.actor_rollout_ref.rollout.n = int(args.n_rollouts)
 
     if args.max_new_tokens_per_turn is not None:
@@ -482,7 +482,7 @@ def main() -> None:
     out_base = figures_dir / out_base_cli.name
 
     n_samples = int(batch.batch["responses"].shape[0])
-    if args.sample_idx is not None and args.sample_idx >= 0 and args.n_rollouts <= 1:
+    if args.sample_idx is not None and args.sample_idx >= 0:
         sample_indices = [int(args.sample_idx)]
     else:
         sample_indices = list(range(n_samples))
