@@ -284,11 +284,11 @@ def _plot_wrapped_token_logprobs(
         y_min = float(row_y.min())
         y_max = float(row_y.max())
         y_span = y_max - y_min if y_max > y_min else 1.0
-        # place annotations inside the plotting area, under the top margin to avoid title overlap
-        y_top_band = y_max - 0.05 * y_span
+        # place annotations near the x-axis and stack upward to reduce overlap
+        y_base_band = y_min + 0.05 * y_span
         annotate_gap = 0.10 * y_span
 
-        def _annotate_segments(stats, overall_mean, color, label_prefix, offset_mult):
+        def _annotate_segments(stats, overall_mean, color, label_prefix, offset_mult, nn_mean=None):
             if not stats or overall_mean in (None, 0):
                 return
             for seg in stats:
@@ -301,9 +301,10 @@ def _plot_wrapped_token_logprobs(
                 if mid < 0 or mid >= len(row_y):
                     continue
                 ratio = seg["mean"] / overall_mean if overall_mean else float("nan")
+                ratio_nn = seg["mean"] / nn_mean if nn_mean not in (None, 0) else None
                 ax.text(
                     mid,
-                    y_top_band - annotate_gap * offset_mult,
+                    y_base_band + annotate_gap * offset_mult,
                     f"{label_prefix} mu={seg['mean']:.3f} r={ratio:.2f}x",
                     color=color,
                     fontsize=7,
@@ -311,9 +312,21 @@ def _plot_wrapped_token_logprobs(
                     va="bottom",
                     bbox=dict(facecolor="1.0", alpha=0.7, edgecolor="none"),
                 )
+                if ratio_nn is not None:
+                    ax.text(
+                        mid,
+                        y_base_band + annotate_gap * (offset_mult + 1.0),
+                        f"{label_prefix} rNN={ratio_nn:.2f}x",
+                        color=color,
+                        fontsize=7,
+                        ha="center",
+                        va="bottom",
+                        bbox=dict(facecolor="1.0", alpha=0.7, edgecolor="none"),
+                    )
 
-        _annotate_segments(env_segment_stats, env_overall_mean, "darkred", "env", 1.0)
-        _annotate_segments(resp_segment_stats, resp_overall_mean, "navy", "resp", 2.0)
+        resp_offset = 2.0 if env_overall_mean_no_nothing not in (None, 0) else 1.0
+        _annotate_segments(env_segment_stats, env_overall_mean, "darkred", "env", 0.0, nn_mean=env_overall_mean_no_nothing)
+        _annotate_segments(resp_segment_stats, resp_overall_mean, "navy", "resp", resp_offset)
 
         if row_idx == 0:
             # Ensure the legend shows all mask categories even if the first row contains none of them.
@@ -576,6 +589,7 @@ def main() -> None:
         footnote_parts = [
             "mu=seg mean logp (mask==1)",
             "r=seg mu / overall mu (same mask)",
+            "rNN=seg mu / env mu without 'Nothing happens.' turns",
             "env_mu_noNH excludes 'Nothing happens.' env turns",
         ]
         avg_summary = []
