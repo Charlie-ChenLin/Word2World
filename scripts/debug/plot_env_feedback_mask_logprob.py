@@ -282,16 +282,16 @@ def _plot_wrapped_token_logprobs(
                 label.set_color("0.5")
 
         # Annotate per-turn averages for env and response masks.
-        y_min = float(row_y.min())
-        y_max = float(row_y.max())
-        y_span = y_max - y_min if y_max > y_min else 1.0
-        # place annotations near the x-axis and stack upward to reduce overlap
-        y_base_band = y_min + 0.05 * y_span
-        annotate_gap = 0.10 * y_span
+        #
+        # Put annotations inside the axes (y in axes-fraction coords), and exclude them from layout
+        # so they don't blow up the spacing between subplots when tight_layout runs.
+        base_y = 0.02
+        y_gap = 0.08
+        y_env = base_y
+        y_env_nn = base_y + y_gap if env_overall_mean_no_nothing not in (None, 0) else None
+        y_resp = base_y + (2 * y_gap if y_env_nn is not None else y_gap)
 
-        band_idx = [0]  # shared stack counter per subplot row (env + resp)
-
-        def _annotate_segments(stats, overall_mean, color, label_prefix, nn_mean=None):
+        def _annotate_segments(stats, overall_mean, color, label_prefix, y_axes, *, nn_mean=None, y_axes_nn=None):
             if not stats or overall_mean in (None, 0):
                 return
             for seg in stats:
@@ -305,34 +305,44 @@ def _plot_wrapped_token_logprobs(
                     continue
                 ratio = seg["mean"] / overall_mean if overall_mean else float("nan")
                 ratio_nn = seg["mean"] / nn_mean if nn_mean not in (None, 0) else None
-                y_pos = y_base_band + annotate_gap * band_idx[0]
-                band_idx[0] += 1
-                ax.text(
+                t = ax.text(
                     mid,
-                    y_pos,
+                    y_axes,
                     f"{label_prefix} mu={seg['mean']:.3f} r={ratio:.2f}x",
                     color=color,
                     fontsize=7,
                     ha="center",
                     va="bottom",
+                    transform=ax.get_xaxis_transform(),
+                    clip_on=True,
                     bbox=dict(facecolor="1.0", alpha=0.7, edgecolor="none"),
                 )
-                if ratio_nn is not None:
-                    y_pos_nn = y_base_band + annotate_gap * band_idx[0]
-                    band_idx[0] += 1
-                    ax.text(
+                t.set_in_layout(False)
+                if ratio_nn is not None and y_axes_nn is not None:
+                    t2 = ax.text(
                         mid,
-                        y_pos_nn,
+                        y_axes_nn,
                         f"{label_prefix} rNN={ratio_nn:.2f}x",
                         color=color,
                         fontsize=7,
                         ha="center",
                         va="bottom",
+                        transform=ax.get_xaxis_transform(),
+                        clip_on=True,
                         bbox=dict(facecolor="1.0", alpha=0.7, edgecolor="none"),
                     )
+                    t2.set_in_layout(False)
 
-        _annotate_segments(env_segment_stats, env_overall_mean, "darkred", "env", nn_mean=env_overall_mean_no_nothing)
-        _annotate_segments(resp_segment_stats, resp_overall_mean, "navy", "resp", nn_mean=None)
+        _annotate_segments(
+            env_segment_stats,
+            env_overall_mean,
+            "darkred",
+            "env",
+            y_env,
+            nn_mean=env_overall_mean_no_nothing,
+            y_axes_nn=y_env_nn,
+        )
+        _annotate_segments(resp_segment_stats, resp_overall_mean, "navy", "resp", y_resp)
 
         if row_idx == 0:
             # Ensure the legend shows all mask categories even if the first row contains none of them.
