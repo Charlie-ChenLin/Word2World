@@ -304,7 +304,7 @@ def _plot_wrapped_token_logprobs(
                 ax.text(
                     mid,
                     y_top_band - annotate_gap * offset_mult,
-                    f"{label_prefix} avg_logp={seg['mean']:.3f} | rel_to_all={ratio:.2f}x",
+                    f"{label_prefix} mu={seg['mean']:.3f} r={ratio:.2f}x",
                     color=color,
                     fontsize=7,
                     ha="center",
@@ -574,17 +574,17 @@ def main() -> None:
         if resp_overall_mean is not None:
             title += f" | resp_turn_avg={resp_overall_mean:.3f}"
         footnote_parts = [
-            "avg_logp = mean over contiguous mask==1 tokens",
-            "rel_to_all = segment avg_logp / overall avg_logp for same mask",
-            "env_turn_avg_noNothing excludes env segments decoding to 'Nothing happens.'",
+            "mu=seg mean logp (mask==1)",
+            "r=seg mu / overall mu (same mask)",
+            "env_mu_noNH excludes 'Nothing happens.' env turns",
         ]
         avg_summary = []
         if env_overall_mean is not None:
-            avg_summary.append(f"env_turn_avg={env_overall_mean:.3f}")
+            avg_summary.append(f"env_mu={env_overall_mean:.3f}")
         if env_overall_mean_no_nothing is not None:
-            avg_summary.append(f"env_turn_avg_noNothing={env_overall_mean_no_nothing:.3f}")
+            avg_summary.append(f"env_mu_noNH={env_overall_mean_no_nothing:.3f}")
         if resp_overall_mean is not None:
-            avg_summary.append(f"resp_turn_avg={resp_overall_mean:.3f}")
+            avg_summary.append(f"resp_mu={resp_overall_mean:.3f}")
         if avg_summary:
             footnote_parts.append(" | ".join(avg_summary))
         footnote = "; ".join(footnote_parts)
