@@ -583,11 +583,21 @@ def main() -> None:
             title += f" | env_turn_avg_noNothing={env_overall_mean_no_nothing:.3f}"
         if resp_overall_mean is not None:
             title += f" | resp_turn_avg={resp_overall_mean:.3f}"
-        footnote = (
-            "avg_logp = mean over contiguous mask==1 tokens; "
-            "rel_to_all = segment avg_logp / overall avg_logp for same mask. "
-            "env_turn_avg_noNothing excludes env segments decoding to 'Nothing happens.'."
-        )
+        footnote_parts = [
+            "avg_logp = mean over contiguous mask==1 tokens",
+            "rel_to_all = segment avg_logp / overall avg_logp for same mask",
+            "env_turn_avg_noNothing excludes env segments decoding to 'Nothing happens.'",
+        ]
+        avg_summary = []
+        if env_overall_mean is not None:
+            avg_summary.append(f"env_turn_avg={env_overall_mean:.3f}")
+        if env_overall_mean_no_nothing is not None:
+            avg_summary.append(f"env_turn_avg_noNothing={env_overall_mean_no_nothing:.3f}")
+        if resp_overall_mean is not None:
+            avg_summary.append(f"resp_turn_avg={resp_overall_mean:.3f}")
+        if avg_summary:
+            footnote_parts.append(" | ".join(avg_summary))
+        footnote = "; ".join(footnote_parts)
         _plot_wrapped_token_logprobs(
             plt=plt,
             token_strs=token_strs,
