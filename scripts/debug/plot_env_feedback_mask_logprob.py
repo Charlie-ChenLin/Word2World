@@ -145,7 +145,9 @@ def _sanitize_for_filename(s: str) -> str:
     return "".join(c if (c.isalnum() or c in ("-", "_", ".")) else "_" for c in str(s))
 
 
-def _compute_mask_segment_stats(mask: np.ndarray, log_probs: np.ndarray) -> list[dict[str, Any]]:
+def _compute_mask_segment_stats(
+    mask: np.ndarray, log_probs: np.ndarray, token_strs: list[str] | None = None
+) -> list[dict[str, Any]]:
     """Return list of contiguous segments where mask==1 with start/end and mean log_prob."""
     stats: list[dict[str, Any]] = []
     start = None
@@ -161,6 +163,12 @@ def _compute_mask_segment_stats(mask: np.ndarray, log_probs: np.ndarray) -> list
         end = len(mask) - 1
         seg_lp = float(log_probs[start : end + 1].mean().item())
         stats.append({"start": start, "end": end, "mean": seg_lp, "len": end - start + 1})
+
+    if token_strs is not None:
+        for seg in stats:
+            seg_tokens = "".join(token_strs[seg["start"] : seg["end"] + 1]).strip().lower()
+            seg["is_nothing_happens"] = "nothing happens" in seg_tokens
+    return stats
     return stats
 
 
@@ -195,6 +203,7 @@ def _plot_wrapped_token_logprobs(
     env_overall_mean: float | None = None,
     resp_segment_stats: list[dict[str, Any]] | None = None,
     resp_overall_mean: float | None = None,
+    footnote_text: str | None = None,
 ) -> None:
     if raw_y is None:
         raw_y = y
@@ -272,9 +281,12 @@ def _plot_wrapped_token_logprobs(
                 label.set_color("0.5")
 
         # Annotate per-turn averages for env and response masks.
-        y_span = float(row_y.max() - row_y.min())
-        y_base = float(row_y.max())
-        annotate_offset = 0.12 * (y_span if y_span > 0 else 1.0)
+        y_min = float(row_y.min())
+        y_max = float(row_y.max())
+        y_span = y_max - y_min if y_max > y_min else 1.0
+        # place annotations inside the plotting area, under the top margin to avoid title overlap
+        y_top_band = y_max - 0.05 * y_span
+        annotate_gap = 0.10 * y_span
 
         def _annotate_segments(stats, overall_mean, color, label_prefix, offset_mult):
             if not stats or overall_mean in (None, 0):
@@ -291,8 +303,8 @@ def _plot_wrapped_token_logprobs(
                 ratio = seg["mean"] / overall_mean if overall_mean else float("nan")
                 ax.text(
                     mid,
-                    y_base + annotate_offset * offset_mult,
-                    f"{label_prefix} μ={seg['mean']:.3f} | rel={ratio:.2f}x",
+                    y_top_band - annotate_gap * offset_mult,
+                    f"{label_prefix} avg_logp={seg['mean']:.3f} | rel_to_all={ratio:.2f}x",
                     color=color,
                     fontsize=7,
                     ha="center",
@@ -317,10 +329,22 @@ def _plot_wrapped_token_logprobs(
         ax.set_title(f"tokens {start}..{end - 1} ({end - start} tokens)")
 
     fig.suptitle(title, y=1.0)
+    if footnote_text:
+        fig.text(0.995, 0.01, footnote_text, ha="right", va="bottom", fontsize=7, color="0.25")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig.tight_layout()
     fig.savefig(out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
+
+    # Rotate the saved figure 90 degrees clockwise to ease token reading.
+    try:
+        from PIL import Image
+
+        img = Image.open(out_path)
+        img = img.rotate(-90, expand=True)
+        img.save(out_path)
+    except Exception as e:
+        print(f"[plot_env_feedback_mask_logprob] WARN: rotate failed for {out_path}: {e}")
 
 
 def main() -> None:
@@ -504,9 +528,16 @@ def main() -> None:
         token_ids = responses.tolist()
         token_strs = [_decode_token(tokenizer, tid) for tid in token_ids]
 
-        env_segment_stats = _compute_mask_segment_stats(env_feedback_mask.numpy(), log_probs.numpy())
+        env_segment_stats = _compute_mask_segment_stats(
+            env_feedback_mask.numpy(), log_probs.numpy(), token_strs=token_strs
+        )
         env_overall_mean = float(np.mean([s["mean"] for s in env_segment_stats])) if env_segment_stats else None
-        resp_segment_stats = _compute_mask_segment_stats(response_mask.numpy(), log_probs.numpy())
+        env_overall_mean_no_nothing = (
+            float(np.mean([s["mean"] for s in env_segment_stats if not s.get("is_nothing_happens", False)]))
+            if env_segment_stats
+            else None
+        )
+        resp_segment_stats = _compute_mask_segment_stats(response_mask.numpy(), log_probs.numpy(), token_strs=token_strs)
         resp_overall_mean = float(np.mean([s["mean"] for s in resp_segment_stats])) if resp_segment_stats else None
 
         dump_jsonl = None
@@ -548,8 +579,15 @@ def main() -> None:
         )
         if env_overall_mean is not None:
             title += f" | env_turn_avg={env_overall_mean:.3f}"
+        if env_overall_mean_no_nothing is not None:
+            title += f" | env_turn_avg_noNothing={env_overall_mean_no_nothing:.3f}"
         if resp_overall_mean is not None:
             title += f" | resp_turn_avg={resp_overall_mean:.3f}"
+        footnote = (
+            "avg_logp = mean over contiguous mask==1 tokens; "
+            "rel_to_all = segment avg_logp / overall avg_logp for same mask. "
+            "env_turn_avg_noNothing excludes env segments decoding to 'Nothing happens.'."
+        )
         _plot_wrapped_token_logprobs(
             plt=plt,
             token_strs=token_strs,
@@ -566,6 +604,7 @@ def main() -> None:
             env_overall_mean=env_overall_mean,
             resp_segment_stats=resp_segment_stats,
             resp_overall_mean=resp_overall_mean,
+            footnote_text=footnote,
         )
 
         thr_tag = f"{float(args.lp_threshold):g}"
@@ -586,6 +625,7 @@ def main() -> None:
             env_overall_mean=env_overall_mean,
             resp_segment_stats=resp_segment_stats,
             resp_overall_mean=resp_overall_mean,
+            footnote_text=footnote,
         )
 
         print(f"[plot_env_feedback_mask_logprob] Saved log_probs (train mode) plot to: {out_train_path}")
