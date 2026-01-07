@@ -336,16 +336,6 @@ def _plot_wrapped_token_logprobs(
     fig.savefig(out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
 
-    # Rotate the saved figure 90 degrees clockwise to ease token reading.
-    try:
-        from PIL import Image
-
-        img = Image.open(out_path)
-        img = img.rotate(-90, expand=True)
-        img.save(out_path)
-    except Exception as e:
-        print(f"[plot_env_feedback_mask_logprob] WARN: rotate failed for {out_path}: {e}")
-
 
 def main() -> None:
     args = _parse_args()
