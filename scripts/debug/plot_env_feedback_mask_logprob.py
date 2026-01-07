@@ -406,68 +406,6 @@ def main() -> None:
     )
     batch.meta_info.pop("log_prob_train_mode", None)
 
-    # Extract valid response window.
-    sample_idx = int(args.sample_idx)
-    if sample_idx < 0 or sample_idx >= len(batch):
-        raise ValueError(f"--sample_idx out of range: {sample_idx} (batch_size={len(batch)})")
-
-    prompt_len = batch.batch["prompts"].shape[-1]
-    valid_len = int(batch.batch["attention_mask"][sample_idx, prompt_len:].sum().item())
-
-    item_id = batch.non_tensor_batch["item_id"][sample_idx]
-    responses = batch.batch["responses"][sample_idx, :valid_len].cpu()
-    response_mask = batch.batch["response_mask"][sample_idx, :valid_len].to(torch.bool).cpu()
-    if "env_feedback_mask" not in batch.batch.keys():
-        raise KeyError("Missing `env_feedback_mask` in rollout output. Did you finish wiring it into vLLM rollout?")
-    env_feedback_mask = batch.batch["env_feedback_mask"][sample_idx, :valid_len].to(torch.bool).cpu()
-
-    old_log_probs = old_lp.batch["old_log_probs"][sample_idx, :valid_len].cpu()
-    log_probs = lp_train_mode.batch["log_probs"][sample_idx, :valid_len].cpu()
-
-    if args.plot_max_tokens is not None and args.plot_max_tokens > 0 and valid_len > args.plot_max_tokens:
-        responses = responses[: args.plot_max_tokens]
-        response_mask = response_mask[: args.plot_max_tokens]
-        env_feedback_mask = env_feedback_mask[: args.plot_max_tokens]
-        old_log_probs = old_log_probs[: args.plot_max_tokens]
-        log_probs = log_probs[: args.plot_max_tokens]
-
-    assert responses.shape == response_mask.shape == env_feedback_mask.shape == old_log_probs.shape == log_probs.shape
-    overlap = (response_mask & env_feedback_mask)
-    assert not overlap.any(), f"env_feedback_mask overlaps response_mask at {overlap.nonzero().flatten().tolist()}"
-
-    token_ids = responses.tolist()
-    token_strs = [_decode_token(tokenizer, tid) for tid in token_ids]
-
-    if args.dump_jsonl:
-        dump_path = Path(args.dump_jsonl)
-        dump_path.parent.mkdir(parents=True, exist_ok=True)
-        with dump_path.open("w", encoding="utf-8") as f:
-            for i, (tid, tstr, lp_old, lp_new, rm, em) in enumerate(
-                zip(
-                    token_ids,
-                    token_strs,
-                    old_log_probs.tolist(),
-                    log_probs.tolist(),
-                    response_mask.tolist(),
-                    env_feedback_mask.tolist(),
-                )
-            ):
-                f.write(
-                    json.dumps(
-                        {
-                            "i": i,
-                            "token_id": tid,
-                            "token_str": tstr,
-                            "old_log_prob": lp_old,
-                            "log_prob": lp_new,
-                            "response_mask": int(rm),
-                            "env_feedback_mask": int(em),
-                        },
-                        ensure_ascii=False,
-                    )
-                    + "\n"
-                )
-
     try:
         import matplotlib.pyplot as plt
     except Exception as e:
