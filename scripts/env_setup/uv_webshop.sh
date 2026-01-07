@@ -1,20 +1,25 @@
 # !/bin/bash
 set -ex
 
-
-curl -LsSf https://astral.sh/uv/install.sh | sh
-export PATH="$HOME/.local/bin:$PATH"
-uv venv uv_webshop --python 3.10
-source uv_webshop/bin/activate
-uv pip install --upgrade pip
+# curl -LsSf https://astral.sh/uv/install.sh | sh
+# export PATH="$HOME/.local/bin:$PATH"
+export UV_INDEX_URL=http://mirrors.i.h.pjlab.org.cn/repository/pypi-proxy/simple/
+# Put the venv on shared storage (similar to uv_alfworld.sh)
+export VENV_DIR=/mnt/shared-storage-user/formalverification-shared/chenlin1/uv_webshop
+mkdir -p "$(dirname "$VENV_DIR")"
+uv venv "$VENV_DIR" --python 3.10
 export UV_LINK_MODE=copy
+# shellcheck disable=SC1091
+source "$VENV_DIR/bin/activate"
+uv pip install --upgrade pip
 
 cd AgentGym/agentenv-webshop/webshop
 # ./setup.sh -d all
 
 # Install Python Dependencies
 uv pip install packaging wheel setuptools
-uv pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+# uv pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+uv pip install torch==2.6.0
 uv pip install flash-attn==2.7.4.post1 --no-build-isolation
 uv pip install vllm==0.8.2
 uv pip install -r requirements.txt --no-deps
@@ -43,7 +48,8 @@ sudo apt install openjdk-11-jdk -y
 # cd ..
 
 uv pip install packaging wheel
-uv pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+# uv pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+uv pip install torch==2.6.0 
 uv pip install flash-attn==2.7.4.post1 --no-build-isolation
 uv pip install vllm==0.8.2
 # spacy 3.7.2 requires typer<0.10.0,>=0.3.0, but you have typer 0.15.2 which is incompatible.
