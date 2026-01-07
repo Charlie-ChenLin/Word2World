@@ -145,6 +145,25 @@ def _sanitize_for_filename(s: str) -> str:
     return "".join(c if (c.isalnum() or c in ("-", "_", ".")) else "_" for c in str(s))
 
 
+def _compute_env_segment_stats(env_mask: np.ndarray, log_probs: np.ndarray) -> list[dict[str, Any]]:
+    """Return list of env-feedback segments with start/end (token indices) and mean log_prob."""
+    stats: list[dict[str, Any]] = []
+    start = None
+    for idx, flag in enumerate(env_mask.tolist()):
+        if flag and start is None:
+            start = idx
+        if not flag and start is not None:
+            end = idx - 1
+            seg_lp = float(log_probs[start : end + 1].mean().item())
+            stats.append({"start": start, "end": end, "mean": seg_lp, "len": end - start + 1})
+            start = None
+    if start is not None:
+        end = len(env_mask) - 1
+        seg_lp = float(log_probs[start : end + 1].mean().item())
+        stats.append({"start": start, "end": end, "mean": seg_lp, "len": end - start + 1})
+    return stats
+
+
 def _resolve_verl_ckpt_actor_path(path: str) -> str:
     p = Path(path).expanduser()
     if not p.exists():
@@ -172,6 +191,8 @@ def _plot_wrapped_token_logprobs(
     title: str,
     ylabel: str,
     out_path: Path,
+    env_segment_stats: list[dict[str, Any]] | None = None,
+    env_overall_mean: float | None = None,
 ) -> None:
     if raw_y is None:
         raw_y = y
@@ -247,6 +268,31 @@ def _plot_wrapped_token_logprobs(
                 label.set_color("red")
             else:
                 label.set_color("0.5")
+
+        # Annotate per-turn env feedback averages inside the corresponding segment.
+        if env_segment_stats and env_overall_mean not in (None, 0):
+            for seg in env_segment_stats:
+                if seg["end"] < start or seg["start"] >= end:
+                    continue
+                local_start = max(seg["start"], start)
+                local_end = min(seg["end"], end - 1)
+                mid_abs = (local_start + local_end) // 2
+                mid = mid_abs - start
+                if mid < 0 or mid >= len(row_y):
+                    continue
+                ratio = seg["mean"] / env_overall_mean if env_overall_mean else float("nan")
+                y_span = float(row_y.max() - row_y.min())
+                y_pos = float(row_y.max() + 0.1 * (y_span if y_span > 0 else 1.0))
+                ax.text(
+                    mid,
+                    y_pos,
+                    f"{seg['mean']:.3f}\n{ratio:.2f}x",
+                    color="darkred",
+                    fontsize=7,
+                    ha="center",
+                    va="bottom",
+                    bbox=dict(facecolor="1.0", alpha=0.65, edgecolor="none"),
+                )
 
         if row_idx == 0:
             # Ensure the legend shows all mask categories even if the first row contains none of them.
@@ -449,6 +495,9 @@ def main() -> None:
         token_ids = responses.tolist()
         token_strs = [_decode_token(tokenizer, tid) for tid in token_ids]
 
+        env_segment_stats = _compute_env_segment_stats(env_feedback_mask.numpy(), log_probs.numpy())
+        env_overall_mean = float(np.mean([s["mean"] for s in env_segment_stats])) if env_segment_stats else None
+
         dump_jsonl = None
         if args.dump_jsonl:
             dump_root = run_dir / "dumps"
@@ -486,6 +535,8 @@ def main() -> None:
             f"{cfg.actor_rollout_ref.agentgym.task_name} | item_id={item_id} | rollout={rollout_i} | "
             f"reward={reward:g} | valid_tokens={valid_len} (prompt excluded)"
         )
+        if env_overall_mean is not None:
+            title += f" | env_turn_avg={env_overall_mean:.3f}"
         _plot_wrapped_token_logprobs(
             plt=plt,
             token_strs=token_strs,
@@ -498,6 +549,8 @@ def main() -> None:
             title=title,
             ylabel="log_probs (train mode)",
             out_path=out_train_path,
+            env_segment_stats=env_segment_stats,
+            env_overall_mean=env_overall_mean,
         )
 
         thr_tag = f"{float(args.lp_threshold):g}"
@@ -514,6 +567,8 @@ def main() -> None:
             title=f"{title} | y_floored@{thr_tag}",
             ylabel=f"log_probs (train mode, floored @ {thr_tag})",
             out_path=out_train_floor_path,
+            env_segment_stats=env_segment_stats,
+            env_overall_mean=env_overall_mean,
         )
 
         print(f"[plot_env_feedback_mask_logprob] Saved log_probs (train mode) plot to: {out_train_path}")

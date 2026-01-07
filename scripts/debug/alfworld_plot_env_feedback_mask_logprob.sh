@@ -66,13 +66,7 @@ sample_idx="${SAMPLE_IDX:-0}"
 item_id="${ITEM_ID:-}"
 verl_ckpt="${VERL_CKPT:-}"
 
-out_dir="${OUT_DIR:-${REPO_ROOT}/debug}"
-mkdir -p "${out_dir}"
-
-out_png="${OUT_PNG:-${out_dir}/env_feedback_mask_logprob.png}"
-dump_jsonl="${DUMP_JSONL:-${out_dir}/env_feedback_mask_logprob.jsonl}"
-rollout_log_dir="${ROLLOUT_LOG_DIR:-${out_dir}/executer_logs}"
-mkdir -p "${rollout_log_dir}"
+run_tag="$(date +%Y%m%d_%H%M%S)"
 
 extra_args=()
 if [[ -n "${item_id}" ]]; then
@@ -104,6 +98,30 @@ if [[ -n "${verl_ckpt}" ]]; then
   agent_model_path="${hf_dir}"
 fi
 
+# Build a model-tag-aware run directory to disambiguate different checkpoints.
+model_tag=$(
+  python3 - "${agent_model_path}" "${REPO_ROOT}" <<'PY'
+from pathlib import Path
+import re, sys
+model = Path(sys.argv[1]).resolve()
+root = Path(sys.argv[2]).resolve()
+try:
+    s = str(model.relative_to(root))
+except Exception:
+    s = str(model)
+print(re.sub(r'[^A-Za-z0-9._-]+', '_', s))
+PY
+)
+
+out_dir="${OUT_DIR:-${REPO_ROOT}/debug/${model_tag}}"
+run_dir="${RUN_DIR:-${out_dir}/${run_tag}}"
+mkdir -p "${run_dir}"
+
+out_png="${OUT_PNG:-${run_dir}/env_feedback_mask_logprob.png}"
+dump_jsonl="${DUMP_JSONL:-${run_dir}/env_feedback_mask_logprob.jsonl}"
+rollout_log_dir="${ROLLOUT_LOG_DIR:-${run_dir}/executer_logs}"
+mkdir -p "${rollout_log_dir}"
+
 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
 python3 scripts/debug/plot_env_feedback_mask_logprob.py \
   --override algorithm.adv_estimator=grpo \
@@ -126,6 +144,7 @@ python3 scripts/debug/plot_env_feedback_mask_logprob.py \
   --sample_idx "${sample_idx}" \
   --plot_max_tokens "${plot_max_tokens}" \
   --tokens_per_row "${tokens_per_row}" \
+  --run_dir "${run_dir}" \
   --out_png "${out_png}" \
   --dump_jsonl "${dump_jsonl}" \
   "${extra_args[@]}"
