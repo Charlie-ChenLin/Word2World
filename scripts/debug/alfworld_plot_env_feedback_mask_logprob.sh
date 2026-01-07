@@ -64,6 +64,7 @@ plot_max_tokens="${PLOT_MAX_TOKENS:-0}"
 tokens_per_row="${TOKENS_PER_ROW:-800}"
 sample_idx="${SAMPLE_IDX:-0}"
 item_id="${ITEM_ID:-}"
+verl_ckpt="${VERL_CKPT:-}"
 
 out_dir="${OUT_DIR:-${REPO_ROOT}/debug}"
 mkdir -p "${out_dir}"
@@ -76,6 +77,9 @@ mkdir -p "${rollout_log_dir}"
 extra_args=()
 if [[ -n "${item_id}" ]]; then
   extra_args+=(--item_id "${item_id}")
+fi
+if [[ -n "${verl_ckpt}" ]]; then
+  extra_args+=(--verl_ckpt "${verl_ckpt}")
 fi
 
 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
