@@ -1,0 +1,1133 @@
+{"i": 0, "token_id": 198, "token_str": "\\n", "log_prob": -0.03868865966796875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.07008552551269531, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 2, "token_id": 872, "token_str": "user", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 3, "token_id": 198, "token_str": "\\n", "log_prob": -1.52587890625e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 4, "token_id": 2610, "token_str": "You", "log_prob": -8.216419219970703, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 5, "token_id": 525, "token_str": " are", "log_prob": -0.012027740478515625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 6, "token_id": 304, "token_str": " in", "log_prob": -0.001338958740234375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 7, "token_id": 279, "token_str": " the", "log_prob": -5.4175262451171875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 8, "token_id": 6149, "token_str": " middle", "log_prob": -12.928569793701172, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 9, "token_id": 315, "token_str": " of", "log_prob": -7.62939453125e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 10, "token_id": 264, "token_str": " a", "log_prob": -0.20190048217773438, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 11, "token_id": 3054, "token_str": " room", "log_prob": -3.0409069061279297, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 12, "token_id": 13, "token_str": ".", "log_prob": -3.8094844818115234, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 13, "token_id": 21131, "token_str": " Looking", "log_prob": -18.602924346923828, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 14, "token_id": 6157, "token_str": " quickly", "log_prob": -20.750038146972656, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 15, "token_id": 2163, "token_str": " around", "log_prob": -7.62939453125e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 16, "token_id": 498, "token_str": " you", "log_prob": -6.628379821777344, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 17, "token_id": 11, "token_str": ",", "log_prob": -1.0629043579101562, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 18, "token_id": 498, "token_str": " you", "log_prob": -0.00701141357421875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 19, "token_id": 1490, "token_str": " see", "log_prob": -3.273143768310547, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 20, "token_id": 264, "token_str": " a", "log_prob": -6.928138732910156, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 21, "token_id": 4845, "token_str": " bed", "log_prob": -8.0433349609375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 22, "token_id": 220, "token_str": " ", "log_prob": -18.188823699951172, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 23, "token_id": 16, "token_str": "1", "log_prob": -0.9671268463134766, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 24, "token_id": 11, "token_str": ",", "log_prob": -0.7052841186523438, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 25, "token_id": 264, "token_str": " a", "log_prob": -0.002262115478515625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 26, "token_id": 18010, "token_str": " desk", "log_prob": -2.444272994995117, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 27, "token_id": 220, "token_str": " ", "log_prob": -0.000743865966796875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 28, "token_id": 16, "token_str": "1", "log_prob": -2.3504390716552734, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 29, "token_id": 11, "token_str": ",", "log_prob": -0.0020580291748046875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 30, "token_id": 264, "token_str": " a", "log_prob": -0.5760688781738281, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 31, "token_id": 26482, "token_str": " drawer", "log_prob": -3.811544418334961, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 32, "token_id": 220, "token_str": " ", "log_prob": -7.62939453125e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 33, "token_id": 16, "token_str": "1", "log_prob": -0.002567291259765625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 34, "token_id": 22, "token_str": "7", "log_prob": -22.152761459350586, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 35, "token_id": 11, "token_str": ",", "log_prob": -0.11966133117675781, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 36, "token_id": 264, "token_str": " a", "log_prob": -1.10546875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 37, "token_id": 26482, "token_str": " drawer", "log_prob": -3.770488739013672, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 38, "token_id": 220, "token_str": " ", "log_prob": -5.340576171875e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 39, "token_id": 16, "token_str": "1", "log_prob": -0.21662139892578125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 40, "token_id": 21, "token_str": "6", "log_prob": -4.14729118347168, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 41, "token_id": 11, "token_str": ",", "log_prob": -0.011648178100585938, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 42, "token_id": 264, "token_str": " a", "log_prob": -0.39211273193359375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 43, "token_id": 26482, "token_str": " drawer", "log_prob": -0.8319606781005859, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 44, "token_id": 220, "token_str": " ", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 45, "token_id": 16, "token_str": "1", "log_prob": -0.08265304565429688, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 46, "token_id": 20, "token_str": "5", "log_prob": -0.09383583068847656, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 47, "token_id": 11, "token_str": ",", "log_prob": -0.018312454223632812, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 48, "token_id": 264, "token_str": " a", "log_prob": -0.14699554443359375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 49, "token_id": 26482, "token_str": " drawer", "log_prob": -0.3664264678955078, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 50, "token_id": 220, "token_str": " ", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 51, "token_id": 16, "token_str": "1", "log_prob": -0.02978515625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 52, "token_id": 19, "token_str": "4", "log_prob": -0.012889862060546875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 53, "token_id": 11, "token_str": ",", "log_prob": -0.004039764404296875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 54, "token_id": 264, "token_str": " a", "log_prob": -0.07198333740234375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 55, "token_id": 26482, "token_str": " drawer", "log_prob": -0.16812515258789062, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 56, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 57, "token_id": 16, "token_str": "1", "log_prob": -0.005596160888671875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 58, "token_id": 18, "token_str": "3", "log_prob": -0.0015087127685546875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 59, "token_id": 11, "token_str": ",", "log_prob": -0.0002899169921875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 60, "token_id": 264, "token_str": " a", "log_prob": -0.022012710571289062, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 61, "token_id": 26482, "token_str": " drawer", "log_prob": -0.060970306396484375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 62, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 63, "token_id": 16, "token_str": "1", "log_prob": -0.001094818115234375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 64, "token_id": 17, "token_str": "2", "log_prob": -0.0005054473876953125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 65, "token_id": 11, "token_str": ",", "log_prob": -0.0002155303955078125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 66, "token_id": 264, "token_str": " a", "log_prob": -0.0064945220947265625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 67, "token_id": 26482, "token_str": " drawer", "log_prob": -0.02823638916015625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 68, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 69, "token_id": 16, "token_str": "1", "log_prob": -0.000690460205078125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 70, "token_id": 16, "token_str": "1", "log_prob": -0.0010833740234375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 71, "token_id": 11, "token_str": ",", "log_prob": -0.000164031982421875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 72, "token_id": 264, "token_str": " a", "log_prob": -0.00363922119140625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 73, "token_id": 26482, "token_str": " drawer", "log_prob": -0.0153961181640625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 74, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 75, "token_id": 16, "token_str": "1", "log_prob": -0.000362396240234375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 76, "token_id": 15, "token_str": "0", "log_prob": -0.000431060791015625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 77, "token_id": 11, "token_str": ",", "log_prob": -0.000110626220703125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 78, "token_id": 264, "token_str": " a", "log_prob": -0.0025806427001953125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 79, "token_id": 26482, "token_str": " drawer", "log_prob": -0.013418197631835938, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 80, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 81, "token_id": 24, "token_str": "9", "log_prob": -0.001316070556640625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 82, "token_id": 11, "token_str": ",", "log_prob": -4.9591064453125e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 83, "token_id": 264, "token_str": " a", "log_prob": -0.0016918182373046875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 84, "token_id": 26482, "token_str": " drawer", "log_prob": -0.00812530517578125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 85, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 86, "token_id": 23, "token_str": "8", "log_prob": -7.62939453125e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 87, "token_id": 11, "token_str": ",", "log_prob": -3.814697265625e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 88, "token_id": 264, "token_str": " a", "log_prob": -0.0050487518310546875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 89, "token_id": 26482, "token_str": " drawer", "log_prob": -0.012899398803710938, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 90, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 91, "token_id": 22, "token_str": "7", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 92, "token_id": 11, "token_str": ",", "log_prob": -4.57763671875e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 93, "token_id": 264, "token_str": " a", "log_prob": -0.007488250732421875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 94, "token_id": 26482, "token_str": " drawer", "log_prob": -0.0202178955078125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 95, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 96, "token_id": 21, "token_str": "6", "log_prob": -4.1961669921875e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 97, "token_id": 11, "token_str": ",", "log_prob": -4.1961669921875e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 98, "token_id": 264, "token_str": " a", "log_prob": -0.005069732666015625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 99, "token_id": 26482, "token_str": " drawer", "log_prob": -0.021234512329101562, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 100, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 101, "token_id": 20, "token_str": "5", "log_prob": -3.814697265625e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 102, "token_id": 11, "token_str": ",", "log_prob": -1.9073486328125e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 103, "token_id": 264, "token_str": " a", "log_prob": -0.0026721954345703125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 104, "token_id": 26482, "token_str": " drawer", "log_prob": -0.012639999389648438, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 105, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 106, "token_id": 19, "token_str": "4", "log_prob": -4.1961669921875e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 107, "token_id": 11, "token_str": ",", "log_prob": -7.62939453125e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 108, "token_id": 264, "token_str": " a", "log_prob": -0.001644134521484375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 109, "token_id": 26482, "token_str": " drawer", "log_prob": -0.0056400299072265625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 110, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 111, "token_id": 18, "token_str": "3", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 112, "token_id": 11, "token_str": ",", "log_prob": -7.62939453125e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 113, "token_id": 264, "token_str": " a", "log_prob": -0.0039005279541015625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 114, "token_id": 26482, "token_str": " drawer", "log_prob": -0.0067768096923828125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 115, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 116, "token_id": 17, "token_str": "2", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 117, "token_id": 11, "token_str": ",", "log_prob": -0.0032138824462890625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 118, "token_id": 264, "token_str": " a", "log_prob": -0.03931999206542969, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 119, "token_id": 26482, "token_str": " drawer", "log_prob": -0.9064178466796875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 120, "token_id": 220, "token_str": " ", "log_prob": -0.0001983642578125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 121, "token_id": 16, "token_str": "1", "log_prob": -5.7220458984375e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 122, "token_id": 11, "token_str": ",", "log_prob": -0.0016574859619140625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 123, "token_id": 264, "token_str": " a", "log_prob": -0.0043087005615234375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 124, "token_id": 95537, "token_str": " dresser", "log_prob": -2.7524871826171875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 125, "token_id": 220, "token_str": " ", "log_prob": -0.008800506591796875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 126, "token_id": 16, "token_str": "1", "log_prob": -0.28168487548828125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 127, "token_id": 11, "token_str": ",", "log_prob": -0.024471282958984375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 128, "token_id": 264, "token_str": " a", "log_prob": -0.10721588134765625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 129, "token_id": 25878, "token_str": " garbage", "log_prob": -5.810636520385742, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 130, "token_id": 4814, "token_str": "can", "log_prob": -6.366264343261719, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 131, "token_id": 220, "token_str": " ", "log_prob": -0.00072479248046875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 132, "token_id": 16, "token_str": "1", "log_prob": -0.12102127075195312, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 133, "token_id": 11, "token_str": ",", "log_prob": -0.0073566436767578125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 134, "token_id": 264, "token_str": " a", "log_prob": -0.1478099822998047, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 135, "token_id": 27645, "token_str": " shelf", "log_prob": -2.1558780670166016, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 136, "token_id": 220, "token_str": " ", "log_prob": -0.0003871917724609375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 137, "token_id": 21, "token_str": "6", "log_prob": -5.692768096923828, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 138, "token_id": 11, "token_str": ",", "log_prob": -0.013257980346679688, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 139, "token_id": 264, "token_str": " a", "log_prob": -0.000858306884765625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 140, "token_id": 27645, "token_str": " shelf", "log_prob": -0.000823974609375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 141, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 142, "token_id": 20, "token_str": "5", "log_prob": -0.005615234375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 143, "token_id": 11, "token_str": ",", "log_prob": -1.9073486328125e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 144, "token_id": 264, "token_str": " a", "log_prob": -0.000213623046875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 145, "token_id": 27645, "token_str": " shelf", "log_prob": -0.0001068115234375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 146, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 147, "token_id": 19, "token_str": "4", "log_prob": -0.000152587890625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 148, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 149, "token_id": 264, "token_str": " a", "log_prob": -0.00012969970703125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 150, "token_id": 27645, "token_str": " shelf", "log_prob": -1.52587890625e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 151, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 152, "token_id": 18, "token_str": "3", "log_prob": -8.392333984375e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 153, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 154, "token_id": 264, "token_str": " a", "log_prob": -0.00025177001953125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 155, "token_id": 27645, "token_str": " shelf", "log_prob": -1.9073486328125e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 156, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 157, "token_id": 17, "token_str": "2", "log_prob": -1.1444091796875e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 158, "token_id": 11, "token_str": ",", "log_prob": -1.1444091796875e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 159, "token_id": 323, "token_str": " and", "log_prob": -6.376850128173828, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 160, "token_id": 264, "token_str": " a", "log_prob": -0.000598907470703125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 161, "token_id": 27645, "token_str": " shelf", "log_prob": -0.000209808349609375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 162, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 163, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 164, "token_id": 624, "token_str": ".\\n", "log_prob": -8.12942123413086, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 165, "token_id": 7771, "token_str": "Your", "log_prob": -7.43238639831543, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 166, "token_id": 3383, "token_str": " task", "log_prob": -1.6008930206298828, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 167, "token_id": 374, "token_str": " is", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 168, "token_id": 311, "token_str": " to", "log_prob": -0.000141143798828125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 169, "token_id": 25, "token_str": ":", "log_prob": -10.94156265258789, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 170, "token_id": 1401, "token_str": " look", "log_prob": -14.092727661132812, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 171, "token_id": 518, "token_str": " at", "log_prob": -3.5414676666259766, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 172, "token_id": 16624, "token_str": " alarm", "log_prob": -7.5530548095703125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 173, "token_id": 20666, "token_str": "clock", "log_prob": -6.412179946899414, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 174, "token_id": 1212, "token_str": " under", "log_prob": -3.6341896057128906, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 175, "token_id": 279, "token_str": " the", "log_prob": -2.5291690826416016, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 176, "token_id": 939, "token_str": " des", "log_prob": -19.797382354736328, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 177, "token_id": 10561, "token_str": "kl", "log_prob": -1.6988391876220703, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 178, "token_id": 1121, "token_str": "amp", "log_prob": -0.02478790283203125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 179, "token_id": 624, "token_str": ".\\n", "log_prob": -5.174102783203125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 180, "token_id": 73078, "token_str": "AVAILABLE", "log_prob": -14.129032135009766, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 181, "token_id": 63315, "token_str": " ACTIONS", "log_prob": -0.01418304443359375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 182, "token_id": 25, "token_str": ":", "log_prob": -11.75173568725586, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 183, "token_id": 728, "token_str": " go", "log_prob": -6.914896011352539, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 184, "token_id": 311, "token_str": " to", "log_prob": -1.9690494537353516, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 185, "token_id": 4845, "token_str": " bed", "log_prob": -1.151132583618164, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 186, "token_id": 220, "token_str": " ", "log_prob": -2.288818359375e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 187, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 188, "token_id": 11, "token_str": ",", "log_prob": -0.04987335205078125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 189, "token_id": 3346, "token_str": "go", "log_prob": -17.37500762939453, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 190, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 191, "token_id": 18010, "token_str": " desk", "log_prob": -0.03891181945800781, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 192, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 193, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 194, "token_id": 11, "token_str": ",", "log_prob": -1.1444091796875e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 195, "token_id": 3346, "token_str": "go", "log_prob": -0.7031402587890625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 196, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 197, "token_id": 26482, "token_str": " drawer", "log_prob": -4.511905670166016, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 198, "token_id": 220, "token_str": " ", "log_prob": -0.00052642822265625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 199, "token_id": 16, "token_str": "1", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 200, "token_id": 11, "token_str": ",", "log_prob": -8.0108642578125e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 201, "token_id": 3346, "token_str": "go", "log_prob": -0.001056671142578125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 202, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 203, "token_id": 26482, "token_str": " drawer", "log_prob": -0.22786712646484375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 204, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 205, "token_id": 16, "token_str": "1", "log_prob": -3.7732505798339844, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 206, "token_id": 15, "token_str": "0", "log_prob": -0.00493621826171875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 207, "token_id": 11, "token_str": ",", "log_prob": -0.000148773193359375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 208, "token_id": 3346, "token_str": "go", "log_prob": -0.00080108642578125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 209, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 210, "token_id": 26482, "token_str": " drawer", "log_prob": -0.181610107421875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 211, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 212, "token_id": 16, "token_str": "1", "log_prob": -0.006374359130859375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 213, "token_id": 16, "token_str": "1", "log_prob": -0.000965118408203125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 214, "token_id": 11, "token_str": ",", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 215, "token_id": 3346, "token_str": "go", "log_prob": -7.62939453125e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 216, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 217, "token_id": 26482, "token_str": " drawer", "log_prob": -0.002044677734375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 218, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 219, "token_id": 16, "token_str": "1", "log_prob": -0.000911712646484375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 220, "token_id": 17, "token_str": "2", "log_prob": -4.57763671875e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 221, "token_id": 11, "token_str": ",", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 222, "token_id": 3346, "token_str": "go", "log_prob": -1.9073486328125e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 223, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 224, "token_id": 26482, "token_str": " drawer", "log_prob": -0.00348663330078125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 225, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 226, "token_id": 16, "token_str": "1", "log_prob": -0.000911712646484375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 227, "token_id": 18, "token_str": "3", "log_prob": -8.7738037109375e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 228, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 229, "token_id": 3346, "token_str": "go", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 230, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 231, "token_id": 26482, "token_str": " drawer", "log_prob": -0.00290679931640625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 232, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 233, "token_id": 16, "token_str": "1", "log_prob": -0.000110626220703125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 234, "token_id": 19, "token_str": "4", "log_prob": -3.0517578125e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 235, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 236, "token_id": 3346, "token_str": "go", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 237, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 238, "token_id": 26482, "token_str": " drawer", "log_prob": -0.001026153564453125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 239, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 240, "token_id": 16, "token_str": "1", "log_prob": -1.52587890625e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 241, "token_id": 20, "token_str": "5", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 242, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 243, "token_id": 3346, "token_str": "go", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 244, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 245, "token_id": 26482, "token_str": " drawer", "log_prob": -0.000171661376953125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 246, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 247, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 248, "token_id": 21, "token_str": "6", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 249, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 250, "token_id": 3346, "token_str": "go", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 251, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 252, "token_id": 26482, "token_str": " drawer", "log_prob": -0.000171661376953125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 253, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 254, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 255, "token_id": 22, "token_str": "7", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 256, "token_id": 11, "token_str": ",", "log_prob": -3.4332275390625e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 257, "token_id": 3346, "token_str": "go", "log_prob": -0.001068115234375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 258, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 259, "token_id": 26482, "token_str": " drawer", "log_prob": -12.500286102294922, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 260, "token_id": 220, "token_str": " ", "log_prob": -0.0055599212646484375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 261, "token_id": 17, "token_str": "2", "log_prob": -0.003574371337890625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 262, "token_id": 11, "token_str": ",", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 263, "token_id": 3346, "token_str": "go", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 264, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 265, "token_id": 26482, "token_str": " drawer", "log_prob": -0.0028839111328125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 266, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 267, "token_id": 18, "token_str": "3", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 268, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 269, "token_id": 3346, "token_str": "go", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 270, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 271, "token_id": 26482, "token_str": " drawer", "log_prob": -0.003261566162109375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 272, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 273, "token_id": 19, "token_str": "4", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 274, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 275, "token_id": 3346, "token_str": "go", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 276, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 277, "token_id": 26482, "token_str": " drawer", "log_prob": -0.00046539306640625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 278, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 279, "token_id": 20, "token_str": "5", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 280, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 281, "token_id": 3346, "token_str": "go", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 282, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 283, "token_id": 26482, "token_str": " drawer", "log_prob": -0.000885009765625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 284, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 285, "token_id": 21, "token_str": "6", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 286, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 287, "token_id": 3346, "token_str": "go", "log_prob": -1.52587890625e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 288, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 289, "token_id": 26482, "token_str": " drawer", "log_prob": -0.003353118896484375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 290, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 291, "token_id": 22, "token_str": "7", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 292, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 293, "token_id": 3346, "token_str": "go", "log_prob": -1.52587890625e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 294, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 295, "token_id": 26482, "token_str": " drawer", "log_prob": -0.006900787353515625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 296, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 297, "token_id": 23, "token_str": "8", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 298, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 299, "token_id": 3346, "token_str": "go", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 300, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 301, "token_id": 26482, "token_str": " drawer", "log_prob": -0.001758575439453125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 302, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 303, "token_id": 24, "token_str": "9", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 304, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 305, "token_id": 3346, "token_str": "go", "log_prob": -0.00150299072265625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 306, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 307, "token_id": 95537, "token_str": " dresser", "log_prob": -0.0059604644775390625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 308, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 309, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 310, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 311, "token_id": 3346, "token_str": "go", "log_prob": -0.0013885498046875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 312, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 313, "token_id": 25878, "token_str": " garbage", "log_prob": -0.06017303466796875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 314, "token_id": 4814, "token_str": "can", "log_prob": -8.7738037109375e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 315, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 316, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 317, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 318, "token_id": 3346, "token_str": "go", "log_prob": -0.0056591033935546875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 319, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 320, "token_id": 27645, "token_str": " shelf", "log_prob": -0.060546875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 321, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 322, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 323, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 324, "token_id": 3346, "token_str": "go", "log_prob": -0.000278472900390625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 325, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 326, "token_id": 27645, "token_str": " shelf", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 327, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 328, "token_id": 17, "token_str": "2", "log_prob": -2.6702880859375e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 329, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 330, "token_id": 3346, "token_str": "go", "log_prob": -5.7220458984375e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 331, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 332, "token_id": 27645, "token_str": " shelf", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 333, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 334, "token_id": 18, "token_str": "3", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 335, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 336, "token_id": 3346, "token_str": "go", "log_prob": -2.6702880859375e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 337, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 338, "token_id": 27645, "token_str": " shelf", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 339, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 340, "token_id": 19, "token_str": "4", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 341, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 342, "token_id": 3346, "token_str": "go", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 343, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 344, "token_id": 27645, "token_str": " shelf", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 345, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 346, "token_id": 20, "token_str": "5", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 347, "token_id": 11, "token_str": ",", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 348, "token_id": 3346, "token_str": "go", "log_prob": -0.000316619873046875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 349, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 350, "token_id": 27645, "token_str": " shelf", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 351, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 352, "token_id": 21, "token_str": "6", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 353, "token_id": 11, "token_str": ",", "log_prob": -0.021059036254882812, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 354, "token_id": 8653, "token_str": "help", "log_prob": -18.605487823486328, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 355, "token_id": 11, "token_str": ",", "log_prob": -0.0010986328125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 356, "token_id": 31093, "token_str": "inventory", "log_prob": -7.983217239379883, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 357, "token_id": 11, "token_str": ",", "log_prob": -0.11066627502441406, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 358, "token_id": 7201, "token_str": "look", "log_prob": -1.1696739196777344, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 359, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -9.25567626953125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 360, "token_id": 198, "token_str": "\\n", "log_prob": -0.04176139831542969, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 361, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.0052337646484375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 362, "token_id": 77091, "token_str": "assistant", "log_prob": -8.650724411010742, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 363, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 364, "token_id": 84169, "token_str": "Thought", "log_prob": -7.62939453125e-06, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 365, "token_id": 25, "token_str": ":", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 366, "token_id": 2014, "token_str": " To", "log_prob": -4.9591064453125e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 367, "token_id": 1401, "token_str": " look", "log_prob": -0.40081787109375, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 368, "token_id": 518, "token_str": " at", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 369, "token_id": 458, "token_str": " an", "log_prob": -0.00091552734375, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 370, "token_id": 16624, "token_str": " alarm", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 371, "token_id": 20666, "token_str": "clock", "log_prob": -0.313262939453125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 372, "token_id": 1212, "token_str": " under", "log_prob": -0.008968353271484375, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 373, "token_id": 264, "token_str": " a", "log_prob": -0.0011444091796875, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 374, "token_id": 939, "token_str": " des", "log_prob": -0.01107025146484375, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 375, "token_id": 10561, "token_str": "kl", "log_prob": -3.814697265625e-06, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 376, "token_id": 1121, "token_str": "amp", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 377, "token_id": 11, "token_str": ",", "log_prob": -7.62939453125e-06, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 378, "token_id": 358, "token_str": " I", "log_prob": -0.003337860107421875, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 379, "token_id": 1156, "token_str": " first", "log_prob": -0.002506256103515625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 380, "token_id": 1184, "token_str": " need", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 381, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 382, "token_id": 1477, "token_str": " find", "log_prob": -0.079864501953125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 383, "token_id": 458, "token_str": " an", "log_prob": -0.02397918701171875, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 384, "token_id": 16624, "token_str": " alarm", "log_prob": -0.000171661376953125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 385, "token_id": 20666, "token_str": "clock", "log_prob": -0.000335693359375, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 386, "token_id": 13, "token_str": ".", "log_prob": -0.26546478271484375, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 387, "token_id": 3874, "token_str": " Des", "log_prob": -2.368867874145508, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 388, "token_id": 2787, "token_str": "ks", "log_prob": -1.1444091796875e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 389, "token_id": 5990, "token_str": " usually", "log_prob": -2.5523147583007812, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 390, "token_id": 614, "token_str": " have", "log_prob": -0.041027069091796875, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 391, "token_id": 16624, "token_str": " alarm", "log_prob": -0.1742706298828125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 392, "token_id": 20666, "token_str": "clock", "log_prob": -0.002109527587890625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 393, "token_id": 82, "token_str": "s", "log_prob": -0.0001068115234375, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 394, "token_id": 382, "token_str": ".\\n\\n", "log_prob": -0.07566452026367188, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 395, "token_id": 2512, "token_str": "Action", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 396, "token_id": 25, "token_str": ":", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 397, "token_id": 728, "token_str": " go", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 398, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 399, "token_id": 18010, "token_str": " desk", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 400, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 401, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 402, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -0.0002689361572265625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 403, "token_id": 198, "token_str": "\\n", "log_prob": -0.00014495849609375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 404, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -1.5433673858642578, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 405, "token_id": 872, "token_str": "user", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 406, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 407, "token_id": 2610, "token_str": "You", "log_prob": -2.5795745849609375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 408, "token_id": 17331, "token_str": " arrive", "log_prob": -20.375015258789062, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 409, "token_id": 518, "token_str": " at", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 410, "token_id": 18010, "token_str": " desk", "log_prob": -0.00193023681640625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 411, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 412, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 413, "token_id": 13, "token_str": ".", "log_prob": -14.568145751953125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 414, "token_id": 1913, "token_str": " On", "log_prob": -11.441484451293945, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 415, "token_id": 279, "token_str": " the", "log_prob": -0.002071380615234375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 416, "token_id": 18010, "token_str": " desk", "log_prob": -0.001659393310546875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 417, "token_id": 220, "token_str": " ", "log_prob": -7.636554718017578, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 418, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 419, "token_id": 11, "token_str": ",", "log_prob": -0.015911102294921875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 420, "token_id": 498, "token_str": " you", "log_prob": -1.3132896423339844, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 421, "token_id": 1490, "token_str": " see", "log_prob": -0.14516258239746094, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 422, "token_id": 264, "token_str": " a", "log_prob": -0.0473785400390625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 423, "token_id": 16624, "token_str": " alarm", "log_prob": -9.873775482177734, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 424, "token_id": 20666, "token_str": "clock", "log_prob": -3.0517578125e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 425, "token_id": 220, "token_str": " ", "log_prob": -3.9356918334960938, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 426, "token_id": 16, "token_str": "1", "log_prob": -0.2316150665283203, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 427, "token_id": 11, "token_str": ",", "log_prob": -2.4281005859375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 428, "token_id": 264, "token_str": " a", "log_prob": -0.01134490966796875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 429, "token_id": 19212, "token_str": " bowl", "log_prob": -8.426675796508789, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 430, "token_id": 220, "token_str": " ", "log_prob": -3.913921356201172, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 431, "token_id": 16, "token_str": "1", "log_prob": -0.3276405334472656, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 432, "token_id": 11, "token_str": ",", "log_prob": -0.05159950256347656, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 433, "token_id": 264, "token_str": " a", "log_prob": -0.40991973876953125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 434, "token_id": 15307, "token_str": " cd", "log_prob": -10.826623916625977, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 435, "token_id": 220, "token_str": " ", "log_prob": -0.3092021942138672, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 436, "token_id": 17, "token_str": "2", "log_prob": -6.626728057861328, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 437, "token_id": 11, "token_str": ",", "log_prob": -0.1793956756591797, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 438, "token_id": 264, "token_str": " a", "log_prob": -0.437225341796875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 439, "token_id": 15307, "token_str": " cd", "log_prob": -3.1530494689941406, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 440, "token_id": 220, "token_str": " ", "log_prob": -0.2550468444824219, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 441, "token_id": 16, "token_str": "1", "log_prob": -0.7030181884765625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 442, "token_id": 11, "token_str": ",", "log_prob": -0.44460487365722656, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 443, "token_id": 264, "token_str": " a", "log_prob": -0.2995719909667969, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 444, "token_id": 51489, "token_str": " mug", "log_prob": -4.048976898193359, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 445, "token_id": 220, "token_str": " ", "log_prob": -7.2479248046875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 446, "token_id": 17, "token_str": "2", "log_prob": -2.959766387939453, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 447, "token_id": 11, "token_str": ",", "log_prob": -0.10519790649414062, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 448, "token_id": 264, "token_str": " a", "log_prob": -0.04142570495605469, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 449, "token_id": 51489, "token_str": " mug", "log_prob": -0.0717010498046875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 450, "token_id": 220, "token_str": " ", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 451, "token_id": 16, "token_str": "1", "log_prob": -0.0172119140625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 452, "token_id": 11, "token_str": ",", "log_prob": -0.5925140380859375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 453, "token_id": 323, "token_str": " and", "log_prob": -1.5170211791992188, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 454, "token_id": 264, "token_str": " a", "log_prob": -0.056339263916015625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 455, "token_id": 46118, "token_str": " pencil", "log_prob": -4.230720520019531, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 456, "token_id": 220, "token_str": " ", "log_prob": -0.07680892944335938, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 457, "token_id": 16, "token_str": "1", "log_prob": -0.37061309814453125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 458, "token_id": 13, "token_str": ".", "log_prob": -5.210456848144531, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 459, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -22.243919372558594, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 460, "token_id": 198, "token_str": "\\n", "log_prob": -0.14406585693359375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 461, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.00801849365234375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 462, "token_id": 77091, "token_str": "assistant", "log_prob": -0.09674072265625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 463, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 464, "token_id": 2512, "token_str": "Action", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 465, "token_id": 25, "token_str": ":", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 466, "token_id": 1492, "token_str": " help", "log_prob": -0.01447296142578125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 467, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -0.0001068115234375, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 468, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 469, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.049533843994140625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 470, "token_id": 872, "token_str": "user", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 471, "token_id": 198, "token_str": "\\n", "log_prob": -7.62939453125e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 472, "token_id": 16485, "token_str": "Available", "log_prob": -25.69013214111328, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 473, "token_id": 11293, "token_str": " commands", "log_prob": -21.125350952148438, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 474, "token_id": 510, "token_str": ":\\n", "log_prob": -10.875358581542969, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 475, "token_id": 220, "token_str": " ", "log_prob": -18.46694564819336, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 476, "token_id": 1401, "token_str": " look", "log_prob": -18.881832122802734, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 477, "token_id": 25, "token_str": ":", "log_prob": -12.872978210449219, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 478, "token_id": 6526, "token_str": "                            ", "log_prob": -13.323797225952148, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 479, "token_id": 1401, "token_str": " look", "log_prob": -1.7841453552246094, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 480, "token_id": 2163, "token_str": " around", "log_prob": -4.264947891235352, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 481, "token_id": 697, "token_str": " your", "log_prob": -11.693891525268555, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 482, "token_id": 1482, "token_str": " current", "log_prob": -0.8237953186035156, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 483, "token_id": 3728, "token_str": " location", "log_prob": -0.000453948974609375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 484, "token_id": 198, "token_str": "\\n", "log_prob": -7.3761444091796875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 485, "token_id": 220, "token_str": " ", "log_prob": -0.000209808349609375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 486, "token_id": 15444, "token_str": " inventory", "log_prob": -8.356025695800781, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 487, "token_id": 25, "token_str": ":", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 488, "token_id": 664, "token_str": "                       ", "log_prob": -3.168060302734375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 489, "token_id": 1779, "token_str": " check", "log_prob": -4.681985855102539, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 490, "token_id": 697, "token_str": " your", "log_prob": -1.5820388793945312, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 491, "token_id": 1482, "token_str": " current", "log_prob": -0.005611419677734375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 492, "token_id": 15444, "token_str": " inventory", "log_prob": -0.8707180023193359, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 493, "token_id": 198, "token_str": "\\n", "log_prob": -0.00014495849609375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 494, "token_id": 220, "token_str": " ", "log_prob": -0.000392913818359375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 495, "token_id": 728, "token_str": " go", "log_prob": -0.00025177001953125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 496, "token_id": 311, "token_str": " to", "log_prob": -7.62939453125e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 497, "token_id": 320, "token_str": " (", "log_prob": -24.875015258789062, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 498, "token_id": 265, "token_str": "re", "log_prob": -13.627750396728516, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 499, "token_id": 1484, "token_str": "cept", "log_prob": -2.413362503051758, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 500, "token_id": 7902, "token_str": "acle", "log_prob": -0.001194000244140625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 501, "token_id": 1648, "token_str": "):", "log_prob": -0.004444122314453125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 502, "token_id": 2290, "token_str": "              ", "log_prob": -0.48011016845703125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 503, "token_id": 3271, "token_str": " move", "log_prob": -5.878513336181641, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 504, "token_id": 311, "token_str": " to", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 505, "token_id": 264, "token_str": " a", "log_prob": -10.750755310058594, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 506, "token_id": 28818, "token_str": " recept", "log_prob": -21.375049591064453, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 507, "token_id": 7902, "token_str": "acle", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 508, "token_id": 198, "token_str": "\\n", "log_prob": -0.0022373199462890625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 509, "token_id": 220, "token_str": " ", "log_prob": -0.000720977783203125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 510, "token_id": 1787, "token_str": " open", "log_prob": -2.4648990631103516, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 511, "token_id": 320, "token_str": " (", "log_prob": -4.9591064453125e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 512, "token_id": 265, "token_str": "re", "log_prob": -8.16128921508789, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 513, "token_id": 1484, "token_str": "cept", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 514, "token_id": 7902, "token_str": "acle", "log_prob": -1.1444091796875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 515, "token_id": 1648, "token_str": "):", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 516, "token_id": 394, "token_str": "               ", "log_prob": -0.0005035400390625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 517, "token_id": 1787, "token_str": " open", "log_prob": -2.6702880859375e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 518, "token_id": 264, "token_str": " a", "log_prob": -0.000194549560546875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 519, "token_id": 28818, "token_str": " recept", "log_prob": -2.240234375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 520, "token_id": 7902, "token_str": "acle", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 521, "token_id": 198, "token_str": "\\n", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 522, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 523, "token_id": 3265, "token_str": " close", "log_prob": -0.0004425048828125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 524, "token_id": 320, "token_str": " (", "log_prob": -3.0517578125e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 525, "token_id": 265, "token_str": "re", "log_prob": -0.00067138671875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 526, "token_id": 1484, "token_str": "cept", "log_prob": -7.62939453125e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 527, "token_id": 7902, "token_str": "acle", "log_prob": -8.7738037109375e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 528, "token_id": 1648, "token_str": "):", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 529, "token_id": 2290, "token_str": "              ", "log_prob": -0.0002422332763671875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 530, "token_id": 3265, "token_str": " close", "log_prob": -1.9073486328125e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 531, "token_id": 264, "token_str": " a", "log_prob": -0.0012359619140625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 532, "token_id": 28818, "token_str": " recept", "log_prob": -0.000640869140625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 533, "token_id": 7902, "token_str": "acle", "log_prob": -0.0046234130859375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 534, "token_id": 198, "token_str": "\\n", "log_prob": -0.006023406982421875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 535, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 536, "token_id": 1896, "token_str": " take", "log_prob": -0.000244140625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 537, "token_id": 320, "token_str": " (", "log_prob": -0.000324249267578125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 538, "token_id": 1700, "token_str": "object", "log_prob": -0.021959304809570312, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 539, "token_id": 8, "token_str": ")", "log_prob": -0.48768043518066406, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 540, "token_id": 504, "token_str": " from", "log_prob": -0.00296783447265625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 541, "token_id": 320, "token_str": " (", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 542, "token_id": 265, "token_str": "re", "log_prob": -1.8391532897949219, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 543, "token_id": 1484, "token_str": "cept", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 544, "token_id": 7902, "token_str": "acle", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 545, "token_id": 1648, "token_str": "):", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 546, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 547, "token_id": 1896, "token_str": " take", "log_prob": -0.016262054443359375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 548, "token_id": 458, "token_str": " an", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 549, "token_id": 1633, "token_str": " object", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 550, "token_id": 504, "token_str": " from", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 551, "token_id": 264, "token_str": " a", "log_prob": -5.340576171875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 552, "token_id": 28818, "token_str": " recept", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 553, "token_id": 7902, "token_str": "acle", "log_prob": -1.1444091796875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 554, "token_id": 198, "token_str": "\\n", "log_prob": -4.9591064453125e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 555, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 556, "token_id": 3271, "token_str": " move", "log_prob": -14.810632705688477, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 557, "token_id": 320, "token_str": " (", "log_prob": -0.004642486572265625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 558, "token_id": 1700, "token_str": "object", "log_prob": -0.001087188720703125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 559, "token_id": 8, "token_str": ")", "log_prob": -0.0001068115234375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 560, "token_id": 311, "token_str": " to", "log_prob": -0.001270294189453125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 561, "token_id": 320, "token_str": " (", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 562, "token_id": 265, "token_str": "re", "log_prob": -1.1444091796875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 563, "token_id": 1484, "token_str": "cept", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 564, "token_id": 7902, "token_str": "acle", "log_prob": -1.1444091796875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 565, "token_id": 1648, "token_str": "):", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 566, "token_id": 220, "token_str": " ", "log_prob": -18.6875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 567, "token_id": 1992, "token_str": " place", "log_prob": -12.125373840332031, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 568, "token_id": 458, "token_str": " an", "log_prob": -0.000530242919921875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 569, "token_id": 1633, "token_str": " object", "log_prob": -1.1444091796875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 570, "token_id": 304, "token_str": " in", "log_prob": -0.05388641357421875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 571, "token_id": 476, "token_str": " or", "log_prob": -9.625080108642578, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 572, "token_id": 389, "token_str": " on", "log_prob": -8.697257995605469, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 573, "token_id": 264, "token_str": " a", "log_prob": -7.2479248046875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 574, "token_id": 28818, "token_str": " recept", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 575, "token_id": 7902, "token_str": "acle", "log_prob": -6.866455078125e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 576, "token_id": 198, "token_str": "\\n", "log_prob": -0.0004024505615234375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 577, "token_id": 220, "token_str": " ", "log_prob": -0.002429962158203125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 578, "token_id": 20961, "token_str": " examine", "log_prob": -6.435993194580078, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 579, "token_id": 320, "token_str": " (", "log_prob": -1.1444091796875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 580, "token_id": 33331, "token_str": "something", "log_prob": -24.937705993652344, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 581, "token_id": 1648, "token_str": "):", "log_prob": -1.1444091796875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 582, "token_id": 1060, "token_str": "             ", "log_prob": -5.753246307373047, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 583, "token_id": 20961, "token_str": " examine", "log_prob": -1.8891010284423828, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 584, "token_id": 264, "token_str": " a", "log_prob": -5.067668914794922, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 585, "token_id": 28818, "token_str": " recept", "log_prob": -10.831258773803711, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 586, "token_id": 7902, "token_str": "acle", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 587, "token_id": 476, "token_str": " or", "log_prob": -0.038951873779296875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 588, "token_id": 458, "token_str": " an", "log_prob": -3.766712188720703, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 589, "token_id": 1633, "token_str": " object", "log_prob": -0.0001220703125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 590, "token_id": 198, "token_str": "\\n", "log_prob": -3.262950897216797, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 591, "token_id": 220, "token_str": " ", "log_prob": -0.0269622802734375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 592, "token_id": 990, "token_str": " use", "log_prob": -0.2105846405029297, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 593, "token_id": 320, "token_str": " (", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 594, "token_id": 1700, "token_str": "object", "log_prob": -3.004487991333008, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 595, "token_id": 1648, "token_str": "):", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 596, "token_id": 3824, "token_str": "                    ", "log_prob": -0.0006866455078125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 597, "token_id": 990, "token_str": " use", "log_prob": -0.000244140625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 598, "token_id": 458, "token_str": " an", "log_prob": -0.003437042236328125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 599, "token_id": 1633, "token_str": " object", "log_prob": -4.57763671875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 600, "token_id": 198, "token_str": "\\n", "log_prob": -4.155498504638672, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 601, "token_id": 220, "token_str": " ", "log_prob": -0.14804840087890625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 602, "token_id": 8628, "token_str": " heat", "log_prob": -18.2243595123291, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 603, "token_id": 320, "token_str": " (", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 604, "token_id": 1700, "token_str": "object", "log_prob": -4.57763671875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 605, "token_id": 8, "token_str": ")", "log_prob": -9.751140594482422, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 606, "token_id": 448, "token_str": " with", "log_prob": -0.3329906463623047, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 607, "token_id": 320, "token_str": " (", "log_prob": -7.624885559082031, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 608, "token_id": 265, "token_str": "re", "log_prob": -9.792882919311523, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 609, "token_id": 1484, "token_str": "cept", "log_prob": -0.0012493133544921875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 610, "token_id": 7902, "token_str": "acle", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 611, "token_id": 1648, "token_str": "):", "log_prob": -1.52587890625e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 612, "token_id": 220, "token_str": " ", "log_prob": -0.7997074127197266, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 613, "token_id": 8628, "token_str": " heat", "log_prob": -0.16527557373046875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 614, "token_id": 458, "token_str": " an", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 615, "token_id": 1633, "token_str": " object", "log_prob": -1.1444091796875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 616, "token_id": 1667, "token_str": " using", "log_prob": -7.754297256469727, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 617, "token_id": 264, "token_str": " a", "log_prob": -0.000148773193359375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 618, "token_id": 28818, "token_str": " recept", "log_prob": -0.0012035369873046875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 619, "token_id": 7902, "token_str": "acle", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 620, "token_id": 198, "token_str": "\\n", "log_prob": -0.006305694580078125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 621, "token_id": 220, "token_str": " ", "log_prob": -0.002231597900390625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 622, "token_id": 4240, "token_str": " clean", "log_prob": -10.831413269042969, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 623, "token_id": 320, "token_str": " (", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 624, "token_id": 1700, "token_str": "object", "log_prob": -0.001720428466796875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 625, "token_id": 8, "token_str": ")", "log_prob": -6.251945495605469, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 626, "token_id": 448, "token_str": " with", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 627, "token_id": 320, "token_str": " (", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 628, "token_id": 265, "token_str": "re", "log_prob": -0.06920433044433594, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 629, "token_id": 1484, "token_str": "cept", "log_prob": -0.00022125244140625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 630, "token_id": 7902, "token_str": "acle", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 631, "token_id": 1648, "token_str": "):", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 632, "token_id": 4240, "token_str": " clean", "log_prob": -0.000518798828125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 633, "token_id": 458, "token_str": " an", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 634, "token_id": 1633, "token_str": " object", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 635, "token_id": 1667, "token_str": " using", "log_prob": -0.02630615234375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 636, "token_id": 264, "token_str": " a", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 637, "token_id": 28818, "token_str": " recept", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 638, "token_id": 7902, "token_str": "acle", "log_prob": -1.52587890625e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 639, "token_id": 198, "token_str": "\\n", "log_prob": -3.536996841430664, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 640, "token_id": 220, "token_str": " ", "log_prob": -0.002834320068359375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 641, "token_id": 7010, "token_str": " cool", "log_prob": -8.953779220581055, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 642, "token_id": 320, "token_str": " (", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 643, "token_id": 1700, "token_str": "object", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 644, "token_id": 8, "token_str": ")", "log_prob": -4.9591064453125e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 645, "token_id": 448, "token_str": " with", "log_prob": -3.0517578125e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 646, "token_id": 320, "token_str": " (", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 647, "token_id": 265, "token_str": "re", "log_prob": -0.00066375732421875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 648, "token_id": 1484, "token_str": "cept", "log_prob": -1.1444091796875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 649, "token_id": 7902, "token_str": "acle", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 650, "token_id": 1648, "token_str": "):", "log_prob": -7.62939453125e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 651, "token_id": 220, "token_str": " ", "log_prob": -0.000339508056640625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 652, "token_id": 7010, "token_str": " cool", "log_prob": -1.1444091796875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 653, "token_id": 458, "token_str": " an", "log_prob": -2.288818359375e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 654, "token_id": 1633, "token_str": " object", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 655, "token_id": 1667, "token_str": " using", "log_prob": -0.0002574920654296875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 656, "token_id": 264, "token_str": " a", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 657, "token_id": 28818, "token_str": " recept", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 658, "token_id": 7902, "token_str": "acle", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 659, "token_id": 198, "token_str": "\\n", "log_prob": -1.9148273468017578, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 660, "token_id": 220, "token_str": " ", "log_prob": -0.000514984130859375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 661, "token_id": 15983, "token_str": " slice", "log_prob": -12.541597366333008, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 662, "token_id": 320, "token_str": " (", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 663, "token_id": 1700, "token_str": "object", "log_prob": -0.001605987548828125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 664, "token_id": 8, "token_str": ")", "log_prob": -7.625495910644531, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 665, "token_id": 448, "token_str": " with", "log_prob": -0.04317283630371094, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 666, "token_id": 320, "token_str": " (", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 667, "token_id": 1700, "token_str": "object", "log_prob": -1.2636375427246094, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 668, "token_id": 1648, "token_str": "):", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 669, "token_id": 257, "token_str": "    ", "log_prob": -0.014217376708984375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 670, "token_id": 15983, "token_str": " slice", "log_prob": -0.016086578369140625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 671, "token_id": 458, "token_str": " an", "log_prob": -0.000400543212890625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 672, "token_id": 1633, "token_str": " object", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 673, "token_id": 1667, "token_str": " using", "log_prob": -2.1269302368164062, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 674, "token_id": 264, "token_str": " a", "log_prob": -1.1549644470214844, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 675, "token_id": 17232, "token_str": " sharp", "log_prob": -8.394466400146484, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 676, "token_id": 1633, "token_str": " object", "log_prob": -7.62939453125e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 677, "token_id": 198, "token_str": "\\n", "log_prob": -0.14281082153320312, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 678, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -33.758419036865234, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 679, "token_id": 198, "token_str": "\\n", "log_prob": -15.759716033935547, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 680, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.00489044189453125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 681, "token_id": 77091, "token_str": "assistant", "log_prob": -0.009141921997070312, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 682, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 683, "token_id": 2512, "token_str": "Action", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 684, "token_id": 25, "token_str": ":", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 685, "token_id": 1896, "token_str": " take", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 686, "token_id": 16624, "token_str": " alarm", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 687, "token_id": 20666, "token_str": "clock", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 688, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 689, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 690, "token_id": 504, "token_str": " from", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 691, "token_id": 18010, "token_str": " desk", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 692, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 693, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 694, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -5.53131103515625e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 695, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 696, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.15648269653320312, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 697, "token_id": 872, "token_str": "user", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 698, "token_id": 198, "token_str": "\\n", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 699, "token_id": 2610, "token_str": "You", "log_prob": -1.52587890625e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 700, "token_id": 3735, "token_str": " pick", "log_prob": -9.375328063964844, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 701, "token_id": 705, "token_str": " up", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 702, "token_id": 279, "token_str": " the", "log_prob": -3.7732582092285156, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 703, "token_id": 16624, "token_str": " alarm", "log_prob": -7.62939453125e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 704, "token_id": 20666, "token_str": "clock", "log_prob": -1.52587890625e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 705, "token_id": 220, "token_str": " ", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 706, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 707, "token_id": 504, "token_str": " from", "log_prob": -0.0003910064697265625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 708, "token_id": 279, "token_str": " the", "log_prob": -1.8110389709472656, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 709, "token_id": 18010, "token_str": " desk", "log_prob": -0.007659912109375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 710, "token_id": 220, "token_str": " ", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 711, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 712, "token_id": 13, "token_str": ".", "log_prob": -3.4332275390625e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 713, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -0.0030040740966796875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 714, "token_id": 198, "token_str": "\\n", "log_prob": -0.00058746337890625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 715, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.01555633544921875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 716, "token_id": 77091, "token_str": "assistant", "log_prob": -0.02135467529296875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 717, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 718, "token_id": 2512, "token_str": "Action", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 719, "token_id": 25, "token_str": ":", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 720, "token_id": 728, "token_str": " go", "log_prob": -3.814697265625e-06, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 721, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 722, "token_id": 18010, "token_str": " desk", "log_prob": -0.000843048095703125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 723, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 724, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 725, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -0.0006198883056640625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 726, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 727, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.021295547485351562, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 728, "token_id": 872, "token_str": "user", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 729, "token_id": 198, "token_str": "\\n", "log_prob": -0.3275279998779297, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 730, "token_id": 23780, "token_str": "Nothing", "log_prob": -4.399236679077148, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 731, "token_id": 8573, "token_str": " happens", "log_prob": -14.375011444091797, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 732, "token_id": 13, "token_str": ".", "log_prob": -1.1444091796875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 733, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -0.4790916442871094, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 734, "token_id": 198, "token_str": "\\n", "log_prob": -0.4336414337158203, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 735, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.009090423583984375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 736, "token_id": 77091, "token_str": "assistant", "log_prob": -0.08057022094726562, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 737, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 738, "token_id": 84169, "token_str": "Thought", "log_prob": -0.000461578369140625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 739, "token_id": 25, "token_str": ":", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 740, "token_id": 34871, "token_str": " Going", "log_prob": -1.1043148040771484, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 741, "token_id": 311, "token_str": " to", "log_prob": -0.10730743408203125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 742, "token_id": 18010, "token_str": " desk", "log_prob": -1.1371383666992188, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 743, "token_id": 220, "token_str": " ", "log_prob": -0.05120086669921875, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 744, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 745, "token_id": 3207, "token_str": " didn", "log_prob": -0.09960174560546875, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 746, "token_id": 944, "token_str": "'t", "log_prob": -1.1444091796875e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 747, "token_id": 1281, "token_str": " make", "log_prob": -1.3804092407226562, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 748, "token_id": 5530, "token_str": " sense", "log_prob": -0.45095062255859375, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 749, "token_id": 438, "token_str": " as", "log_prob": -0.17322921752929688, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 750, "token_id": 358, "token_str": " I", "log_prob": -0.02686309814453125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 751, "token_id": 2669, "token_str": " already", "log_prob": -0.11188125610351562, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 752, "token_id": 3867, "token_str": " took", "log_prob": -0.9569778442382812, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 753, "token_id": 279, "token_str": " the", "log_prob": -0.00049591064453125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 754, "token_id": 16624, "token_str": " alarm", "log_prob": -0.00019073486328125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 755, "token_id": 20666, "token_str": "clock", "log_prob": -0.00070953369140625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 756, "token_id": 1052, "token_str": " there", "log_prob": -0.8867378234863281, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 757, "token_id": 13, "token_str": ".", "log_prob": -0.014190673828125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 758, "token_id": 358, "token_str": " I", "log_prob": -0.569122314453125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 759, "token_id": 1265, "token_str": " should", "log_prob": -0.15289688110351562, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 760, "token_id": 990, "token_str": " use", "log_prob": -1.2289371490478516, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 761, "token_id": 279, "token_str": " the", "log_prob": -0.018625259399414062, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 762, "token_id": 27962, "token_str": " lamp", "log_prob": -5.052314758300781, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 763, "token_id": 389, "token_str": " on", "log_prob": -1.191152572631836, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 764, "token_id": 279, "token_str": " the", "log_prob": -0.19778823852539062, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 765, "token_id": 18010, "token_str": " desk", "log_prob": -8.0108642578125e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 766, "token_id": 11, "token_str": ",", "log_prob": -7.311431884765625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 767, "token_id": 773, "token_str": " so", "log_prob": -0.6729850769042969, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 768, "token_id": 358, "token_str": " I", "log_prob": -0.09251785278320312, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 769, "token_id": 686, "token_str": " will", "log_prob": -1.1696128845214844, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 770, "token_id": 728, "token_str": " go", "log_prob": -0.1919384002685547, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 771, "token_id": 311, "token_str": " to", "log_prob": -0.13852310180664062, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 772, "token_id": 18010, "token_str": " desk", "log_prob": -2.4428939819335938, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 773, "token_id": 220, "token_str": " ", "log_prob": -0.0008544921875, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 774, "token_id": 16, "token_str": "1", "log_prob": -4.1961669921875e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 775, "token_id": 1549, "token_str": " again", "log_prob": -0.11714553833007812, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 776, "token_id": 382, "token_str": ".\\n\\n", "log_prob": -0.09698104858398438, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 777, "token_id": 2512, "token_str": "Action", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 778, "token_id": 25, "token_str": ":", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 779, "token_id": 728, "token_str": " go", "log_prob": -0.10033416748046875, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 780, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 781, "token_id": 18010, "token_str": " desk", "log_prob": -4.57763671875e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 782, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 783, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 784, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -5.91278076171875e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 785, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 786, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.2990684509277344, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 787, "token_id": 872, "token_str": "user", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 788, "token_id": 198, "token_str": "\\n", "log_prob": -0.000553131103515625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 789, "token_id": 23780, "token_str": "Nothing", "log_prob": -16.375335693359375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 790, "token_id": 8573, "token_str": " happens", "log_prob": -0.01416778564453125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 791, "token_id": 13, "token_str": ".", "log_prob": -7.62939453125e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 792, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -0.0028057098388671875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 793, "token_id": 198, "token_str": "\\n", "log_prob": -5.340576171875e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 794, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.0072784423828125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 795, "token_id": 77091, "token_str": "assistant", "log_prob": -0.0108184814453125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 796, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 797, "token_id": 84169, "token_str": "Thought", "log_prob": -9.918212890625e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 798, "token_id": 25, "token_str": ":", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 799, "token_id": 18765, "token_str": " Perhaps", "log_prob": -3.1993656158447266, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 800, "token_id": 279, "token_str": " the", "log_prob": -1.0923614501953125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 801, "token_id": 939, "token_str": " des", "log_prob": -0.8568267822265625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 802, "token_id": 10561, "token_str": "kl", "log_prob": -3.0517578125e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 803, "token_id": 1121, "token_str": "amp", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 804, "token_id": 374, "token_str": " is", "log_prob": -0.19721603393554688, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 805, "token_id": 537, "token_str": " not", "log_prob": -0.1626873016357422, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 806, "token_id": 15614, "token_str": " accessible", "log_prob": -5.349630355834961, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 807, "token_id": 389, "token_str": " on", "log_prob": -2.0821781158447266, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 808, "token_id": 279, "token_str": " the", "log_prob": -0.058055877685546875, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 809, "token_id": 18010, "token_str": " desk", "log_prob": -0.0058135986328125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 810, "token_id": 13, "token_str": ".", "log_prob": -0.3977317810058594, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 811, "token_id": 358, "token_str": " I", "log_prob": -0.05219078063964844, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 812, "token_id": 1265, "token_str": " should", "log_prob": -1.1473369598388672, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 813, "token_id": 1779, "token_str": " check", "log_prob": -0.6455955505371094, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 814, "token_id": 2163, "token_str": " around", "log_prob": -3.9705276489257812, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 815, "token_id": 279, "token_str": " the", "log_prob": -0.16568946838378906, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 816, "token_id": 18010, "token_str": " desk", "log_prob": -0.002071380615234375, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 817, "token_id": 311, "token_str": " to", "log_prob": -1.7477054595947266, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 818, "token_id": 1477, "token_str": " find", "log_prob": -0.4618854522705078, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 819, "token_id": 264, "token_str": " a", "log_prob": -3.350309371948242, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 820, "token_id": 3204, "token_str": " possible", "log_prob": -1.881591796875, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 821, "token_id": 1992, "token_str": " place", "log_prob": -2.155599594116211, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 822, "token_id": 429, "token_str": " that", "log_prob": -4.471458435058594, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 823, "token_id": 702, "token_str": " has", "log_prob": -2.6801223754882812, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 824, "token_id": 279, "token_str": " the", "log_prob": -0.15873146057128906, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 825, "token_id": 939, "token_str": " des", "log_prob": -0.09294700622558594, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 826, "token_id": 10561, "token_str": "kl", "log_prob": -3.814697265625e-06, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 827, "token_id": 1121, "token_str": "amp", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 828, "token_id": 382, "token_str": ".\\n\\n", "log_prob": -0.03628730773925781, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 829, "token_id": 2512, "token_str": "Action", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 830, "token_id": 25, "token_str": ":", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 831, "token_id": 1401, "token_str": " look", "log_prob": -0.0341339111328125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 832, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -0.00390625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 833, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 834, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.019643783569335938, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 835, "token_id": 872, "token_str": "user", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 836, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 837, "token_id": 2610, "token_str": "You", "log_prob": -0.16138839721679688, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 838, "token_id": 525, "token_str": " are", "log_prob": -7.911094665527344, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 839, "token_id": 12880, "token_str": " facing", "log_prob": -9.080514907836914, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 840, "token_id": 279, "token_str": " the", "log_prob": -3.9128799438476562, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 841, "token_id": 18010, "token_str": " desk", "log_prob": -0.022405624389648438, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 842, "token_id": 220, "token_str": " ", "log_prob": -1.1444091796875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 843, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 844, "token_id": 13, "token_str": ".", "log_prob": -0.004974365234375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 845, "token_id": 9295, "token_str": " Next", "log_prob": -10.368026733398438, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 846, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 847, "token_id": 432, "token_str": " it", "log_prob": -7.059816360473633, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 848, "token_id": 11, "token_str": ",", "log_prob": -0.6550159454345703, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 849, "token_id": 498, "token_str": " you", "log_prob": -0.8234100341796875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 850, "token_id": 1490, "token_str": " see", "log_prob": -0.04842376708984375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 851, "token_id": 4302, "token_str": " nothing", "log_prob": -11.010761260986328, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 852, "token_id": 13, "token_str": ".", "log_prob": -3.1121673583984375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 853, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -0.7765522003173828, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 854, "token_id": 198, "token_str": "\\n", "log_prob": -2.6702880859375e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 855, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.004913330078125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 856, "token_id": 77091, "token_str": "assistant", "log_prob": -0.0077571868896484375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 857, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 858, "token_id": 2512, "token_str": "Action", "log_prob": -0.000911712646484375, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 859, "token_id": 25, "token_str": ":", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 860, "token_id": 990, "token_str": " use", "log_prob": -0.00072479248046875, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 861, "token_id": 16624, "token_str": " alarm", "log_prob": -0.00014495849609375, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 862, "token_id": 20666, "token_str": "clock", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 863, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 864, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 865, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -5.14984130859375e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 866, "token_id": 198, "token_str": "\\n", "log_prob": -7.62939453125e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 867, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.027698516845703125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 868, "token_id": 872, "token_str": "user", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 869, "token_id": 198, "token_str": "\\n", "log_prob": -0.0049610137939453125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 870, "token_id": 23780, "token_str": "Nothing", "log_prob": -0.09237480163574219, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 871, "token_id": 8573, "token_str": " happens", "log_prob": -13.500003814697266, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 872, "token_id": 13, "token_str": ".", "log_prob": -5.7220458984375e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 873, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -0.002132415771484375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 874, "token_id": 198, "token_str": "\\n", "log_prob": -7.62939453125e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 875, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.004749298095703125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 876, "token_id": 77091, "token_str": "assistant", "log_prob": -0.00316619873046875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 877, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 878, "token_id": 84169, "token_str": "Thought", "log_prob": -1.1444091796875e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 879, "token_id": 25, "token_str": ":", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 880, "token_id": 12091, "token_str": " Using", "log_prob": -0.05080986022949219, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 881, "token_id": 279, "token_str": " the", "log_prob": -0.037105560302734375, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 882, "token_id": 16624, "token_str": " alarm", "log_prob": -0.00269317626953125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 883, "token_id": 20666, "token_str": "clock", "log_prob": -0.001934051513671875, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 884, "token_id": 3207, "token_str": " didn", "log_prob": -0.4590950012207031, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 885, "token_id": 944, "token_str": "'t", "log_prob": -0.000263214111328125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 886, "token_id": 975, "token_str": " work", "log_prob": -2.101430892944336, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 887, "token_id": 13, "token_str": ".", "log_prob": -0.6678943634033203, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 888, "token_id": 10696, "token_str": " Maybe", "log_prob": -2.844512939453125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 889, "token_id": 358, "token_str": " I", "log_prob": -0.35044288635253906, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 890, "token_id": 1184, "token_str": " need", "log_prob": -0.15835952758789062, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 891, "token_id": 311, "token_str": " to", "log_prob": -0.00066375732421875, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 892, "token_id": 3271, "token_str": " move", "log_prob": -3.6475982666015625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 893, "token_id": 432, "token_str": " it", "log_prob": -0.4156990051269531, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 894, "token_id": 311, "token_str": " to", "log_prob": -0.16793251037597656, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 895, "token_id": 264, "token_str": " a", "log_prob": -0.445892333984375, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 896, "token_id": 14452, "token_str": " suitable", "log_prob": -2.847288131713867, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 897, "token_id": 1992, "token_str": " place", "log_prob": -0.8055610656738281, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 898, "token_id": 311, "token_str": " to", "log_prob": -2.0672035217285156, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 899, "token_id": 990, "token_str": " use", "log_prob": -0.07016181945800781, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 900, "token_id": 279, "token_str": " the", "log_prob": -1.7236461639404297, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 901, "token_id": 939, "token_str": " des", "log_prob": -0.007419586181640625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 902, "token_id": 10561, "token_str": "kl", "log_prob": -6.866455078125e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 903, "token_id": 1121, "token_str": "amp", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 904, "token_id": 382, "token_str": ".\\n\\n", "log_prob": -0.14021873474121094, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 905, "token_id": 2512, "token_str": "Action", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 906, "token_id": 25, "token_str": ":", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 907, "token_id": 728, "token_str": " go", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 908, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 909, "token_id": 18010, "token_str": " desk", "log_prob": -0.01105499267578125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 910, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 911, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 912, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -0.0001068115234375, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 913, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 914, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.027072906494140625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 915, "token_id": 872, "token_str": "user", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 916, "token_id": 198, "token_str": "\\n", "log_prob": -0.5813426971435547, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 917, "token_id": 23780, "token_str": "Nothing", "log_prob": -2.035490036010742, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 918, "token_id": 8573, "token_str": " happens", "log_prob": -1.1444091796875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 919, "token_id": 13, "token_str": ".", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 920, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -0.0004825592041015625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 921, "token_id": 198, "token_str": "\\n", "log_prob": -7.62939453125e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 922, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.0040740966796875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 923, "token_id": 77091, "token_str": "assistant", "log_prob": -0.00051116943359375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 924, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 925, "token_id": 84169, "token_str": "Thought", "log_prob": -0.16028594970703125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 926, "token_id": 25, "token_str": ":", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 927, "token_id": 34871, "token_str": " Going", "log_prob": -1.1832637786865234, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 928, "token_id": 1182, "token_str": " back", "log_prob": -2.5842361450195312, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 929, "token_id": 311, "token_str": " to", "log_prob": -0.091888427734375, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 930, "token_id": 279, "token_str": " the", "log_prob": -0.5254554748535156, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 931, "token_id": 18010, "token_str": " desk", "log_prob": -0.00061798095703125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 932, "token_id": 4977, "token_str": " seems", "log_prob": -4.091974258422852, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 933, "token_id": 311, "token_str": " to", "log_prob": -1.4286022186279297, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 934, "token_id": 387, "token_str": " be", "log_prob": -0.0713348388671875, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 935, "token_id": 25165, "token_str": " unnecessary", "log_prob": -1.135824203491211, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 936, "token_id": 2474, "token_str": " since", "log_prob": -3.136049270629883, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 937, "token_id": 358, "token_str": " I", "log_prob": -0.2877464294433594, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 938, "token_id": 2669, "token_str": " already", "log_prob": -0.4884757995605469, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 939, "token_id": 12771, "token_str": " picked", "log_prob": -1.7879314422607422, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 940, "token_id": 705, "token_str": " up", "log_prob": -0.05689811706542969, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 941, "token_id": 279, "token_str": " the", "log_prob": -0.001850128173828125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 942, "token_id": 16624, "token_str": " alarm", "log_prob": -0.0012359619140625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 943, "token_id": 20666, "token_str": "clock", "log_prob": -0.0019683837890625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 944, "token_id": 13, "token_str": ".", "log_prob": -0.5202312469482422, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 945, "token_id": 6771, "token_str": " Let", "log_prob": -0.9889240264892578, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 946, "token_id": 752, "token_str": " me", "log_prob": -0.023763656616210938, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 947, "token_id": 1430, "token_str": " try", "log_prob": -0.06873703002929688, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 948, "token_id": 24047, "token_str": " placing", "log_prob": -2.2601680755615234, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 949, "token_id": 432, "token_str": " it", "log_prob": -1.138437271118164, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 950, "token_id": 1212, "token_str": " under", "log_prob": -0.25251007080078125, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 951, "token_id": 264, "token_str": " a", "log_prob": -2.147798538208008, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 952, "token_id": 14452, "token_str": " suitable", "log_prob": -2.5052452087402344, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 953, "token_id": 27962, "token_str": " lamp", "log_prob": -0.7723255157470703, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 954, "token_id": 382, "token_str": ".\\n\\n", "log_prob": -0.15168380737304688, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 955, "token_id": 2512, "token_str": "Action", "log_prob": -6.103515625e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 956, "token_id": 25, "token_str": ":", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 957, "token_id": 728, "token_str": " go", "log_prob": -0.000919342041015625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 958, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 959, "token_id": 18010, "token_str": " desk", "log_prob": -1.1690826416015625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 960, "token_id": 220, "token_str": " ", "log_prob": -1.71661376953125e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 961, "token_id": 16, "token_str": "1", "log_prob": -3.4332275390625e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 962, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -0.0051212310791015625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 963, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 964, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.14468002319335938, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 965, "token_id": 872, "token_str": "user", "log_prob": -1.1444091796875e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 966, "token_id": 198, "token_str": "\\n", "log_prob": -0.10568618774414062, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 967, "token_id": 23780, "token_str": "Nothing", "log_prob": -5.635034561157227, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 968, "token_id": 8573, "token_str": " happens", "log_prob": -7.62939453125e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 969, "token_id": 13, "token_str": ".", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 970, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -0.0002651214599609375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 971, "token_id": 198, "token_str": "\\n", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 972, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.003688812255859375, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 973, "token_id": 77091, "token_str": "assistant", "log_prob": -0.0014476776123046875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 974, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 975, "token_id": 84169, "token_str": "Thought", "log_prob": -0.1002655029296875, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 976, "token_id": 25, "token_str": ":", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 977, "token_id": 49858, "token_str": " Trying", "log_prob": -3.513660430908203, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 978, "token_id": 311, "token_str": " to", "log_prob": -0.11062049865722656, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 979, "token_id": 728, "token_str": " go", "log_prob": -0.11731338500976562, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 980, "token_id": 311, "token_str": " to", "log_prob": -0.32352447509765625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 981, "token_id": 264, "token_str": " a", "log_prob": -6.256547927856445, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 982, "token_id": 2477, "token_str": " non", "log_prob": -3.5448150634765625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 983, "token_id": 59828, "token_str": "-existent", "log_prob": -0.3280830383300781, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 984, "token_id": 18010, "token_str": " desk", "log_prob": -1.4346199035644531, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 985, "token_id": 3728, "token_str": " location", "log_prob": -1.4932174682617188, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 986, "token_id": 1549, "token_str": " again", "log_prob": -1.1564102172851562, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 987, "token_id": 2578, "token_str": " might", "log_prob": -2.739248275756836, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 988, "token_id": 537, "token_str": " not", "log_prob": -1.1434879302978516, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 989, "token_id": 387, "token_str": " be", "log_prob": -0.09935951232910156, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 990, "token_id": 279, "token_str": " the", "log_prob": -0.9322147369384766, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 991, "token_id": 4396, "token_str": " correct", "log_prob": -2.2718849182128906, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 992, "token_id": 5486, "token_str": " approach", "log_prob": -0.9943084716796875, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 993, "token_id": 13, "token_str": ".", "log_prob": -0.09654808044433594, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 994, "token_id": 358, "token_str": " I", "log_prob": -0.9768161773681641, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 995, "token_id": 2578, "token_str": " might", "log_prob": -3.4995079040527344, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 996, "token_id": 1430, "token_str": " try", "log_prob": -4.74186897277832, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 997, "token_id": 38725, "token_str": " positioning", "log_prob": -4.95018196105957, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 998, "token_id": 279, "token_str": " the", "log_prob": -0.1054840087890625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 999, "token_id": 939, "token_str": " des", "log_prob": -1.9161014556884766, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1000, "token_id": 10561, "token_str": "kl", "log_prob": -8.0108642578125e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1001, "token_id": 1121, "token_str": "amp", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1002, "token_id": 3143, "token_str": " near", "log_prob": -3.0331459045410156, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1003, "token_id": 279, "token_str": " the", "log_prob": -0.2345142364501953, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1004, "token_id": 27645, "token_str": " shelf", "log_prob": -4.229536056518555, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1005, "token_id": 1380, "token_str": " where", "log_prob": -1.541818618774414, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1006, "token_id": 279, "token_str": " the", "log_prob": -0.8938064575195312, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1007, "token_id": 27962, "token_str": " lamp", "log_prob": -1.7995586395263672, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1008, "token_id": 1410, "token_str": " could", "log_prob": -1.8964862823486328, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1009, "token_id": 387, "token_str": " be", "log_prob": -0.09347343444824219, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1010, "token_id": 7407, "token_str": " located", "log_prob": -2.0676193237304688, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1011, "token_id": 382, "token_str": ".\\n\\n", "log_prob": -0.0893707275390625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1012, "token_id": 2512, "token_str": "Action", "log_prob": -3.814697265625e-06, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1013, "token_id": 25, "token_str": ":", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1014, "token_id": 728, "token_str": " go", "log_prob": -0.0001373291015625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1015, "token_id": 311, "token_str": " to", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1016, "token_id": 27645, "token_str": " shelf", "log_prob": -0.000156402587890625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1017, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1018, "token_id": 16, "token_str": "1", "log_prob": -0.005519866943359375, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1019, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -6.29425048828125e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1020, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1021, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -1.0823345184326172, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1022, "token_id": 872, "token_str": "user", "log_prob": -7.62939453125e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1023, "token_id": 198, "token_str": "\\n", "log_prob": -0.03205108642578125, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1024, "token_id": 2610, "token_str": "You", "log_prob": -0.0533599853515625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1025, "token_id": 17331, "token_str": " arrive", "log_prob": -0.0054931640625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1026, "token_id": 518, "token_str": " at", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1027, "token_id": 27645, "token_str": " shelf", "log_prob": -2.288818359375e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1028, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1029, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1030, "token_id": 13, "token_str": ".", "log_prob": -5.7220458984375e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1031, "token_id": 1913, "token_str": " On", "log_prob": -2.8206253051757812, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1032, "token_id": 279, "token_str": " the", "log_prob": -0.20590591430664062, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1033, "token_id": 27645, "token_str": " shelf", "log_prob": -5.7220458984375e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1034, "token_id": 220, "token_str": " ", "log_prob": -0.0113372802734375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1035, "token_id": 16, "token_str": "1", "log_prob": -7.62939453125e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1036, "token_id": 11, "token_str": ",", "log_prob": -0.000911712646484375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1037, "token_id": 498, "token_str": " you", "log_prob": -0.003620147705078125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1038, "token_id": 1490, "token_str": " see", "log_prob": -0.0012359619140625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1039, "token_id": 4302, "token_str": " nothing", "log_prob": -5.161493301391602, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1040, "token_id": 13, "token_str": ".", "log_prob": -0.9098434448242188, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1041, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -0.007997512817382812, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1042, "token_id": 198, "token_str": "\\n", "log_prob": -7.62939453125e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1043, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.00170135498046875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1044, "token_id": 77091, "token_str": "assistant", "log_prob": -0.016244888305664062, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1045, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1046, "token_id": 2512, "token_str": "Action", "log_prob": -0.12693023681640625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1047, "token_id": 25, "token_str": ":", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1048, "token_id": 728, "token_str": " go", "log_prob": -0.00524139404296875, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1049, "token_id": 311, "token_str": " to", "log_prob": -4.57763671875e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1050, "token_id": 95537, "token_str": " dresser", "log_prob": -0.1312408447265625, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1051, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1052, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1053, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -7.62939453125e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1054, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1055, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -1.2340278625488281, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1056, "token_id": 872, "token_str": "user", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1057, "token_id": 198, "token_str": "\\n", "log_prob": -0.022100448608398438, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1058, "token_id": 2610, "token_str": "You", "log_prob": -0.8274269104003906, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1059, "token_id": 17331, "token_str": " arrive", "log_prob": -0.0048675537109375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1060, "token_id": 518, "token_str": " at", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1061, "token_id": 95537, "token_str": " dresser", "log_prob": -1.1444091796875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1062, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1063, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1064, "token_id": 13, "token_str": ".", "log_prob": -3.814697265625e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1065, "token_id": 1913, "token_str": " On", "log_prob": -0.2671337127685547, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1066, "token_id": 279, "token_str": " the", "log_prob": -6.103515625e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1067, "token_id": 95537, "token_str": " dresser", "log_prob": -5.340576171875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1068, "token_id": 220, "token_str": " ", "log_prob": -7.62939453125e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1069, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1070, "token_id": 11, "token_str": ",", "log_prob": -9.5367431640625e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1071, "token_id": 498, "token_str": " you", "log_prob": -7.62939453125e-06, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1072, "token_id": 1490, "token_str": " see", "log_prob": -4.38690185546875e-05, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1073, "token_id": 264, "token_str": " a", "log_prob": -0.17129135131835938, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1074, "token_id": 16624, "token_str": " alarm", "log_prob": -13.97055435180664, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1075, "token_id": 20666, "token_str": "clock", "log_prob": -0.002986907958984375, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1076, "token_id": 220, "token_str": " ", "log_prob": -0.013036727905273438, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1077, "token_id": 17, "token_str": "2", "log_prob": -0.48674964904785156, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1078, "token_id": 11, "token_str": ",", "log_prob": -0.05212974548339844, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1079, "token_id": 264, "token_str": " a", "log_prob": -0.03854942321777344, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1080, "token_id": 939, "token_str": " des", "log_prob": -14.46687126159668, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1081, "token_id": 10561, "token_str": "kl", "log_prob": -0.11560440063476562, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1082, "token_id": 1121, "token_str": "amp", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1083, "token_id": 220, "token_str": " ", "log_prob": -0.06498146057128906, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1084, "token_id": 16, "token_str": "1", "log_prob": -0.019805908203125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1085, "token_id": 11, "token_str": ",", "log_prob": -0.06091499328613281, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1086, "token_id": 264, "token_str": " a", "log_prob": -0.33867645263671875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1087, "token_id": 1376, "token_str": " key", "log_prob": -7.881214141845703, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1088, "token_id": 8819, "token_str": "chain", "log_prob": -0.03954315185546875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1089, "token_id": 220, "token_str": " ", "log_prob": -0.00244140625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1090, "token_id": 18, "token_str": "3", "log_prob": -3.9655895233154297, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1091, "token_id": 11, "token_str": ",", "log_prob": -0.03692054748535156, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1092, "token_id": 264, "token_str": " a", "log_prob": -0.3578319549560547, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1093, "token_id": 1376, "token_str": " key", "log_prob": -1.7075462341308594, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1094, "token_id": 8819, "token_str": "chain", "log_prob": -0.011249542236328125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1095, "token_id": 220, "token_str": " ", "log_prob": -0.000102996826171875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1096, "token_id": 16, "token_str": "1", "log_prob": -4.307554244995117, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1097, "token_id": 11, "token_str": ",", "log_prob": -0.05231475830078125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1098, "token_id": 323, "token_str": " and", "log_prob": -0.8334617614746094, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1099, "token_id": 264, "token_str": " a", "log_prob": -0.019237518310546875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1100, "token_id": 3736, "token_str": " watch", "log_prob": -8.05013656616211, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1101, "token_id": 220, "token_str": " ", "log_prob": -0.0049457550048828125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1102, "token_id": 16, "token_str": "1", "log_prob": -0.22024917602539062, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1103, "token_id": 13, "token_str": ".", "log_prob": -0.0001049041748046875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1104, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -0.0042057037353515625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1105, "token_id": 198, "token_str": "\\n", "log_prob": -0.0001354217529296875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1106, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -0.004547119140625, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1107, "token_id": 77091, "token_str": "assistant", "log_prob": -0.024934768676757812, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1108, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1109, "token_id": 2512, "token_str": "Action", "log_prob": -2.6702880859375e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1110, "token_id": 25, "token_str": ":", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1111, "token_id": 990, "token_str": " use", "log_prob": -0.13053512573242188, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1112, "token_id": 939, "token_str": " des", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1113, "token_id": 10561, "token_str": "kl", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1114, "token_id": 1121, "token_str": "amp", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1115, "token_id": 220, "token_str": " ", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1116, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1117, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -6.67572021484375e-05, "response_mask": 1, "env_feedback_mask": 0}
+{"i": 1118, "token_id": 198, "token_str": "\\n", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1119, "token_id": 151644, "token_str": "<|im_start|>", "log_prob": -4.021955490112305, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1120, "token_id": 872, "token_str": "user", "log_prob": -1.52587890625e-05, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1121, "token_id": 198, "token_str": "\\n", "log_prob": -0.0668182373046875, "response_mask": 0, "env_feedback_mask": 0}
+{"i": 1122, "token_id": 2610, "token_str": "You", "log_prob": -1.8429431915283203, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1123, "token_id": 2484, "token_str": " turn", "log_prob": -1.6281852722167969, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1124, "token_id": 389, "token_str": " on", "log_prob": -0.00083160400390625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1125, "token_id": 279, "token_str": " the", "log_prob": -0.048633575439453125, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1126, "token_id": 939, "token_str": " des", "log_prob": -0.000640869140625, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1127, "token_id": 10561, "token_str": "kl", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1128, "token_id": 1121, "token_str": "amp", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1129, "token_id": 220, "token_str": " ", "log_prob": -0.00017547607421875, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1130, "token_id": 16, "token_str": "1", "log_prob": -0.0, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1131, "token_id": 13, "token_str": ".", "log_prob": -0.41060829162597656, "response_mask": 0, "env_feedback_mask": 1}
+{"i": 1132, "token_id": 151645, "token_str": "<|im_end|>", "log_prob": -3.8122920989990234, "response_mask": 0, "env_feedback_mask": 0}
