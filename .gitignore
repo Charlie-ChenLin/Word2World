@@ -23,6 +23,7 @@ env.bak/
 venv.bak/
 build/
 *egg-info/
+*.whl
 
 # Debug
 .debug/

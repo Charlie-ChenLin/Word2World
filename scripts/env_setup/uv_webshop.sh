@@ -3,9 +3,10 @@ set -ex
 
 # curl -LsSf https://astral.sh/uv/install.sh | sh
 # export PATH="$HOME/.local/bin:$PATH"
-export UV_INDEX_URL=http://mirrors.i.h.pjlab.org.cn/repository/pypi-proxy/simple/
+# export UV_INDEX_URL=http://mirrors.i.h.pjlab.org.cn/repository/pypi-proxy/simple/
 # Put the venv on shared storage (similar to uv_alfworld.sh)
-export VENV_DIR=/mnt/shared-storage-user/formalverification-shared/chenlin1/uv_webshop
+# export VENV_DIR=/mnt/shared-storage-user/formalverification-shared/chenlin1/uv_webshop
+export VENV_DIR=/home/lchen/home/uv_webshop
 mkdir -p "$(dirname "$VENV_DIR")"
 uv venv "$VENV_DIR" --python 3.10
 export UV_LINK_MODE=copy

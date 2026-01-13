@@ -7,7 +7,9 @@ set -ex
 # source uv_alfworld/bin/activate
 # uv pip install --upgrade pip
 
-export VENV_DIR=/mnt/shared-storage-user/formalverification-shared/chenlin1/uv_alfworld
+# export VENV_DIR=/mnt/shared-storage-user/formalverification-shared/chenlin1/uv_alfworld
+export VENV_DIR=/home/lchen/home/uv_alfworld
+
 mkdir -p "$(dirname "$VENV_DIR")"
 uv venv "$VENV_DIR" --python 3.9
 # source uv_alfworld/bin/activate

@@ -4,6 +4,27 @@ import shutil
 import sys
 from pathlib import Path
 
+try:
+    import light_hf_proxy  # noqa: F401  # optional lightweight HF proxy
+    _LIGHT_HF_PROXY_READY = True
+except ImportError:
+    _LIGHT_HF_PROXY_READY = False
+
+
+# Default to mainland China mirror to speed up HF access
+HF_MIRROR = "https://hf-mirror.com"
+
+
+def configure_hf_endpoint(endpoint: str = HF_MIRROR) -> None:
+    """Force huggingface_hub to use the given base URL (mirror)."""
+    os.environ["HF_ENDPOINT"] = endpoint
+    os.environ["HUGGINGFACE_HUB_BASE_URL"] = endpoint
+    print(f"Using Hugging Face mirror: {endpoint}")
+    if _LIGHT_HF_PROXY_READY:
+        print("light_hf_proxy active (import succeeded).")
+    else:
+        print("light_hf_proxy not installed; continuing without it.")
+
 
 def ensure_huggingface_hub():
     try:
@@ -52,11 +73,31 @@ def main(argv=None):
         default="data",
         help="Path to output directory (default: data)",
     )
+    parser.add_argument(
+        "--hf_endpoint",
+        default=HF_MIRROR,
+        help="Hugging Face base URL to use (default: mainland mirror)",
+    )
     args = parser.parse_args(argv)
 
     ensure_huggingface_hub()
+    # Try user-specified endpoint first, then fall back to official if it fails
+    endpoints = [args.hf_endpoint]
+    if "https://huggingface.co" not in endpoints:
+        endpoints.append("https://huggingface.co")
+
+    last_err: Exception | None = None
     output_dir = Path(args.output_dir)
-    download_agent_eval(output_dir)
+    for ep in endpoints:
+        configure_hf_endpoint(ep)
+        try:
+            download_agent_eval(output_dir)
+            break
+        except Exception as exc:  # broad catch to allow graceful fallback
+            last_err = exc
+            print(f"Download failed via {ep}: {exc}\nTrying next endpoint...")
+    else:
+        raise SystemExit(last_err)
 
     # rm -rf ~/.cache/alfworld
     # unzip data/alfworld.zip -d ~/.cache

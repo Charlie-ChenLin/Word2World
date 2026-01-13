@@ -8,7 +8,10 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # source uv_agentgym_rl/bin/activate
 # uv pip install --upgrade pip
 
-export VENV_DIR=/mnt/shared-storage-user/formalverification-shared/chenlin1/uv_agentgym_rl
+# export VENV_DIR=/mnt/shared-storage-user/formalverification-shared/chenlin1/uv_agentgym_rl
+# export VENV_DIR=/mnt/shared-storage-user/formalverification-shared/chenlin1/uv_agentgym_rl
+export VENV_DIR=/home/lchen/home/uv_agentgym_rl
+
 mkdir -p "$(dirname "$VENV_DIR")"
 uv venv "$VENV_DIR" --python 3.10
 source "$VENV_DIR/bin/activate"
