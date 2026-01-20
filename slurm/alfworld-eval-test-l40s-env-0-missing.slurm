@@ -94,8 +94,8 @@ for step in "${STEPS[@]}"; do
             --batch_size "${BATCH_SIZE}" \
             --rollout_log_dir "${rollout_log_dir}" \
             > "${eval_log}" 2>&1; then
-        avg=$(awk -F': ' '/Avg@'\"${SAMPLE_NUM}\"':/{print $2; exit}' "${eval_log}" | tr -d ' ')
-        pas=$(awk -F': ' '/Pass@'\"${SAMPLE_NUM}\"':/{print $2; exit}' "${eval_log}" | tr -d ' ')
+        avg=$(awk -F': ' '/^Avg@/{print $2; exit}' "${eval_log}" | tr -d ' ')
+        pas=$(awk -F': ' '/^Pass@/{print $2; exit}' "${eval_log}" | tr -d ' ')
         status="OK"
         if [ -z "${avg}" ] || [ -z "${pas}" ]; then
             status="PARSE_FAIL"
