@@ -5,6 +5,7 @@ __pycache__/
 .history/
 core
 logs/
+log/
 wandb/
 
 # Mac
@@ -40,7 +41,7 @@ AgentGym-RL/saves/
 amlt
 !scripts/amlt
 !scripts/amlt/**
-data
+# data
 outputs
 outputs_old
 

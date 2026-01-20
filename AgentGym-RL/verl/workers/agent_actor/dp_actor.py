@@ -208,7 +208,7 @@ class DataParallelPPOActor(BasePPOActor):
 
         temperature = data.meta_info['temperature']  # temperature must be in the data.meta_info to avoid slient error
 
-        select_keys = ['input_ids', 'attention_mask', 'position_ids', 'old_log_probs', 'advantages', 'responses', 'response_mask']
+        select_keys = ['input_ids', 'attention_mask', 'position_ids', 'old_log_probs', 'advantages', 'responses', 'response_mask', 'env_feedback_mask']
         if self.config.use_kl_loss:
             select_keys.append('ref_log_prob')
         batch = data.select(batch_keys=select_keys).batch
@@ -234,11 +234,22 @@ class DataParallelPPOActor(BasePPOActor):
             for data in micro_batches:
                 data = data.cuda()  # actor device is cpu when using offload
                 response_mask = data['response_mask']
+                env_feedback_mask = data['env_feedback_mask']
                 old_log_prob = data['old_log_probs']
                 advantages = data['advantages']
+                # One-time sanity log to confirm env_feedback_mask arrives and aligns with response_mask.
+                if not getattr(self, "_logged_env_feedback_mask", False):
+                    print(
+                        "[actor] env_feedback_mask received:",
+                        f"shape={tuple(env_feedback_mask.shape)}",
+                        f"sum={env_feedback_mask.sum().item()}",
+                        f"response_sum={response_mask.sum().item()}",
+                    )
+                    self._logged_env_feedback_mask = True
 
                 clip_ratio = self.config.clip_ratio
                 entropy_coeff = self.config.entropy_coeff
+                env_feedback_coef = self.config.get('env_feedback_loss_coef', 1.0)
 
                 # all return: (bsz, response_length)
                 entropy, log_prob = self._forward_micro_batch(micro_batch=data, temperature=temperature)
@@ -254,6 +265,16 @@ class DataParallelPPOActor(BasePPOActor):
                 # compute policy loss
                 policy_loss = pg_loss - entropy_loss * entropy_coeff
 
+                # auxiliary env-feedback LM loss (maximize log_prob on env tokens)
+                env_token_count = env_feedback_mask.sum()
+                if env_token_count.item() > 0:
+                    env_feedback_loss = -verl_F.masked_mean(log_prob, env_feedback_mask)
+                else:
+                    env_feedback_loss = torch.zeros((), device=log_prob.device)
+
+                env_feedback_loss_weighted = env_feedback_loss * env_feedback_coef
+                policy_loss = policy_loss + env_feedback_loss_weighted
+
                 if self.config.use_kl_loss:
                     ref_log_prob = data['ref_log_prob']
                     # compute kl loss
@@ -268,16 +289,28 @@ class DataParallelPPOActor(BasePPOActor):
 
                 if self.config.use_dynamic_bsz:
                     # relative to the dynamic bsz
-                    loss = policy_loss * (len(data) / self.config.ppo_mini_batch_size)
+                    scale_factor = len(data) / self.config.ppo_mini_batch_size
+                    loss = policy_loss * scale_factor
                 else:
-                    loss = policy_loss / self.gradient_accumulation
+                    scale_factor = 1.0 / self.gradient_accumulation
+                    loss = policy_loss * scale_factor
                 loss.backward()
 
+                # Micro-batch metrics for logging; scaled_* reflects the actual backward scaling.
                 data = {
                     'actor/entropy_loss': entropy_loss.detach().item(),
                     'actor/pg_loss': pg_loss.detach().item(),
                     'actor/pg_clipfrac': pg_clipfrac.detach().item(),
                     'actor/ppo_kl': ppo_kl.detach().item(),
+                    'actor/env_feedback_loss': env_feedback_loss.detach().item(),
+                    'actor/env_feedback_loss_weighted': env_feedback_loss_weighted.detach().item(),
+                    'actor/env_feedback_tokens': env_token_count.detach().item(),
+                    'actor/env_feedback_coef': env_feedback_coef,
+                    'actor/policy_loss': policy_loss.detach().item(),
+                    'actor/loss': loss.detach().item(),
+                    'actor/pg_loss_scaled': (pg_loss * scale_factor).detach().item(),
+                    'actor/env_feedback_loss_scaled': (env_feedback_loss * scale_factor).detach().item(),
+                    'actor/env_feedback_loss_weighted_scaled': (env_feedback_loss_weighted * scale_factor).detach().item(),
                 }
                 append_to_dict(metrics, data)
 
@@ -285,4 +318,19 @@ class DataParallelPPOActor(BasePPOActor):
             data = {'actor/grad_norm': grad_norm.detach().item()}
             append_to_dict(metrics, data)
         self.actor_optimizer.zero_grad()
+        # Step-level aggregates (mean over micro-batches) for logging.
+        step_metric_map = {
+            'actor/policy_loss': 'actor_step/policy_loss',
+            'actor/loss': 'actor_step/loss',
+            'actor/pg_loss': 'actor_step/pg_loss',
+            'actor/env_feedback_loss': 'actor_step/env_feedback_loss',
+            'actor/env_feedback_loss_weighted': 'actor_step/env_feedback_loss_weighted',
+            'actor/pg_loss_scaled': 'actor_step/pg_loss_scaled',
+            'actor/env_feedback_loss_scaled': 'actor_step/env_feedback_loss_scaled',
+            'actor/env_feedback_loss_weighted_scaled': 'actor_step/env_feedback_loss_weighted_scaled',
+        }
+        for src_key, dst_key in step_metric_map.items():
+            vals = metrics.get(src_key)
+            if isinstance(vals, list) and len(vals) > 0:
+                metrics[dst_key] = float(sum(vals) / len(vals))
         return metrics
