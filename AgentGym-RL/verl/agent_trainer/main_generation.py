@@ -80,7 +80,10 @@ def main(config):
     # real_batch_size = data.batch['input_ids'].shape[0]
     config_batch_size = config.data.batch_size
     dp_size = wg.world_size // config.rollout.tensor_model_parallel_size
-    num_batch = (total_samples // config_batch_size) + 1
+    # NOTE: Avoid creating an extra empty batch when `total_samples % batch_size == 0`.
+    # The previous `(total_samples // batch_size) + 1` leads to `batch_item_ids=[]` on the last
+    # iteration, and `tokenizer([])` crashes with `IndexError: list index out of range`.
+    num_batch = (total_samples + config_batch_size - 1) // config_batch_size
     output_lst = [[] for _ in range(config.data.n_samples)]
     env_client = init_env_client(config.agentgym)
 
@@ -89,6 +92,9 @@ def main(config):
         start_idx = batch_idx * config_batch_size
         end_idx = min(total_samples, start_idx + config_batch_size)
         batch_item_ids = item_ids[start_idx: end_idx]
+        if len(batch_item_ids) == 0:
+            # Defensive guard in case `total_samples` changes unexpectedly or for any edge case.
+            continue
         prompt_with_chat_template = ["<|im_start|>system\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\n<|im_start|>user\n" + env_client.conversation_start[0]["value"] + "<|im_end|>\n<|im_start|>assistant\n" + env_client.conversation_start[1]["value"] + "<|im_end|>" for _ in range(len(batch_item_ids))]
         messages = [[{"role": "user", "content": env_client.conversation_start[0]["value"]},
                      {"role": "assistant", "content": env_client.conversation_start[1]["value"]}] for _ in range(len(batch_item_ids))]
