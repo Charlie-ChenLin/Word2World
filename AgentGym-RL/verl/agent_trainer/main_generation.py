@@ -85,6 +85,10 @@ def main(config):
     # iteration, and `tokenizer([])` crashes with `IndexError: list index out of range`.
     num_batch = (total_samples + config_batch_size - 1) // config_batch_size
     output_lst = [[] for _ in range(config.data.n_samples)]
+    raw_output_lst = [[] for _ in range(config.data.n_samples)]
+    rule_output_lst = [[] for _ in range(config.data.n_samples)]
+    has_raw_scores = False
+    has_rule_scores = False
     env_client = init_env_client(config.agentgym)
 
     for batch_idx in range(num_batch):
@@ -133,6 +137,12 @@ def main(config):
             output = output[:real_batch_size]
 
             output_lst[i].extend(output.batch['task_scores'].sum(dim=-1).tolist())
+            if 'raw_task_scores' in output.batch:
+                has_raw_scores = True
+                raw_output_lst[i].extend(output.batch['raw_task_scores'].sum(dim=-1).tolist())
+            if 'rule_task_scores' in output.batch:
+                has_rule_scores = True
+                rule_output_lst[i].extend(output.batch['rule_task_scores'].sum(dim=-1).tolist())
 
     # convert output_lst from (n_samples, n_data) to (n_data, n_sampels)
     output_np = np.array(output_lst, dtype=object)
@@ -140,8 +150,46 @@ def main(config):
     output_lst = output_np.tolist()
 
     print("============Total Task Evaluation============")
-    print(f"Avg@{config.data.n_samples}: {np.mean(output_np)}")
-    print(f"Pass@{config.data.n_samples}: {np.mean(np.max(output_np, axis=-1) > 0)}")
+    scores = np.array(output_np, dtype=np.float32)
+    print(f"Avg@{config.data.n_samples}: {np.mean(scores)}")
+    print(f"Pass@{config.data.n_samples}: {np.mean(np.max(scores, axis=-1) > 0)}")
+
+    def _transpose_scores(score_list):
+        score_np = np.array(score_list, dtype=object)
+        score_np = np.transpose(score_np, axes=(1, 0))
+        return np.array(score_np, dtype=np.float32)
+
+    eps = 1e-8
+    if has_raw_scores:
+        raw_scores = _transpose_scores(raw_output_lst)
+        print(f"RawAvg@{config.data.n_samples}: {np.mean(raw_scores)}")
+        print(f"RawPass@{config.data.n_samples}: {np.mean(np.max(raw_scores, axis=-1) > 0)}")
+        print(f"RawSuccessRate (reward==1.0): {np.mean(raw_scores >= 1.0 - eps)}")
+
+    if has_rule_scores:
+        rule_scores = _transpose_scores(rule_output_lst)
+        print(f"RuleAvg@{config.data.n_samples}: {np.mean(rule_scores)}")
+        print(f"RulePass@{config.data.n_samples}: {np.mean(np.max(rule_scores, axis=-1) > 0)}")
+        print(f"RuleSuccessRate (reward>0): {np.mean(rule_scores > 0)}")
+
+    # Verl-agent style metrics (WebShop): success_rate (reward==1.0) and rule-based test_score (10/0).
+    # If rule reward is already enabled in the env, scores will be 10/0; warn and adapt.
+    max_score = float(np.max(scores)) if scores.size else 0.0
+    print("============Verl-Agent Style Evaluation============")
+    if max_score > 1.0 + eps:
+        # Likely already rule-based reward; raw continuous WebShop score is not available.
+        success_rate = np.mean(scores > 0)
+        test_score = np.mean(scores)
+        print("Note: detected rule-based rewards (max>1). Raw WebShop task_score is not available.")
+        print(f"SuccessRate (reward>0): {success_rate}")
+        print(f"TestScore (rule_reward mean): {test_score}")
+        print("WebshopTaskScore (raw mean): N/A")
+    else:
+        success_rate = np.mean(scores >= 1.0 - eps)
+        test_score = success_rate * 10.0
+        print(f"WebshopTaskScore (raw mean): {np.mean(scores)}")
+        print(f"SuccessRate (reward==1.0): {success_rate}")
+        print(f"TestScore (rule_reward 10/0 mean): {test_score}")
     print("============Sub Task Evaluation============")
     
     category_success_bucket = defaultdict(list)
