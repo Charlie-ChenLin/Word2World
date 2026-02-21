@@ -81,7 +81,6 @@ class vLLMRollout(BaseRollout):
 
         if kwargs.get('train_tp', None) is not None:
             # deployed with megatron
-            import os
             os.environ['CUDA_TIMER_STREAM_KAFKA_ENABLE'] = '0'
             os.environ['MEGATRON_IMPORT_TIMERS'] = '0'
             train_tp = kwargs.get('train_tp', None)
@@ -90,11 +89,27 @@ class vLLMRollout(BaseRollout):
                 vllm_ps.initialize_parallel_state(tensor_model_parallel_size=tensor_parallel_size,
                                                   num_tp_per_train_tp=num_tp_per_train_tp)
 
+        # vLLM uses its own RNG stream for sampling. If we never override it,
+        # the engine seed defaults to 0 (see verl.third_party.vllm.*.LLM),
+        # which makes evaluation runs deterministic even with temperature > 0.
+        #
+        # For ablations (e.g. measure variance across seeds), set:
+        #   VLLM_ENGINE_SEED=1 (or 2, ...)
+        # in the Slurm job env. With apptainer, the most robust form is:
+        #   APPTAINERENV_VLLM_ENGINE_SEED=1
+        seed_env = os.environ.get("VLLM_ENGINE_SEED", "")
+        try:
+            vllm_engine_seed = int(seed_env) if seed_env != "" else 0
+        except Exception:
+            vllm_engine_seed = 0
+        print(f"[vLLMRollout] vLLM engine seed: {vllm_engine_seed}")
+
         self.inference_engine = LLM(
             actor_module,
             tokenizer=tokenizer,
             model_hf_config=model_hf_config,
             tensor_parallel_size=tensor_parallel_size,
+            seed=vllm_engine_seed,
             dtype=rollout_config.dtype,
             enforce_eager=rollout_config.enforce_eager,
             gpu_memory_utilization=rollout_config.gpu_memory_utilization,
@@ -275,6 +290,14 @@ class vLLMRollout(BaseRollout):
                     step_output.reward,
                     step_output.done,
                 )
+                info = getattr(step_output, "info", None)
+                if isinstance(info, dict):
+                    if "raw_task_score" in info:
+                        rollout_handler_ls[idx].raw_score = info["raw_task_score"]
+                    if "rule_task_score" in info:
+                        rollout_handler_ls[idx].rule_score = info["rule_task_score"]
+                    if "won" in info:
+                        rollout_handler_ls[idx].won = info["won"]
                 rollout_handler_ls[idx].add_user_message(self.tokenizer, state)
                 return step_output.done
             except Exception as e:
@@ -314,7 +337,8 @@ class vLLMRollout(BaseRollout):
         # process ids
         rollout_bar.close()
         response_ids, response_attention_mask, response_position_ids, response_loss_mask, response_env_mask = [], [], [], [], []
-        scores, messages = [], []
+        scores, raw_scores, rule_scores, wins, messages = [], [], [], [], []
+        has_rule_reward_info = False
 
         for rollout_handler in rollout_handler_ls:
             # check length
@@ -329,6 +353,13 @@ class vLLMRollout(BaseRollout):
             response_loss_mask.append(torch.tensor(rollout_handler.response_loss_mask, dtype=torch.int, device=cur_device))
             response_env_mask.append(torch.tensor(rollout_handler.response_env_mask, dtype=torch.int, device=cur_device))
             scores.append(rollout_handler.score)
+            raw_scores.append(rollout_handler.raw_score if rollout_handler.raw_score is not None else 0.0)
+            rule_scores.append(rollout_handler.rule_score if rollout_handler.rule_score is not None else 0.0)
+            wins.append(float(rollout_handler.won) if rollout_handler.won is not None else 0.0)
+            if (rollout_handler.raw_score is not None
+                    or rollout_handler.rule_score is not None
+                    or rollout_handler.won is not None):
+                has_rule_reward_info = True
             messages.append(rollout_handler.messages)
 
         # pad to length
@@ -368,18 +399,41 @@ class vLLMRollout(BaseRollout):
         for i in range(len(scores)):
             reward_tensor[i, valid_response_length[i].item() - 1] = scores[i]
 
+        raw_reward_tensor = None
+        rule_reward_tensor = None
+        if has_rule_reward_info:
+            raw_reward_tensor = torch.zeros_like(response_ids, dtype=torch.float32)
+            rule_reward_tensor = torch.zeros_like(response_ids, dtype=torch.float32)
+            for i in range(len(scores)):
+                last_idx = valid_response_length[i].item() - 1
+                raw_reward_tensor[i, last_idx] = raw_scores[i]
+                rule_reward_tensor[i, last_idx] = rule_scores[i]
+
         if global_steps:
             try:
-                os.makedirs(os.path.join(self.config.rollout_log_dir, f"step{global_steps}"), exist_ok=True)
-                with open(os.path.join(self.config.rollout_log_dir, f"step{global_steps}/{torch.distributed.get_rank()}.json"), "w") as f:
-                    json_msg = []
-                    for idx, msgs in enumerate(messages):
-                        records = {
-                            "item_id": rollout_handler_ls[idx].item_id,
-                            "conversations": [msg.to_dict() for msg in msgs],
-                            "reward": scores[idx]
-                        }
-                        json_msg.append(records)
+                log_dir = os.path.join(self.config.rollout_log_dir, f"step{global_steps}")
+                os.makedirs(log_dir, exist_ok=True)
+                log_path = os.path.join(log_dir, f"{torch.distributed.get_rank()}.json")
+                json_msg = []
+                for idx, msgs in enumerate(messages):
+                    records = {
+                        "item_id": rollout_handler_ls[idx].item_id,
+                        "conversations": [msg.to_dict() for msg in msgs],
+                        "reward": scores[idx]
+                    }
+                    json_msg.append(records)
+
+                append_logs = os.environ.get("VERL_ROLLOUT_APPEND_LOGS", "").lower() in ("1", "true", "yes")
+                if append_logs and os.path.exists(log_path):
+                    try:
+                        with open(log_path, "r") as f:
+                            existing = json.load(f)
+                        if isinstance(existing, list):
+                            json_msg = existing + json_msg
+                    except Exception:
+                        pass
+
+                with open(log_path, "w") as f:
                     json.dump(json_msg, f, ensure_ascii=True, indent=4)
             except Exception as e:
                 print(e)
@@ -391,20 +445,24 @@ class vLLMRollout(BaseRollout):
             except Exception as e:
                 print(f"Error during closing env: {e}")
 
-        batch = TensorDict(
-            {
-                'prompts': input_ids,
-                'responses': response_ids,
-                'input_ids': seq,
-                'attention_mask': attention_mask,
-                'position_ids': position_ids,
-                'response_mask': response_mask,
-                'env_feedback_mask': env_feedback_mask,
-                'scores': reward_tensor,
-                'task_rounds': torch.tensor(task_rounds, dtype=torch.float32).to(input_ids.device),
-                'task_scores': reward_tensor
-            },
-            batch_size=batch_size)
+        batch_dict = {
+            'prompts': input_ids,
+            'responses': response_ids,
+            'input_ids': seq,
+            'attention_mask': attention_mask,
+            'position_ids': position_ids,
+            'response_mask': response_mask,
+            'env_feedback_mask': env_feedback_mask,
+            'scores': reward_tensor,
+            'task_rounds': torch.tensor(task_rounds, dtype=torch.float32).to(input_ids.device),
+            'task_scores': reward_tensor,
+        }
+        if has_rule_reward_info:
+            batch_dict['raw_task_scores'] = raw_reward_tensor
+            batch_dict['rule_task_scores'] = rule_reward_tensor
+            batch_dict['task_wins'] = torch.tensor(wins, dtype=torch.float32).to(input_ids.device)
+
+        batch = TensorDict(batch_dict, batch_size=batch_size)
 
         # free vllm cache engine
         if self.config.free_cache_engine:
