@@ -247,16 +247,21 @@ class WebshopEnvClient(BaseEnvClient):
         except Exception as e:
             print(e, action)
             return StepOutput(
-                state="Invalid Action.\n\n" + self.observe(include_actions), reward=0.0, done=False
+                state="Invalid Action.\n\n" + self.observe(include_actions),
+                reward=0.0,
+                done=False,
+                info=None,
             )
         response = self._post("step", {"action": action})
         state = response["state"]
         if include_actions:
             state = self._append_admissible_actions(state)
+        info = response.get("info")
         return StepOutput(
             state=state,
             reward=response["reward"],
             done=response["done"],
+            info=info,
         )
 
     def reset(self, idx: int) -> dict[str, Any]:
