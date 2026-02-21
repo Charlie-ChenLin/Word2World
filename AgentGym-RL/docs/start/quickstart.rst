@@ -118,6 +118,11 @@ You are expected to see the following logs, indicating training in progress. The
 
 Checkout :ref:`algo-baseline-page` for full training and validation logs for reference.
 
+Notes on token-length metrics:
+
+- ``response_length/*`` counts model output tokens only (loss mask).
+- ``response_total_length/*`` counts response-side total tokens (model output + env feedback + template tokens).
+
 The checkpoint is saved at the following dir by default: ``checkpoints/${trainer.project_name}/${trainer.experiment_name}``
 
 To enable ``wandb`` for experiment tracking, set the following configs:
