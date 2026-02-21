@@ -38,7 +38,7 @@ from torch.utils.data import DataLoader, DistributedSampler
 from flash_attn.bert_padding import pad_input, unpad_input, rearrange, index_first_axis
 
 from verl.utils.fsdp_utils import get_fsdp_wrap_policy, init_fn, get_init_weight_context_manager
-from verl.utils.agent_dataset import SFTDataset
+from verl.utils.agent_dataset import PreTokenizedDataset, SFTDataset
 from verl.utils.fs import copy_local_path_from_hdfs
 from verl.utils.tracking import Tracking
 from verl.utils.ulysses import get_ulysses_sequence_parallel_world_size
@@ -119,9 +119,17 @@ class FSDPSFTTrainer(object):
     def _build_dataloader(self):
         config = self.config
         # build dataset
-        self.train_dataset = SFTDataset(json_file=config.data.train_files,
-                                        tokenizer=self.tokenizer,
-                                        prompt_key=config.data.prompt_key)
+        if config.data.get('pre_tokenized', False):
+            self.train_dataset = PreTokenizedDataset(
+                json_file=config.data.train_files,
+                tokenizer=self.tokenizer,
+                max_length=config.data.max_length,
+                truncation=config.data.truncation,
+            )
+        else:
+            self.train_dataset = SFTDataset(json_file=config.data.train_files,
+                                            tokenizer=self.tokenizer,
+                                            prompt_key=config.data.prompt_key)
 
         # build dataloader
         # Use data parallel rank and size instead of global rank and world size
