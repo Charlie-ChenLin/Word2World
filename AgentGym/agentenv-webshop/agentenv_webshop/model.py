@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from pydantic import BaseModel
 
@@ -12,7 +12,7 @@ class StepResponse(BaseModel):
     state: str
     reward: float
     done: bool
-    info: None
+    info: Optional[dict[str, Any]] = None
 
 
 class AvailableActionsResponse(BaseModel):
