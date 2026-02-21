@@ -260,6 +260,8 @@ def compute_data_metrics(batch, use_critic=True):
 
     response_length = batch.batch['response_mask'].sum(-1).float()
     prompt_length = batch.batch['attention_mask'].sum(-1).float() - response_length
+    prompt_seq_len = batch.batch['prompts'].size(-1)
+    response_total_length = batch.batch['attention_mask'][:, prompt_seq_len:].sum(-1).float()
 
     advantages = batch.batch['advantages']
     returns = batch.batch['returns']
@@ -334,6 +336,13 @@ def compute_data_metrics(batch, use_critic=True):
             torch.max(response_length).detach().item(),
         'response_length/min':
             torch.min(response_length).detach().item(),
+        # response total length (model + env feedback + templates)
+        'response_total_length/mean':
+            torch.mean(response_total_length).detach().item(),
+        'response_total_length/max':
+            torch.max(response_total_length).detach().item(),
+        'response_total_length/min':
+            torch.min(response_total_length).detach().item(),
         # prompt length
         'prompt_length/mean':
             torch.mean(prompt_length).detach().item(),
@@ -342,6 +351,35 @@ def compute_data_metrics(batch, use_critic=True):
         'prompt_length/min':
             torch.min(prompt_length).detach().item(),
     }
+
+    if 'raw_task_scores' in batch.batch:
+        raw_task_scores = batch.batch['raw_task_scores'].sum(-1)
+        metrics.update({
+            'critic/raw_task_score/mean':
+                torch.mean(raw_task_scores).detach().item(),
+            'critic/raw_task_score/max':
+                torch.max(raw_task_scores).detach().item(),
+            'critic/raw_task_score/min':
+                torch.min(raw_task_scores).detach().item(),
+        })
+
+    if 'rule_task_scores' in batch.batch:
+        rule_task_scores = batch.batch['rule_task_scores'].sum(-1)
+        metrics.update({
+            'critic/rule_task_score/mean':
+                torch.mean(rule_task_scores).detach().item(),
+            'critic/rule_task_score/max':
+                torch.max(rule_task_scores).detach().item(),
+            'critic/rule_task_score/min':
+                torch.min(rule_task_scores).detach().item(),
+        })
+
+    if 'task_wins' in batch.batch:
+        task_wins = batch.batch['task_wins'].float()
+        metrics.update({
+            'critic/success_rate/mean':
+                torch.mean(task_wins).detach().item(),
+        })
     return metrics
 
 
