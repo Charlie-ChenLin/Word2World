@@ -6,15 +6,15 @@ playwright install
 pip install -e .
 pip3 install gunicorn
 
-export SHOPPING="http://metis.lti.cs.cmu.edu:7770"
-export SHOPPING_ADMIN="http://metis.lti.cs.cmu.edu:7780/admin"
-export REDDIT="http://metis.lti.cs.cmu.edu:9999"
-export GITLAB="http://metis.lti.cs.cmu.edu:8023"
-export MAP="http://metis.lti.cs.cmu.edu:3000"
-export WIKIPEDIA="http://metis.lti.cs.cmu.edu:8888/wikipedia_en_all_maxi_2022-05/A/User:The_other_Kiwix_guy/Landing"
-export HOMEPAGE="http://metis.lti.cs.cmu.edu:4399"
-export OPENAI_API_KEY=""
-export OPENAI_BASE_URL=""
+export SHOPPING="${SHOPPING:-http://127.0.0.1:7770}"
+export SHOPPING_ADMIN="${SHOPPING_ADMIN:-http://127.0.0.1:7780/admin}"
+export REDDIT="${REDDIT:-http://127.0.0.1:9999}"
+export GITLAB="${GITLAB:-http://127.0.0.1:8023}"
+export MAP="${MAP:-http://127.0.0.1:3000}"
+export WIKIPEDIA="${WIKIPEDIA:-http://127.0.0.1:8888/wikipedia_en_all_maxi_2022-05/A/User:The_other_Kiwix_guy/Landing}"
+export HOMEPAGE="${HOMEPAGE:-http://127.0.0.1:4399}"
+export OPENAI_API_KEY="${OPENAI_API_KEY:-}"
+export OPENAI_BASE_URL="${OPENAI_BASE_URL:-}"
 
 
 python scripts/generate_test_data.py
