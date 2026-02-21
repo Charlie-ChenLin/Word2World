@@ -14,3 +14,4 @@
 
 from .rl_dataset import RLHFDataset
 from .sft_dataset import SFTDataset
+from .pretokenized_dataset import PreTokenizedDataset
