@@ -82,13 +82,30 @@ if __name__ == '__main__':
     model_state_dict_lst.append(state_dict)
     model_state_dict_lst.extend([""] * (total_shards - 1))
 
+    # Limit concurrent shard loading to avoid oversubscribing CPUs on shared Slurm nodes.
+    # Prefer explicit override via MODEL_MERGER_MAX_WORKERS; fallback to SLURM_CPUS_PER_TASK if set.
+    max_workers = None
+    if os.environ.get("MODEL_MERGER_MAX_WORKERS"):
+        try:
+            max_workers = int(os.environ["MODEL_MERGER_MAX_WORKERS"])
+        except ValueError:
+            max_workers = None
+    if max_workers is None:
+        try:
+            max_workers = int(os.environ.get("SLURM_CPUS_PER_TASK", "0")) or None
+        except ValueError:
+            max_workers = None
+    if max_workers is None:
+        max_workers = os.cpu_count() or 1
+    max_workers = max(1, min(32, max_workers))
+
     def process_one_shard(rank):
         model_path = os.path.join(local_dir, f'model_world_size_{world_size}_rank_{rank}.pt')
         state_dict = torch.load(model_path, map_location='cpu', weights_only=False)
         model_state_dict_lst[rank] = state_dict
         return state_dict
 
-    with ThreadPoolExecutor(max_workers=min(32, os.cpu_count())) as executor:
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
         for rank in range(1, total_shards):
             executor.submit(process_one_shard, rank)
     state_dict = {}
@@ -163,7 +180,6 @@ if __name__ == '__main__':
         )
     
     
-
 
 
 
