@@ -46,7 +46,10 @@ class RolloutHandler:
         prompt_env_mask: Optional[List[int]] = None,
         response_env_mask: Optional[List[int]] = None,
         max_response_len: int = 8192,
-        max_model_len: int = 32768   
+        max_model_len: int = 32768,
+        raw_score: Optional[float] = None,
+        rule_score: Optional[float] = None,
+        won: Optional[bool] = None,
     ):
         self.messages = messages
         self.task_name = task_name
@@ -69,7 +72,10 @@ class RolloutHandler:
         self.prompt_env_mask = prompt_env_mask if prompt_env_mask is not None else [0] * len(prompt_ids)
         self.response_env_mask = response_env_mask if response_env_mask is not None else []
         self.max_response_len = max_response_len
-        self.max_model_len = max_model_len  
+        self.max_model_len = max_model_len
+        self.raw_score = raw_score
+        self.rule_score = rule_score
+        self.won = won
         self.format_config: dict = {
             "qwen": {
                 "assistat_prefix_msg": "\n<|im_start|>assistant\n",
