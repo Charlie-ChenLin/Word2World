@@ -91,32 +91,66 @@ ROLLOUT_TP_SIZE="${ROLLOUT_TP_SIZE:-1}"
 
 EVAL_PATH="${EVAL_PATH:-${REPO_ROOT}/data/AgentEval/webshop}"
 
-# Pick a free local port for the env server.
+# Pick a free local port for the env server (with retries).
 WEBSHOP_PORT="${WEBSHOP_PORT:-}"
-if [ -z "${WEBSHOP_PORT}" ]; then
+WEBSHOP_PORT_RETRY="${WEBSHOP_PORT_RETRY:-10}"
+
+pick_free_port() {
   if command -v python3 >/dev/null 2>&1; then
-    WEBSHOP_PORT="$(python3 - <<'PY'
+    python3 - <<'PY'
 import socket
 s = socket.socket()
 s.bind(("", 0))
 print(s.getsockname()[1])
 s.close()
 PY
-)"
   else
-    WEBSHOP_PORT=$((36001 + (${SLURM_JOB_ID:-0} % 1000)))
+    echo $((36001 + (${SLURM_JOB_ID:-0} % 1000)))
   fi
-fi
-export WEBSHOP_PORT
-ENV_SERVER_URL="http://127.0.0.1:${WEBSHOP_PORT}"
+}
 
-# Start env server inside apptainer (CPU only).
-apptainer exec "${APPTAINER_ARGS[@]}" "${APPTAINER_IMG}" \
-  bash scripts/env_server/start_webshop.sh \
-  > "${JOB_BASE}/env_server.log" 2>&1 &
-server_pid=$!
+start_env_server() {
+  local attempt=1
+  local port=""
+  while [ "${attempt}" -le "${WEBSHOP_PORT_RETRY}" ]; do
+    if [ -n "${WEBSHOP_PORT}" ]; then
+      port="${WEBSHOP_PORT}"
+    else
+      port="$(pick_free_port)"
+    fi
+    export WEBSHOP_PORT="${port}"
+    ENV_SERVER_URL="http://127.0.0.1:${WEBSHOP_PORT}"
+    echo "[eval-envfb] Starting env server on port ${WEBSHOP_PORT} (attempt ${attempt}/${WEBSHOP_PORT_RETRY})"
+    : > "${JOB_BASE}/env_server.log"
+    apptainer exec "${APPTAINER_ARGS[@]}" "${APPTAINER_IMG}" \
+      bash scripts/env_server/start_webshop.sh \
+      > "${JOB_BASE}/env_server.log" 2>&1 &
+    server_pid=$!
+    sleep 5
+    if kill -0 "${server_pid}" 2>/dev/null; then
+      if grep -Eq "error while attempting to bind|address already in use" "${JOB_BASE}/env_server.log"; then
+        echo "[eval-envfb] Port ${WEBSHOP_PORT} in use; retrying." >&2
+      else
+        return 0
+      fi
+    fi
+    kill "${server_pid}" 2>/dev/null || true
+    wait "${server_pid}" 2>/dev/null || true
+    if [ -n "${WEBSHOP_PORT}" ]; then
+      # If user explicitly set WEBSHOP_PORT, don't randomize unless forced.
+      if [ -z "${WEBSHOP_PORT_RETRY_FORCE:-}" ]; then
+        break
+      fi
+      unset WEBSHOP_PORT
+    fi
+    attempt=$((attempt + 1))
+  done
+  echo "[eval-envfb] Failed to start env server after ${WEBSHOP_PORT_RETRY} attempts." >&2
+  exit 1
+}
+
+start_env_server
 trap 'kill ${server_pid} 2>/dev/null || true; wait ${server_pid} 2>/dev/null || true' EXIT
-sleep 5
 
 for STEP in "${steps[@]}"; do
   ckpt_actor="${SAVE_ROOT}/${MODEL_NAME}/global_step_${STEP}/actor"
@@ -151,7 +185,7 @@ for STEP in "${steps[@]}"; do
     HYDRA_FULL_ERROR=1 python3 -m verl.agent_trainer.main_generation \
       hydra.job.chdir=False \
       trainer.nnodes=1 \
-      trainer.n_gpus_per_node=1 \
+      trainer.n_gpus_per_node='${N_GPUS_PER_NODE:-1}' \
       data.path='${EVAL_PATH}' \
       data.max_prompt_length='${MAX_PROMPT_LEN}' \
       data.max_response_length='${MAX_RESPONSE_LEN}' \
