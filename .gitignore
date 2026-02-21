@@ -6,7 +6,9 @@ __pycache__/
 core
 logs/
 log/
+log
 wandb/
+wandb
 
 # Mac
 .DS_Store
@@ -46,6 +48,10 @@ outputs
 outputs_old
 
 data/
+datasets/
 .cache/
+
+# Local large artifacts
+AgentGym/agentenv-webarena/apptainer_images/
 
 codex-config-backup.toml
