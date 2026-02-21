@@ -105,7 +105,13 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 cd "${REPO_ROOT}"
 
 # Activate training env (uv preferred; fall back to conda template used by other example scripts).
-source ../uv_agentgym_rl/bin/activate
+UVENVS_HOME="${UVENVS_HOME:-$HOME/uv_envs}"
+VENV_AGENTGYM_RL="${VENV_AGENTGYM_RL:-$UVENVS_HOME/uv_agentgym_rl}"
+if [ ! -f "${VENV_AGENTGYM_RL}/bin/activate" ]; then
+    echo "[alfworld_train.sh] Missing venv: ${VENV_AGENTGYM_RL}" 1>&2
+    exit 1
+fi
+source "${VENV_AGENTGYM_RL}/bin/activate"
 
 # Offline training (no internet access; only talks to local env server).
 # NOTE: This requires `AGENT_MODEL_PATH` to point to a fully local HF model dir.
