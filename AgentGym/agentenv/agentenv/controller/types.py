@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Sequence, TypedDict, List
+from typing import Any, Optional, Sequence, TypedDict, List
 
 ConversationMessage = TypedDict(
     "ConversationMessage", {"from": str, "loss": Optional[bool], "value": str}
@@ -36,6 +36,7 @@ class StepOutput:
     state: str
     reward: float
     done: bool
+    info: Optional[dict[str, Any]] = None
 
 
 @dataclass
