@@ -7,6 +7,7 @@ from typing import Optional
 import gym
 from web_agent_site.envs import WebAgentTextEnv
 
+from .rule_reward import apply_rule_reward, rule_reward_enabled, rule_reward_values
 
 class WebshopEnvServer:
     """
@@ -45,7 +46,21 @@ class WebshopEnvServer:
         return idx
 
     def step(self, env_idx, action: str):
-        return self.env[env_idx].step(action)
+        state, raw_reward, done, info = self.env[env_idx].step(action)
+        success_reward, failure_reward = rule_reward_values()
+        rule_reward, won = apply_rule_reward(
+            raw_reward,
+            done,
+            success_reward=success_reward,
+            failure_reward=failure_reward,
+        )
+        reward = rule_reward if rule_reward_enabled() else raw_reward
+        info = dict(info or {})
+        info["task_score"] = reward
+        info["raw_task_score"] = raw_reward
+        info["rule_task_score"] = rule_reward
+        info["won"] = won
+        return state, reward, done, info
 
     def get_available_actions(self, env_idx):
         """
