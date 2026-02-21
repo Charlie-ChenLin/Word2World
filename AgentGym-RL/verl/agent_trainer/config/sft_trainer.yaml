@@ -6,6 +6,7 @@ data:
   prompt_key: conversations
   max_length: 4096
   truncation: right
+  pre_tokenized: false
   balance_dp_token: False
   chat_template: null
 model:
@@ -40,4 +41,3 @@ trainer:
   logger: ['console']
   seed: 1
   storage_mode: local
-
