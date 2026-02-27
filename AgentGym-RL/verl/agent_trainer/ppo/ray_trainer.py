@@ -35,6 +35,7 @@ from verl.agent_trainer.ppo import core_algos
 from verl.utils.seqlen_balancing import get_seqlen_balanced_partitions, log_seqlen_unbalance
 from verl.utils.checkpoint.checkpoint_manager import find_latest_ckpt_path
 from verl.utils.agent_dataset.rl_dataset import RLHFDataset, collate_fn
+from verl.utils.scheduling import build_schedule
 from abc import ABC, abstractmethod
 
 WorkerType = Type[Worker]
@@ -578,6 +579,7 @@ class RayPPOTrainer(object):
             total_training_steps = self.config.trainer.total_training_steps
 
         self.total_training_steps = total_training_steps
+        self._init_env_feedback_loss_coef_schedule()
         if self.config.algorithm.rounds_ctrl.type == 'fixed':
             self.rounds_scheduler = FixedRoundsScheduler(rounds=self.config.algorithm.rounds_ctrl.rounds)
         elif self.config.algorithm.rounds_ctrl.type == 'scaling_inter_stepwise':
@@ -591,6 +593,58 @@ class RayPPOTrainer(object):
         with open_dict(self.config):
             self.config.actor_rollout_ref.actor.optim.total_training_steps = total_training_steps
             self.config.critic.optim.total_training_steps = total_training_steps
+
+    def _init_env_feedback_loss_coef_schedule(self):
+        schedule_cfg = self.config.actor_rollout_ref.actor.get("env_feedback_loss_coef_schedule", None)
+        self.env_feedback_loss_coef_schedule_enabled = False
+        self.env_feedback_loss_coef_schedule_algo = (
+            schedule_cfg.get("scheduling_algo", "linear") if schedule_cfg is not None else "linear"
+        )
+        self.env_feedback_loss_coef_schedule_initial = float(
+            self.config.actor_rollout_ref.actor.env_feedback_loss_coef,
+        )
+        self.env_feedback_loss_coef_schedule_final = self.env_feedback_loss_coef_schedule_initial
+        self.env_feedback_loss_coef_schedule = None
+
+        if schedule_cfg is None:
+            return
+
+        enabled = bool(schedule_cfg.get("enabled", False))
+        self.env_feedback_loss_coef_schedule_enabled = enabled
+
+        final_value = schedule_cfg.get(
+            "final_env_feedback_loss_coef",
+            self.env_feedback_loss_coef_schedule_initial,
+        )
+        if final_value is None:
+            final_value = self.env_feedback_loss_coef_schedule_initial
+        self.env_feedback_loss_coef_schedule_final = float(final_value)
+
+        if not enabled:
+            return
+
+        self.env_feedback_loss_coef_schedule = build_schedule(
+            self.env_feedback_loss_coef_schedule_algo,
+            start=self.env_feedback_loss_coef_schedule_initial,
+            end=self.env_feedback_loss_coef_schedule_final,
+            total_steps=self.total_training_steps,
+        )
+
+    def _get_env_feedback_loss_coef(self, step: int) -> float:
+        if self.env_feedback_loss_coef_schedule is None:
+            return self.env_feedback_loss_coef_schedule_initial
+        return float(self.env_feedback_loss_coef_schedule.value_at(step))
+
+    def _log_env_feedback_loss_coef(self, step: int, value: float):
+        print(
+            f"[env_feedback_loss_coef_schedule] step={step}/{self.total_training_steps} "
+            f"enabled={self.env_feedback_loss_coef_schedule_enabled} "
+            f"algo={self.env_feedback_loss_coef_schedule_algo} "
+            f"initial={self.env_feedback_loss_coef_schedule_initial} "
+            f"final={self.env_feedback_loss_coef_schedule_final} "
+            f"current={value}",
+            flush=True,
+        )
 
     def init_workers(self):
         """Init resource pool and worker group"""
@@ -883,6 +937,9 @@ class RayPPOTrainer(object):
                                                   lam=self.config.algorithm.lam,
                                                   num_repeat=self.config.actor_rollout_ref.rollout.n)
 
+                    current_env_feedback_loss_coef = self._get_env_feedback_loss_coef(self.global_steps)
+                    batch.meta_info["env_feedback_loss_coef"] = current_env_feedback_loss_coef
+
                     # update critic
                     if self.use_critic:
                         with _timer('update_critic', timing_raw):
@@ -907,8 +964,18 @@ class RayPPOTrainer(object):
                 metrics.update(compute_data_metrics(batch=batch, use_critic=self.use_critic))
                 metrics.update(compute_timing_metrics(batch=batch, timing_raw=timing_raw))
 
+                metrics.update({
+                    "env_feedback_loss_coef/current": current_env_feedback_loss_coef,
+                    "env_feedback_loss_coef/initial": self.env_feedback_loss_coef_schedule_initial,
+                    "env_feedback_loss_coef/final": self.env_feedback_loss_coef_schedule_final,
+                    "env_feedback_loss_coef/enabled": float(self.env_feedback_loss_coef_schedule_enabled),
+                    "env_feedback_loss_coef/total_steps": float(self.total_training_steps),
+                })
+
                 # TODO: make a canonical logger that supports various backend
                 logger.log(data=metrics, step=self.global_steps)
+
+                self._log_env_feedback_loss_coef(self.global_steps, current_env_feedback_loss_coef)
 
                 self.global_steps += 1
                 self.rounds_scheduler.step()
