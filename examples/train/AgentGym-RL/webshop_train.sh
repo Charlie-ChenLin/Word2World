@@ -36,7 +36,11 @@ All options override the defaults in this script. They can also be set via env v
   --rounds INT
   --project_name NAME
   --save_freq INT
+  --grad_clip FLOAT
   --env_feedback_loss_coef FLOAT
+  --schedule_env_feedback_loss_coef BOOL
+  --final_env_feedback_loss_coef FLOAT
+  --scheduling_algo NAME
   --webshop_rule_reward BOOL
   --webshop_rule_reward_success FLOAT
   --webshop_rule_reward_fail FLOAT
@@ -76,7 +80,11 @@ critic_use_remove_padding="${CRITIC_USE_REMOVE_PADDING:-${use_remove_padding}}"
 rounds="${ROUNDS:-30}"
 project_name="${PROJECT_NAME:-xxx}"
 save_freq="${SAVE_FREQ:-50}"
+grad_clip="${GRAD_CLIP:-1.0}"
 env_feedback_loss_coef="${ENV_FEEDBACK_LOSS_COEF:-1.0}"
+schedule_env_feedback_loss_coef="${SCHEDULE_ENV_FEEDBACK_LOSS_COEF:-false}"
+final_env_feedback_loss_coef="${FINAL_ENV_FEEDBACK_LOSS_COEF:-}"
+scheduling_algo="${SCHEDULING_ALGO:-linear}"
 webshop_rule_reward="${WEBSHOP_RULE_REWARD:-0}"
 webshop_rule_reward_success="${WEBSHOP_RULE_REWARD_SUCCESS:-10}"
 webshop_rule_reward_fail="${WEBSHOP_RULE_REWARD_FAIL:-0}"
@@ -114,7 +122,11 @@ while [ $# -gt 0 ]; do
         --rounds) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; rounds="$2"; shift 2 ;;
         --project_name) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; project_name="$2"; shift 2 ;;
         --save_freq) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; save_freq="$2"; shift 2 ;;
+        --grad_clip) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; grad_clip="$2"; shift 2 ;;
         --env_feedback_loss_coef) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_loss_coef="$2"; shift 2 ;;
+        --schedule_env_feedback_loss_coef) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; schedule_env_feedback_loss_coef="$2"; shift 2 ;;
+        --final_env_feedback_loss_coef) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; final_env_feedback_loss_coef="$2"; shift 2 ;;
+        --scheduling_algo) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; scheduling_algo="$2"; shift 2 ;;
         --webshop_rule_reward) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; webshop_rule_reward="$2"; shift 2 ;;
         --webshop_rule_reward_success) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; webshop_rule_reward_success="$2"; shift 2 ;;
         --webshop_rule_reward_fail) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; webshop_rule_reward_fail="$2"; shift 2 ;;
@@ -122,6 +134,18 @@ while [ $# -gt 0 ]; do
         *) echo "Unknown argument: $1" 1>&2; usage; exit 1 ;;
     esac
 done
+
+normalize_bool() {
+    case "$1" in
+        1|true|TRUE|True|yes|YES|y|Y) echo "true" ;;
+        0|false|FALSE|False|no|NO|n|N|"") echo "false" ;;
+        *) echo "$1" ;;
+    esac
+}
+schedule_env_feedback_loss_coef="$(normalize_bool "${schedule_env_feedback_loss_coef}")"
+if [ -z "${final_env_feedback_loss_coef}" ]; then
+    final_env_feedback_loss_coef="${env_feedback_loss_coef}"
+fi
 
 export VLLM_USE_MODELSCOPE="${VLLM_USE_MODELSCOPE:-0}"
 export VLLM_WORKER_MULTIPROC_METHOD="${VLLM_WORKER_MULTIPROC_METHOD:-spawn}"
@@ -182,7 +206,7 @@ if [ -n "${total_training_steps}" ]; then
     extra_trainer_overrides+=("trainer.total_training_steps=${total_training_steps}")
 fi
 
-HYDRA_FULL_ERROR=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True WANDB_MODE=offline python3 -m verl.agent_trainer.main_ppo  \
+HYDRA_FULL_ERROR=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True PYTHONUNBUFFERED=1 WANDB_MODE=offline python3 -m verl.agent_trainer.main_ppo  \
     hydra.job.chdir=False \
     hydra.run.dir="${HYDRA_RUN_DIR}" \
     algorithm.adv_estimator=grpo \
@@ -215,7 +239,11 @@ HYDRA_FULL_ERROR=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True WANDB_MODE=o
     actor_rollout_ref.actor.optim.lr=${policy_learning_rate} \
     actor_rollout_ref.actor.ppo_mini_batch_size=${ppo_mini_batch_size} \
     actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=${ppo_micro_batch_size_per_gpu} \
+    actor_rollout_ref.actor.grad_clip=${grad_clip} \
     actor_rollout_ref.actor.env_feedback_loss_coef=${env_feedback_loss_coef} \
+    actor_rollout_ref.actor.env_feedback_loss_coef_schedule.enabled=${schedule_env_feedback_loss_coef} \
+    actor_rollout_ref.actor.env_feedback_loss_coef_schedule.final_env_feedback_loss_coef=${final_env_feedback_loss_coef} \
+    actor_rollout_ref.actor.env_feedback_loss_coef_schedule.scheduling_algo=${scheduling_algo} \
     actor_rollout_ref.rollout.rollout_log_dir=${model_save_path}/executer_logs \
     algorithm.kl_ctrl.kl_coef=${kl_coef} \
     trainer.default_local_dir=${model_save_path} \
@@ -223,6 +251,7 @@ HYDRA_FULL_ERROR=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True WANDB_MODE=o
     trainer.experiment_name=${exp_name} \
     trainer.save_freq=${save_freq} \
     trainer.total_epochs=${total_epochs} \
+    critic.grad_clip=${grad_clip} \
     "${extra_trainer_overrides[@]}"
 status=$?
 exit $status
