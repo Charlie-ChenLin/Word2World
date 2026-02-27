@@ -31,6 +31,9 @@ All options override the defaults in this script. They can also be set via env v
   --project_name NAME
   --save_freq INT
   --env_feedback_loss_coef FLOAT
+  --schedule_env_feedback_loss_coef BOOL
+  --final_env_feedback_loss_coef FLOAT
+  --scheduling_algo NAME
   -h, --help
 EOF
 }
@@ -62,6 +65,9 @@ rounds="${ROUNDS:-30}"
 project_name="${PROJECT_NAME:-xxx}"
 save_freq="${SAVE_FREQ:-25}"
 env_feedback_loss_coef="${ENV_FEEDBACK_LOSS_COEF:-1.0}"
+schedule_env_feedback_loss_coef="${SCHEDULE_ENV_FEEDBACK_LOSS_COEF:-false}"
+final_env_feedback_loss_coef="${FINAL_ENV_FEEDBACK_LOSS_COEF:-}"
+scheduling_algo="${SCHEDULING_ALGO:-linear}"
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -91,10 +97,25 @@ while [ $# -gt 0 ]; do
         --project_name) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; project_name="$2"; shift 2 ;;
         --save_freq) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; save_freq="$2"; shift 2 ;;
         --env_feedback_loss_coef) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_loss_coef="$2"; shift 2 ;;
+        --schedule_env_feedback_loss_coef) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; schedule_env_feedback_loss_coef="$2"; shift 2 ;;
+        --final_env_feedback_loss_coef) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; final_env_feedback_loss_coef="$2"; shift 2 ;;
+        --scheduling_algo) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; scheduling_algo="$2"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
         *) echo "Unknown argument: $1" 1>&2; usage; exit 1 ;;
     esac
 done
+
+normalize_bool() {
+    case "$1" in
+        1|true|TRUE|True|yes|YES|y|Y) echo "true" ;;
+        0|false|FALSE|False|no|NO|n|N|"") echo "false" ;;
+        *) echo "$1" ;;
+    esac
+}
+schedule_env_feedback_loss_coef="$(normalize_bool "${schedule_env_feedback_loss_coef}")"
+if [ -z "${final_env_feedback_loss_coef}" ]; then
+    final_env_feedback_loss_coef="${env_feedback_loss_coef}"
+fi
 
 export VLLM_USE_MODELSCOPE="${VLLM_USE_MODELSCOPE:-0}"
 export VLLM_WORKER_MULTIPROC_METHOD="${VLLM_WORKER_MULTIPROC_METHOD:-spawn}"
@@ -169,6 +190,9 @@ HYDRA_FULL_ERROR=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True WANDB_MODE=o
     actor_rollout_ref.actor.ppo_mini_batch_size=${ppo_mini_batch_size} \
     actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=${ppo_micro_batch_size_per_gpu} \
     actor_rollout_ref.actor.env_feedback_loss_coef=${env_feedback_loss_coef} \
+    actor_rollout_ref.actor.env_feedback_loss_coef_schedule.enabled=${schedule_env_feedback_loss_coef} \
+    actor_rollout_ref.actor.env_feedback_loss_coef_schedule.final_env_feedback_loss_coef=${final_env_feedback_loss_coef} \
+    actor_rollout_ref.actor.env_feedback_loss_coef_schedule.scheduling_algo=${scheduling_algo} \
     actor_rollout_ref.rollout.rollout_log_dir=${model_save_path}/executer_logs \
     algorithm.kl_ctrl.kl_coef=${kl_coef} \
     trainer.default_local_dir=${model_save_path} \
