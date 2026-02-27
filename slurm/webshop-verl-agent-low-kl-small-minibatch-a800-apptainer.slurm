@@ -86,6 +86,9 @@ export WEBSHOP_RULE_REWARD_SUCCESS="${WEBSHOP_RULE_REWARD_SUCCESS:-10}"
 export WEBSHOP_RULE_REWARD_FAIL="${WEBSHOP_RULE_REWARD_FAIL:-0}"
 export RUN_TS="${RUN_TS:-$(date +%Y%m%d-%H%M%S)}"
 export ENV_FEEDBACK_LOSS_COEF="${ENV_FEEDBACK_LOSS_COEF:-0}"
+export SCHEDULE_ENV_FEEDBACK_LOSS_COEF="${SCHEDULE_ENV_FEEDBACK_LOSS_COEF:-false}"
+export FINAL_ENV_FEEDBACK_LOSS_COEF="${FINAL_ENV_FEEDBACK_LOSS_COEF:-}"
+export SCHEDULING_ALGO="${SCHEDULING_ALGO:-linear}"
 mkdir -p "$TRITON_CACHE_DIR"
 
 MODEL_SAVE_DIR_DEFAULT="/mnt/inspurfs/chenlin1/ckpts/projects/Word2World/AgentGym-RL/saves"
@@ -183,6 +186,9 @@ srun --ntasks=1 --cpus-per-task=52 --gres=gpu:4 \
      --rollout_gpu_mem_util "${ROLLOUT_GPU_MEM_UTIL:-0.6}" \
      --rollout_tp_size "${ROLLOUT_TP_SIZE:-1}" \
      --env_feedback_loss_coef "${ENV_FEEDBACK_LOSS_COEF}" \
+     --schedule_env_feedback_loss_coef "${SCHEDULE_ENV_FEEDBACK_LOSS_COEF}" \
+     --final_env_feedback_loss_coef "${FINAL_ENV_FEEDBACK_LOSS_COEF}" \
+     --scheduling_algo "${SCHEDULING_ALGO}" \
      --save_freq "${SAVE_FREQ:-50}" \
      --webshop_rule_reward "${WEBSHOP_RULE_REWARD}" \
      --webshop_rule_reward_success "${WEBSHOP_RULE_REWARD_SUCCESS}" \
