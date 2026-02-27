@@ -208,6 +208,11 @@ class DataParallelPPOActor(BasePPOActor):
 
         temperature = data.meta_info['temperature']  # temperature must be in the data.meta_info to avoid slient error
 
+        env_feedback_coef = data.meta_info.get(
+            'env_feedback_loss_coef',
+            self.config.get('env_feedback_loss_coef', 1.0),
+        )
+
         select_keys = ['input_ids', 'attention_mask', 'position_ids', 'old_log_probs', 'advantages', 'responses', 'response_mask', 'env_feedback_mask']
         if self.config.use_kl_loss:
             select_keys.append('ref_log_prob')
@@ -249,8 +254,6 @@ class DataParallelPPOActor(BasePPOActor):
 
                 clip_ratio = self.config.clip_ratio
                 entropy_coeff = self.config.entropy_coeff
-                env_feedback_coef = self.config.get('env_feedback_loss_coef', 1.0)
-
                 # all return: (bsz, response_length)
                 entropy, log_prob = self._forward_micro_batch(micro_batch=data, temperature=temperature)
 
