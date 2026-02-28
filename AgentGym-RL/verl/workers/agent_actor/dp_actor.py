@@ -19,6 +19,7 @@ import itertools
 from typing import Tuple
 
 import torch
+import torch.distributed as dist
 from torch import nn
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 
@@ -54,6 +55,13 @@ class DataParallelPPOActor(BasePPOActor):
         self.use_ulysses_sp = self.ulysses_sequence_parallel_size > 1
 
         self.compute_entropy_from_logits = torch.compile(verl_F.entropy_from_logits, dynamic=True)
+        self.project_env_feedback_grad_to_pg = bool(self.config.get('project_env_feedback_grad_to_pg', False))
+        self.env_feedback_grad_proj_eps = float(self.config.get('env_feedback_grad_proj_eps', 1e-12))
+        self._actor_params = [param for param in self.actor_module.parameters() if param.requires_grad]
+        print(
+            f"Actor project_env_feedback_grad_to_pg={self.project_env_feedback_grad_to_pg} "
+            f"env_feedback_grad_proj_eps={self.env_feedback_grad_proj_eps}"
+        )
 
     def _forward_micro_batch(self, micro_batch, temperature) -> Tuple[torch.Tensor, torch.Tensor]:
         """
@@ -149,6 +157,81 @@ class DataParallelPPOActor(BasePPOActor):
             grad_norm = torch.nn.utils.clip_grad_norm_(self.actor_module.parameters(), max_norm=self.config.grad_clip)
         self.actor_optimizer.step()
         return grad_norm
+
+    def _compute_grad_norm_sq(self, device: torch.device) -> torch.Tensor:
+        grad_norm_sq = torch.zeros((), device=device, dtype=torch.float32)
+        for param in self._actor_params:
+            if param.grad is None:
+                continue
+            grad = param.grad.detach().float()
+            grad_norm_sq.add_(torch.sum(grad * grad))
+        return grad_norm_sq
+
+    def _project_env_grad_to_pg(
+        self,
+        env_feedback_loss_scaled: torch.Tensor,
+        pg_grad_norm_sq: torch.Tensor,
+        retain_graph: bool,
+    ):
+        dot = torch.zeros((), device=env_feedback_loss_scaled.device, dtype=torch.float32)
+        env_grad_norm_sq = torch.zeros((), device=env_feedback_loss_scaled.device, dtype=torch.float32)
+        handles = []
+
+        def _make_hook(param):
+            def _hook(env_grad):
+                if env_grad is None:
+                    return env_grad
+                env_grad_fp32 = env_grad.detach().float()
+                env_grad_norm_sq.add_(torch.sum(env_grad_fp32 * env_grad_fp32))
+                pg_grad = param.grad
+                if pg_grad is not None:
+                    dot.add_(torch.sum(env_grad_fp32 * pg_grad.detach().float()))
+                return torch.zeros_like(env_grad)
+
+            return _hook
+
+        for param in self._actor_params:
+            handles.append(param.register_hook(_make_hook(param)))
+
+        try:
+            env_feedback_loss_scaled.backward(retain_graph=retain_graph)
+        finally:
+            for handle in handles:
+                handle.remove()
+
+        if dist.is_available() and dist.is_initialized():
+            dist.all_reduce(dot, op=dist.ReduceOp.SUM)
+            dist.all_reduce(pg_grad_norm_sq, op=dist.ReduceOp.SUM)
+            dist.all_reduce(env_grad_norm_sq, op=dist.ReduceOp.SUM)
+
+        cosine_before = dot / torch.sqrt(
+            pg_grad_norm_sq.clamp_min(self.env_feedback_grad_proj_eps)
+            * env_grad_norm_sq.clamp_min(self.env_feedback_grad_proj_eps)
+        )
+
+        if pg_grad_norm_sq.item() <= self.env_feedback_grad_proj_eps:
+            alpha = torch.zeros_like(dot)
+            cosine_after = torch.zeros_like(dot)
+            aligned_after = 0.0
+            return alpha, dot, pg_grad_norm_sq, env_grad_norm_sq, cosine_before, cosine_after, aligned_after, 0.0
+
+        alpha = dot / pg_grad_norm_sq.clamp_min(self.env_feedback_grad_proj_eps)
+        for param in self._actor_params:
+            if param.grad is None:
+                continue
+            param.grad.mul_((1.0 + alpha).to(dtype=param.grad.dtype))
+
+        if alpha.item() > self.env_feedback_grad_proj_eps:
+            cosine_after = torch.ones_like(alpha)
+            aligned_after = 1.0
+        elif alpha.item() < -self.env_feedback_grad_proj_eps:
+            cosine_after = -torch.ones_like(alpha)
+            aligned_after = 0.0
+        else:
+            cosine_after = torch.zeros_like(alpha)
+            aligned_after = 0.0
+
+        return alpha, dot, pg_grad_norm_sq, env_grad_norm_sq, cosine_before, cosine_after, aligned_after, 1.0
 
     def compute_log_prob(self, data: DataProto, train_mode: bool = False) -> torch.Tensor:
         """Compute the log probability of the responses given input_ids, attention_mask and position_ids
@@ -278,6 +361,7 @@ class DataParallelPPOActor(BasePPOActor):
                 env_feedback_loss_weighted = env_feedback_loss * env_feedback_coef
                 policy_loss = policy_loss + env_feedback_loss_weighted
 
+                kl_loss = None
                 if self.config.use_kl_loss:
                     ref_log_prob = data['ref_log_prob']
                     # compute kl loss
@@ -297,7 +381,48 @@ class DataParallelPPOActor(BasePPOActor):
                 else:
                     scale_factor = 1.0 / self.gradient_accumulation
                     loss = policy_loss * scale_factor
-                loss.backward()
+
+                env_feedback_proj_alpha = torch.zeros((), device=log_prob.device)
+                env_feedback_proj_dot = torch.zeros((), device=log_prob.device)
+                env_feedback_proj_pg_norm_sq = torch.zeros((), device=log_prob.device)
+                env_feedback_proj_env_norm_sq = torch.zeros((), device=log_prob.device)
+                env_feedback_proj_cosine_before = torch.zeros((), device=log_prob.device)
+                env_feedback_proj_cosine_after = torch.zeros((), device=log_prob.device)
+                env_feedback_proj_aligned_after = 0.0
+                env_feedback_proj_applied = 0.0
+                use_env_feedback_grad_proj = self.project_env_feedback_grad_to_pg and env_token_count.item() > 0
+
+                if use_env_feedback_grad_proj:
+                    pg_loss_scaled = pg_loss * scale_factor
+                    has_entropy_term = float(entropy_coeff) != 0.0
+                    has_kl_term = self.config.use_kl_loss and float(self.config.kl_loss_coef) != 0.0
+                    other_policy_loss = -entropy_loss * entropy_coeff
+                    if self.config.use_kl_loss:
+                        other_policy_loss = other_policy_loss + kl_loss * self.config.kl_loss_coef
+                    has_other_policy_loss = has_entropy_term or has_kl_term
+
+                    pg_loss_scaled.backward(retain_graph=True)
+                    env_feedback_proj_pg_norm_sq = self._compute_grad_norm_sq(device=log_prob.device)
+                    env_feedback_loss_weighted_scaled = env_feedback_loss_weighted * scale_factor
+                    (
+                        env_feedback_proj_alpha,
+                        env_feedback_proj_dot,
+                        env_feedback_proj_pg_norm_sq,
+                        env_feedback_proj_env_norm_sq,
+                        env_feedback_proj_cosine_before,
+                        env_feedback_proj_cosine_after,
+                        env_feedback_proj_aligned_after,
+                        env_feedback_proj_applied,
+                    ) = self._project_env_grad_to_pg(
+                        env_feedback_loss_scaled=env_feedback_loss_weighted_scaled,
+                        pg_grad_norm_sq=env_feedback_proj_pg_norm_sq,
+                        retain_graph=has_other_policy_loss,
+                    )
+                    if has_other_policy_loss:
+                        other_policy_loss_scaled = other_policy_loss * scale_factor
+                        other_policy_loss_scaled.backward()
+                else:
+                    loss.backward()
 
                 # Micro-batch metrics for logging; scaled_* reflects the actual backward scaling.
                 data = {
@@ -314,6 +439,15 @@ class DataParallelPPOActor(BasePPOActor):
                     'actor/pg_loss_scaled': (pg_loss * scale_factor).detach().item(),
                     'actor/env_feedback_loss_scaled': (env_feedback_loss * scale_factor).detach().item(),
                     'actor/env_feedback_loss_weighted_scaled': (env_feedback_loss_weighted * scale_factor).detach().item(),
+                    'actor/env_feedback_proj_enabled': float(self.project_env_feedback_grad_to_pg),
+                    'actor/env_feedback_proj_applied': env_feedback_proj_applied,
+                    'actor/env_feedback_proj_alpha': env_feedback_proj_alpha.detach().item(),
+                    'actor/env_feedback_proj_dot': env_feedback_proj_dot.detach().item(),
+                    'actor/env_feedback_proj_pg_norm_sq': env_feedback_proj_pg_norm_sq.detach().item(),
+                    'actor/env_feedback_proj_env_norm_sq': env_feedback_proj_env_norm_sq.detach().item(),
+                    'actor/env_feedback_proj_cosine_before': env_feedback_proj_cosine_before.detach().item(),
+                    'actor/env_feedback_proj_cosine_after': env_feedback_proj_cosine_after.detach().item(),
+                    'actor/env_feedback_proj_aligned_after': env_feedback_proj_aligned_after,
                 }
                 append_to_dict(metrics, data)
 
@@ -331,6 +465,14 @@ class DataParallelPPOActor(BasePPOActor):
             'actor/pg_loss_scaled': 'actor_step/pg_loss_scaled',
             'actor/env_feedback_loss_scaled': 'actor_step/env_feedback_loss_scaled',
             'actor/env_feedback_loss_weighted_scaled': 'actor_step/env_feedback_loss_weighted_scaled',
+            'actor/env_feedback_proj_applied': 'actor_step/env_feedback_proj_applied',
+            'actor/env_feedback_proj_alpha': 'actor_step/env_feedback_proj_alpha',
+            'actor/env_feedback_proj_dot': 'actor_step/env_feedback_proj_dot',
+            'actor/env_feedback_proj_pg_norm_sq': 'actor_step/env_feedback_proj_pg_norm_sq',
+            'actor/env_feedback_proj_env_norm_sq': 'actor_step/env_feedback_proj_env_norm_sq',
+            'actor/env_feedback_proj_cosine_before': 'actor_step/env_feedback_proj_cosine_before',
+            'actor/env_feedback_proj_cosine_after': 'actor_step/env_feedback_proj_cosine_after',
+            'actor/env_feedback_proj_aligned_after': 'actor_step/env_feedback_proj_aligned_after',
         }
         for src_key, dst_key in step_metric_map.items():
             vals = metrics.get(src_key)

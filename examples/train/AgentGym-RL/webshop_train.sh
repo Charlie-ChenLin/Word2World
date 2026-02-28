@@ -38,6 +38,8 @@ All options override the defaults in this script. They can also be set via env v
   --save_freq INT
   --grad_clip FLOAT
   --env_feedback_loss_coef FLOAT
+  --env_feedback_grad_proj_to_pg BOOL
+  --env_feedback_grad_proj_eps FLOAT
   --schedule_env_feedback_loss_coef BOOL
   --final_env_feedback_loss_coef FLOAT
   --scheduling_algo NAME
@@ -82,6 +84,8 @@ project_name="${PROJECT_NAME:-xxx}"
 save_freq="${SAVE_FREQ:-50}"
 grad_clip="${GRAD_CLIP:-1.0}"
 env_feedback_loss_coef="${ENV_FEEDBACK_LOSS_COEF:-1.0}"
+env_feedback_grad_proj_to_pg="${ENV_FEEDBACK_GRAD_PROJ_TO_PG:-false}"
+env_feedback_grad_proj_eps="${ENV_FEEDBACK_GRAD_PROJ_EPS:-1e-12}"
 schedule_env_feedback_loss_coef="${SCHEDULE_ENV_FEEDBACK_LOSS_COEF:-false}"
 final_env_feedback_loss_coef="${FINAL_ENV_FEEDBACK_LOSS_COEF:-}"
 scheduling_algo="${SCHEDULING_ALGO:-linear}"
@@ -124,6 +128,8 @@ while [ $# -gt 0 ]; do
         --save_freq) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; save_freq="$2"; shift 2 ;;
         --grad_clip) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; grad_clip="$2"; shift 2 ;;
         --env_feedback_loss_coef) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_loss_coef="$2"; shift 2 ;;
+        --env_feedback_grad_proj_to_pg) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_grad_proj_to_pg="$2"; shift 2 ;;
+        --env_feedback_grad_proj_eps) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_grad_proj_eps="$2"; shift 2 ;;
         --schedule_env_feedback_loss_coef) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; schedule_env_feedback_loss_coef="$2"; shift 2 ;;
         --final_env_feedback_loss_coef) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; final_env_feedback_loss_coef="$2"; shift 2 ;;
         --scheduling_algo) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; scheduling_algo="$2"; shift 2 ;;
@@ -142,6 +148,7 @@ normalize_bool() {
         *) echo "$1" ;;
     esac
 }
+env_feedback_grad_proj_to_pg="$(normalize_bool "${env_feedback_grad_proj_to_pg}")"
 schedule_env_feedback_loss_coef="$(normalize_bool "${schedule_env_feedback_loss_coef}")"
 if [ -z "${final_env_feedback_loss_coef}" ]; then
     final_env_feedback_loss_coef="${env_feedback_loss_coef}"
@@ -241,6 +248,8 @@ HYDRA_FULL_ERROR=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True PYTHONUNBUFF
     actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=${ppo_micro_batch_size_per_gpu} \
     actor_rollout_ref.actor.grad_clip=${grad_clip} \
     actor_rollout_ref.actor.env_feedback_loss_coef=${env_feedback_loss_coef} \
+    actor_rollout_ref.actor.project_env_feedback_grad_to_pg=${env_feedback_grad_proj_to_pg} \
+    actor_rollout_ref.actor.env_feedback_grad_proj_eps=${env_feedback_grad_proj_eps} \
     actor_rollout_ref.actor.env_feedback_loss_coef_schedule.enabled=${schedule_env_feedback_loss_coef} \
     actor_rollout_ref.actor.env_feedback_loss_coef_schedule.final_env_feedback_loss_coef=${final_env_feedback_loss_coef} \
     actor_rollout_ref.actor.env_feedback_loss_coef_schedule.scheduling_algo=${scheduling_algo} \
