@@ -396,14 +396,15 @@ class DataParallelPPOActor(BasePPOActor):
                     pg_loss_scaled = pg_loss * scale_factor
                     has_entropy_term = float(entropy_coeff) != 0.0
                     has_kl_term = self.config.use_kl_loss and float(self.config.kl_loss_coef) != 0.0
-                    other_policy_loss = -entropy_loss * entropy_coeff
-                    if self.config.use_kl_loss:
-                        other_policy_loss = other_policy_loss + kl_loss * self.config.kl_loss_coef
                     has_other_policy_loss = has_entropy_term or has_kl_term
 
-                    pg_loss_scaled.backward(retain_graph=True)
+                    pg_loss_scaled.backward()
                     env_feedback_proj_pg_norm_sq = self._compute_grad_norm_sq(device=log_prob.device)
-                    env_feedback_loss_weighted_scaled = env_feedback_loss_weighted * scale_factor
+                    # Recompute env-feedback loss on a fresh graph to avoid second-backward issues
+                    # under FSDP + activation checkpointing.
+                    _, log_prob_env = self._forward_micro_batch(micro_batch=data, temperature=temperature)
+                    env_feedback_loss_proj = -verl_F.masked_mean(log_prob_env, env_feedback_mask)
+                    env_feedback_loss_weighted_scaled = env_feedback_loss_proj * env_feedback_coef * scale_factor
                     (
                         env_feedback_proj_alpha,
                         env_feedback_proj_dot,
@@ -416,10 +417,20 @@ class DataParallelPPOActor(BasePPOActor):
                     ) = self._project_env_grad_to_pg(
                         env_feedback_loss_scaled=env_feedback_loss_weighted_scaled,
                         pg_grad_norm_sq=env_feedback_proj_pg_norm_sq,
-                        retain_graph=has_other_policy_loss,
+                        retain_graph=False,
                     )
                     if has_other_policy_loss:
-                        other_policy_loss_scaled = other_policy_loss * scale_factor
+                        entropy_other, log_prob_other = self._forward_micro_batch(micro_batch=data, temperature=temperature)
+                        other_policy_loss_recomputed = -verl_F.masked_mean(entropy_other, response_mask) * entropy_coeff
+                        if self.config.use_kl_loss:
+                            kld_other = core_algos.kl_penalty(logprob=log_prob_other,
+                                                              ref_logprob=ref_log_prob,
+                                                              kl_penalty=self.config.kl_loss_type)
+                            kl_loss_other = masked_mean(kld_other, response_mask)
+                            other_policy_loss_recomputed = other_policy_loss_recomputed + kl_loss_other * self.config.kl_loss_coef
+                            metrics['actor/kl_loss'] = kl_loss_other.detach().item()
+                            metrics['actor/kl_coef'] = self.config.kl_loss_coef
+                        other_policy_loss_scaled = other_policy_loss_recomputed * scale_factor
                         other_policy_loss_scaled.backward()
                 else:
                     loss.backward()

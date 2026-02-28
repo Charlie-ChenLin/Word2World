@@ -86,6 +86,8 @@ export WEBSHOP_RULE_REWARD_SUCCESS="${WEBSHOP_RULE_REWARD_SUCCESS:-10}"
 export WEBSHOP_RULE_REWARD_FAIL="${WEBSHOP_RULE_REWARD_FAIL:-0}"
 export RUN_TS="${RUN_TS:-$(date +%Y%m%d-%H%M%S)}"
 export ENV_FEEDBACK_LOSS_COEF="${ENV_FEEDBACK_LOSS_COEF:-1}"
+export ENV_FEEDBACK_GRAD_PROJ_TO_PG="${ENV_FEEDBACK_GRAD_PROJ_TO_PG:-false}"
+export ENV_FEEDBACK_GRAD_PROJ_EPS="${ENV_FEEDBACK_GRAD_PROJ_EPS:-1e-12}"
 export SCHEDULE_ENV_FEEDBACK_LOSS_COEF="${SCHEDULE_ENV_FEEDBACK_LOSS_COEF:-true}"
 export FINAL_ENV_FEEDBACK_LOSS_COEF="${FINAL_ENV_FEEDBACK_LOSS_COEF:-0}"
 export SCHEDULING_ALGO="${SCHEDULING_ALGO:-linear}"
@@ -188,6 +190,8 @@ srun --ntasks=1 --cpus-per-task=52 --gres=gpu:4 \
      --rollout_gpu_mem_util "${ROLLOUT_GPU_MEM_UTIL:-0.6}" \
      --rollout_tp_size "${ROLLOUT_TP_SIZE:-1}" \
      --env_feedback_loss_coef "${ENV_FEEDBACK_LOSS_COEF}" \
+     --env_feedback_grad_proj_to_pg "${ENV_FEEDBACK_GRAD_PROJ_TO_PG}" \
+     --env_feedback_grad_proj_eps "${ENV_FEEDBACK_GRAD_PROJ_EPS}" \
      --schedule_env_feedback_loss_coef "${SCHEDULE_ENV_FEEDBACK_LOSS_COEF}" \
      --final_env_feedback_loss_coef "${FINAL_ENV_FEEDBACK_LOSS_COEF}" \
      --scheduling_algo "${SCHEDULING_ALGO}" \
