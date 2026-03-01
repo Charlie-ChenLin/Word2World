@@ -41,6 +41,7 @@ All options override the defaults in this script. They can also be set via env v
   --env_feedback_grad_proj_to_pg BOOL
   --env_feedback_grad_proj_eps FLOAT
   --env_feedback_grad_proj_impl NAME
+  --env_feedback_grad_proj_legacy_compat_metrics BOOL
   --schedule_env_feedback_loss_coef BOOL
   --final_env_feedback_loss_coef FLOAT
   --scheduling_algo NAME
@@ -88,6 +89,7 @@ env_feedback_loss_coef="${ENV_FEEDBACK_LOSS_COEF:-1.0}"
 env_feedback_grad_proj_to_pg="${ENV_FEEDBACK_GRAD_PROJ_TO_PG:-false}"
 env_feedback_grad_proj_eps="${ENV_FEEDBACK_GRAD_PROJ_EPS:-1e-12}"
 env_feedback_grad_proj_impl="${ENV_FEEDBACK_GRAD_PROJ_IMPL:-reordered_exact}"
+env_feedback_grad_proj_legacy_compat_metrics="${ENV_FEEDBACK_GRAD_PROJ_LEGACY_COMPAT_METRICS:-false}"
 schedule_env_feedback_loss_coef="${SCHEDULE_ENV_FEEDBACK_LOSS_COEF:-false}"
 final_env_feedback_loss_coef="${FINAL_ENV_FEEDBACK_LOSS_COEF:-}"
 scheduling_algo="${SCHEDULING_ALGO:-linear}"
@@ -133,6 +135,7 @@ while [ $# -gt 0 ]; do
         --env_feedback_grad_proj_to_pg) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_grad_proj_to_pg="$2"; shift 2 ;;
         --env_feedback_grad_proj_eps) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_grad_proj_eps="$2"; shift 2 ;;
         --env_feedback_grad_proj_impl) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_grad_proj_impl="$2"; shift 2 ;;
+        --env_feedback_grad_proj_legacy_compat_metrics) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_grad_proj_legacy_compat_metrics="$2"; shift 2 ;;
         --schedule_env_feedback_loss_coef) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; schedule_env_feedback_loss_coef="$2"; shift 2 ;;
         --final_env_feedback_loss_coef) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; final_env_feedback_loss_coef="$2"; shift 2 ;;
         --scheduling_algo) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; scheduling_algo="$2"; shift 2 ;;
@@ -254,6 +257,7 @@ HYDRA_FULL_ERROR=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True PYTHONUNBUFF
     actor_rollout_ref.actor.project_env_feedback_grad_to_pg=${env_feedback_grad_proj_to_pg} \
     actor_rollout_ref.actor.env_feedback_grad_proj_eps=${env_feedback_grad_proj_eps} \
     actor_rollout_ref.actor.env_feedback_grad_proj_impl=${env_feedback_grad_proj_impl} \
+    actor_rollout_ref.actor.env_feedback_grad_proj_legacy_compat_metrics=${env_feedback_grad_proj_legacy_compat_metrics} \
     actor_rollout_ref.actor.env_feedback_loss_coef_schedule.enabled=${schedule_env_feedback_loss_coef} \
     actor_rollout_ref.actor.env_feedback_loss_coef_schedule.final_env_feedback_loss_coef=${final_env_feedback_loss_coef} \
     actor_rollout_ref.actor.env_feedback_loss_coef_schedule.scheduling_algo=${scheduling_algo} \

@@ -60,6 +60,10 @@ class DataParallelPPOActor(BasePPOActor):
         self.env_feedback_grad_proj_eps = float(self.config.get('env_feedback_grad_proj_eps', 1e-12))
         self.env_feedback_grad_proj_min_free_gb = float(self.config.get('env_feedback_grad_proj_min_free_gb', 0.0))
         self.env_feedback_grad_proj_oom_fallback = bool(self.config.get('env_feedback_grad_proj_oom_fallback', True))
+        self.env_feedback_grad_proj_legacy_compat_metrics = bool(
+            self.config.get('env_feedback_grad_proj_legacy_compat_metrics', False)
+        )
+        self._env_feedback_grad_proj_legacy_compat_runtime_disabled = False
         self.env_feedback_grad_proj_impl = str(
             self.config.get('env_feedback_grad_proj_impl', 'reordered_exact')
         ).strip().lower()
@@ -76,6 +80,7 @@ class DataParallelPPOActor(BasePPOActor):
             f"env_feedback_grad_proj_eps={self.env_feedback_grad_proj_eps} "
             f"env_feedback_grad_proj_min_free_gb={self.env_feedback_grad_proj_min_free_gb} "
             f"env_feedback_grad_proj_oom_fallback={self.env_feedback_grad_proj_oom_fallback} "
+            f"env_feedback_grad_proj_legacy_compat_metrics={self.env_feedback_grad_proj_legacy_compat_metrics} "
             f"env_feedback_grad_proj_impl={self.env_feedback_grad_proj_impl}"
         )
 
@@ -564,12 +569,21 @@ class DataParallelPPOActor(BasePPOActor):
                 env_feedback_proj_env_norm_sq = torch.zeros((), device=device)
                 env_feedback_proj_cosine_before = torch.zeros((), device=device)
                 env_feedback_proj_cosine_after = torch.zeros((), device=device)
+                env_feedback_proj_alpha_abs = torch.zeros((), device=device)
+                env_feedback_proj_dot_abs = torch.zeros((), device=device)
+                env_feedback_proj_alpha_legacy_compat = torch.zeros((), device=device)
+                env_feedback_proj_dot_legacy_compat = torch.zeros((), device=device)
+                env_feedback_proj_pg_norm_sq_legacy_compat = torch.zeros((), device=device)
+                env_feedback_proj_env_norm_sq_legacy_compat = torch.zeros((), device=device)
+                env_feedback_proj_cosine_before_legacy_compat = torch.zeros((), device=device)
                 env_feedback_proj_aligned_after = 0.0
                 env_feedback_proj_pg_grad_offloaded = 0.0
                 env_feedback_proj_pg_grad_offload_mb = 0.0
                 env_feedback_proj_applied = 0.0
                 env_feedback_proj_skipped_low_mem = 0.0
                 env_feedback_proj_oom_fallback = 0.0
+                env_feedback_proj_legacy_compat_enabled = 0.0
+                env_feedback_proj_legacy_compat_valid = 0.0
                 microbatch_oom_skipped = 0.0
                 entropy_runtime_disabled_metric = 1.0 if entropy_runtime_disabled else 0.0
                 env_feedback_proj_impl_id = 0.0 if self.env_feedback_grad_proj_impl == 'legacy_cpu_offload' else 1.0
@@ -714,6 +728,66 @@ class DataParallelPPOActor(BasePPOActor):
                             env_feedback_loss = -verl_F.masked_mean(log_prob_pg, env_feedback_mask).detach()
                             env_feedback_loss_weighted = env_feedback_loss * env_feedback_coef
 
+                            legacy_compat_metrics_enabled = (
+                                self.env_feedback_grad_proj_legacy_compat_metrics
+                                and (not self._env_feedback_grad_proj_legacy_compat_runtime_disabled)
+                            )
+                            env_feedback_proj_legacy_compat_enabled = 1.0 if legacy_compat_metrics_enabled else 0.0
+                            if legacy_compat_metrics_enabled:
+                                try:
+                                    _, log_prob_pg_legacy = self._forward_micro_batch(
+                                        micro_batch=data,
+                                        temperature=temperature,
+                                        compute_entropy=False,
+                                    )
+                                    pg_loss_legacy, _, _ = core_algos.compute_policy_loss(
+                                        old_log_prob=old_log_prob,
+                                        log_prob=log_prob_pg_legacy,
+                                        advantages=advantages,
+                                        eos_mask=response_mask,
+                                        cliprange=clip_ratio,
+                                    )
+                                    pg_loss_legacy_scaled = pg_loss_legacy * scale_factor
+                                    (
+                                        offloaded_pg_grads_legacy,
+                                        _,
+                                        env_feedback_proj_pg_norm_sq_legacy_compat,
+                                    ) = self._capture_pg_grads_to_cpu_without_accum(
+                                        pg_loss_scaled=pg_loss_legacy_scaled,
+                                        retain_graph=False,
+                                    )
+                                    _, log_prob_env_legacy = self._forward_micro_batch(
+                                        micro_batch=data,
+                                        temperature=temperature,
+                                        compute_entropy=False,
+                                    )
+                                    env_feedback_loss_proj_legacy = -verl_F.masked_mean(log_prob_env_legacy, env_feedback_mask)
+                                    env_feedback_loss_weighted_scaled_legacy = (
+                                        env_feedback_loss_proj_legacy * env_feedback_coef * scale_factor
+                                    )
+                                    (
+                                        env_feedback_proj_alpha_legacy_compat,
+                                        env_feedback_proj_dot_legacy_compat,
+                                        env_feedback_proj_pg_norm_sq_legacy_compat,
+                                        env_feedback_proj_env_norm_sq_legacy_compat,
+                                        env_feedback_proj_cosine_before_legacy_compat,
+                                        _,
+                                        _,
+                                        env_feedback_proj_legacy_compat_valid,
+                                    ) = self._compute_env_proj_stats_from_pg_cpu(
+                                        env_feedback_loss_scaled=env_feedback_loss_weighted_scaled_legacy,
+                                        pg_grads_cpu=offloaded_pg_grads_legacy,
+                                        pg_grad_norm_sq=env_feedback_proj_pg_norm_sq_legacy_compat,
+                                        retain_graph=False,
+                                    )
+                                    self._clear_current_grads()
+                                except RuntimeError as runtime_err:
+                                    if not self._is_oom_error(runtime_err):
+                                        raise
+                                    self._env_feedback_grad_proj_legacy_compat_runtime_disabled = True
+                                    print("[actor] disable env_feedback_grad_proj_legacy_compat_metrics due to OOM")
+                                    self._handle_microbatch_oom()
+
                             pg_loss_scaled = pg_loss * scale_factor
                             pg_loss_scaled.backward()
                             env_feedback_proj_pg_norm_sq = self._compute_grad_norm_sq(device=device)
@@ -739,6 +813,8 @@ class DataParallelPPOActor(BasePPOActor):
                                 pg_grad_norm_sq=env_feedback_proj_pg_norm_sq,
                                 retain_graph=False,
                             )
+                            env_feedback_proj_alpha_abs = torch.abs(env_feedback_proj_alpha.detach())
+                            env_feedback_proj_dot_abs = torch.abs(env_feedback_proj_dot.detach())
 
                             kl_loss = torch.zeros((), device=device)
                             other_policy_loss = torch.zeros((), device=device)
@@ -832,6 +908,9 @@ class DataParallelPPOActor(BasePPOActor):
                         if len(offloaded_accum_grads) > 0:
                             self._accumulate_offloaded_grads_from_cpu(offloaded_grads=offloaded_accum_grads, scale=1.0)
 
+                env_feedback_proj_alpha_abs = torch.abs(env_feedback_proj_alpha.detach())
+                env_feedback_proj_dot_abs = torch.abs(env_feedback_proj_dot.detach())
+
                 # Micro-batch metrics for logging; scaled_* reflects the actual backward scaling.
                 data = {
                     'actor/entropy_loss': entropy_loss.detach().item(),
@@ -850,11 +929,20 @@ class DataParallelPPOActor(BasePPOActor):
                     'actor/env_feedback_proj_enabled': float(self.project_env_feedback_grad_to_pg),
                     'actor/env_feedback_proj_applied': env_feedback_proj_applied,
                     'actor/env_feedback_proj_alpha': env_feedback_proj_alpha.detach().item(),
+                    'actor/env_feedback_proj_alpha_abs': env_feedback_proj_alpha_abs.detach().item(),
                     'actor/env_feedback_proj_dot': env_feedback_proj_dot.detach().item(),
+                    'actor/env_feedback_proj_dot_abs': env_feedback_proj_dot_abs.detach().item(),
                     'actor/env_feedback_proj_pg_norm_sq': env_feedback_proj_pg_norm_sq.detach().item(),
                     'actor/env_feedback_proj_env_norm_sq': env_feedback_proj_env_norm_sq.detach().item(),
                     'actor/env_feedback_proj_cosine_before': env_feedback_proj_cosine_before.detach().item(),
                     'actor/env_feedback_proj_cosine_after': env_feedback_proj_cosine_after.detach().item(),
+                    'actor/env_feedback_proj_alpha_legacy_compat': env_feedback_proj_alpha_legacy_compat.detach().item(),
+                    'actor/env_feedback_proj_dot_legacy_compat': env_feedback_proj_dot_legacy_compat.detach().item(),
+                    'actor/env_feedback_proj_pg_norm_sq_legacy_compat': env_feedback_proj_pg_norm_sq_legacy_compat.detach().item(),
+                    'actor/env_feedback_proj_env_norm_sq_legacy_compat': env_feedback_proj_env_norm_sq_legacy_compat.detach().item(),
+                    'actor/env_feedback_proj_cosine_before_legacy_compat': env_feedback_proj_cosine_before_legacy_compat.detach().item(),
+                    'actor/env_feedback_proj_legacy_compat_enabled': env_feedback_proj_legacy_compat_enabled,
+                    'actor/env_feedback_proj_legacy_compat_valid': env_feedback_proj_legacy_compat_valid,
                     'actor/env_feedback_proj_aligned_after': env_feedback_proj_aligned_after,
                     'actor/env_feedback_proj_pg_grad_offloaded': env_feedback_proj_pg_grad_offloaded,
                     'actor/env_feedback_proj_pg_grad_offload_mb': env_feedback_proj_pg_grad_offload_mb,
@@ -882,11 +970,20 @@ class DataParallelPPOActor(BasePPOActor):
             'actor/env_feedback_loss_weighted_scaled': 'actor_step/env_feedback_loss_weighted_scaled',
             'actor/env_feedback_proj_applied': 'actor_step/env_feedback_proj_applied',
             'actor/env_feedback_proj_alpha': 'actor_step/env_feedback_proj_alpha',
+            'actor/env_feedback_proj_alpha_abs': 'actor_step/env_feedback_proj_alpha_abs',
             'actor/env_feedback_proj_dot': 'actor_step/env_feedback_proj_dot',
+            'actor/env_feedback_proj_dot_abs': 'actor_step/env_feedback_proj_dot_abs',
             'actor/env_feedback_proj_pg_norm_sq': 'actor_step/env_feedback_proj_pg_norm_sq',
             'actor/env_feedback_proj_env_norm_sq': 'actor_step/env_feedback_proj_env_norm_sq',
             'actor/env_feedback_proj_cosine_before': 'actor_step/env_feedback_proj_cosine_before',
             'actor/env_feedback_proj_cosine_after': 'actor_step/env_feedback_proj_cosine_after',
+            'actor/env_feedback_proj_alpha_legacy_compat': 'actor_step/env_feedback_proj_alpha_legacy_compat',
+            'actor/env_feedback_proj_dot_legacy_compat': 'actor_step/env_feedback_proj_dot_legacy_compat',
+            'actor/env_feedback_proj_pg_norm_sq_legacy_compat': 'actor_step/env_feedback_proj_pg_norm_sq_legacy_compat',
+            'actor/env_feedback_proj_env_norm_sq_legacy_compat': 'actor_step/env_feedback_proj_env_norm_sq_legacy_compat',
+            'actor/env_feedback_proj_cosine_before_legacy_compat': 'actor_step/env_feedback_proj_cosine_before_legacy_compat',
+            'actor/env_feedback_proj_legacy_compat_enabled': 'actor_step/env_feedback_proj_legacy_compat_enabled',
+            'actor/env_feedback_proj_legacy_compat_valid': 'actor_step/env_feedback_proj_legacy_compat_valid',
             'actor/env_feedback_proj_aligned_after': 'actor_step/env_feedback_proj_aligned_after',
             'actor/env_feedback_proj_pg_grad_offloaded': 'actor_step/env_feedback_proj_pg_grad_offloaded',
             'actor/env_feedback_proj_pg_grad_offload_mb': 'actor_step/env_feedback_proj_pg_grad_offload_mb',
