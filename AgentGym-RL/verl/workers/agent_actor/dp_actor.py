@@ -677,6 +677,8 @@ class DataParallelPPOActor(BasePPOActor):
                 env_feedback_proj_oom_fallback = 0.0
                 env_feedback_proj_legacy_compat_enabled = 0.0
                 env_feedback_proj_legacy_compat_valid = 0.0
+                env_feedback_proj_alpha_pos_count = 0.0
+                env_feedback_proj_alpha_valid_count = 0.0
                 microbatch_oom_skipped = 0.0
                 entropy_runtime_disabled_metric = 1.0 if entropy_runtime_disabled else 0.0
                 env_feedback_proj_impl_id = 0.0 if self.env_feedback_grad_proj_impl == 'legacy_cpu_offload' else 1.0
@@ -1016,6 +1018,11 @@ class DataParallelPPOActor(BasePPOActor):
 
                 env_feedback_proj_alpha_abs = torch.abs(env_feedback_proj_alpha.detach())
                 env_feedback_proj_dot_abs = torch.abs(env_feedback_proj_dot.detach())
+                if env_feedback_proj_applied > 0.0:
+                    env_feedback_proj_alpha_valid_count = 1.0
+                    env_feedback_proj_alpha_pos_count = (
+                        1.0 if env_feedback_proj_alpha.detach().item() > self.env_feedback_grad_proj_eps else 0.0
+                    )
 
                 # Micro-batch metrics for logging; scaled_* reflects the actual backward scaling.
                 data = {
@@ -1051,6 +1058,8 @@ class DataParallelPPOActor(BasePPOActor):
                     'actor/env_feedback_proj_cosine_before_legacy_compat': env_feedback_proj_cosine_before_legacy_compat.detach().item(),
                     'actor/env_feedback_proj_legacy_compat_enabled': env_feedback_proj_legacy_compat_enabled,
                     'actor/env_feedback_proj_legacy_compat_valid': env_feedback_proj_legacy_compat_valid,
+                    'actor/env_feedback_proj_alpha_pos_count': env_feedback_proj_alpha_pos_count,
+                    'actor/env_feedback_proj_alpha_valid_count': env_feedback_proj_alpha_valid_count,
                     'actor/env_feedback_proj_aligned_after': env_feedback_proj_aligned_after,
                     'actor/env_feedback_proj_pg_grad_offloaded': env_feedback_proj_pg_grad_offloaded,
                     'actor/env_feedback_proj_pg_grad_offload_mb': env_feedback_proj_pg_grad_offload_mb,
@@ -1094,6 +1103,8 @@ class DataParallelPPOActor(BasePPOActor):
             'actor/env_feedback_proj_cosine_before_legacy_compat': 'actor_step/env_feedback_proj_cosine_before_legacy_compat',
             'actor/env_feedback_proj_legacy_compat_enabled': 'actor_step/env_feedback_proj_legacy_compat_enabled',
             'actor/env_feedback_proj_legacy_compat_valid': 'actor_step/env_feedback_proj_legacy_compat_valid',
+            'actor/env_feedback_proj_alpha_pos_count': 'actor_step/env_feedback_proj_alpha_pos_count',
+            'actor/env_feedback_proj_alpha_valid_count': 'actor_step/env_feedback_proj_alpha_valid_count',
             'actor/env_feedback_proj_aligned_after': 'actor_step/env_feedback_proj_aligned_after',
             'actor/env_feedback_proj_pg_grad_offloaded': 'actor_step/env_feedback_proj_pg_grad_offloaded',
             'actor/env_feedback_proj_pg_grad_offload_mb': 'actor_step/env_feedback_proj_pg_grad_offload_mb',
@@ -1107,4 +1118,17 @@ class DataParallelPPOActor(BasePPOActor):
             vals = metrics.get(src_key)
             if isinstance(vals, list) and len(vals) > 0:
                 metrics[dst_key] = float(sum(vals) / len(vals))
+        alpha_pos_vals = metrics.get('actor/env_feedback_proj_alpha_pos_count')
+        alpha_valid_vals = metrics.get('actor/env_feedback_proj_alpha_valid_count')
+        if (
+            isinstance(alpha_pos_vals, list)
+            and isinstance(alpha_valid_vals, list)
+            and len(alpha_pos_vals) > 0
+            and len(alpha_valid_vals) > 0
+        ):
+            alpha_valid_total = float(sum(alpha_valid_vals))
+            if alpha_valid_total > 0.0:
+                metrics['actor_step/env_feedback_proj_alpha_pos_ratio'] = float(sum(alpha_pos_vals)) / alpha_valid_total
+            else:
+                metrics['actor_step/env_feedback_proj_alpha_pos_ratio'] = 0.0
         return metrics
