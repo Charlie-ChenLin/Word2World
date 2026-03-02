@@ -69,6 +69,19 @@ This document tracks the cumulative changes on this branch relative to the earli
   - with support counters:
     - `actor_step/env_feedback_proj_alpha_pos_count`
     - `actor_step/env_feedback_proj_alpha_valid_count`
+- Added projection distribution diagnostics (step-level):
+  - `actor_step/env_feedback_proj_alpha_max`
+  - `actor_step/env_feedback_proj_alpha_min`
+  - `actor_step/env_feedback_proj_alpha_std`
+  - `actor_step/env_feedback_proj_cosine_before_max`
+  - `actor_step/env_feedback_proj_cosine_before_min`
+  - `actor_step/env_feedback_proj_cosine_before_std`
+  - `actor_step/env_feedback_proj_cosine_after_max`
+  - `actor_step/env_feedback_proj_cosine_after_min`
+  - `actor_step/env_feedback_proj_cosine_after_std`
+  - `actor_step/env_feedback_proj_cosine_before_pos_ratio`
+  - `actor_step/env_feedback_proj_cosine_before_pos_mean`
+  - `actor_step/env_feedback_proj_cosine_before_neg_mean`
 
 ## 5) Training Interface Changes
 
