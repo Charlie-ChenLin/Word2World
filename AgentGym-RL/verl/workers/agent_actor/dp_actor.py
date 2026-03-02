@@ -260,32 +260,86 @@ class DataParallelPPOActor(BasePPOActor):
             else:
                 param.grad.add_(grad_restore)
 
+    def _align_env_pg_for_dot(
+        self,
+        pg_grad: torch.Tensor,
+        env_grad: torch.Tensor,
+        param_idx: int,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        pg_flat = pg_grad.reshape(-1)
+        env_flat = env_grad.reshape(-1)
+        if pg_flat.numel() == env_flat.numel():
+            return env_grad, pg_grad.reshape_as(env_grad)
+
+        rank = dist.get_rank() if dist.is_available() and dist.is_initialized() else 0
+        if pg_flat.numel() > env_flat.numel() and pg_flat.numel() % env_flat.numel() == 0:
+            shard_count = pg_flat.numel() // env_flat.numel()
+            shard_rank = rank % shard_count
+            start = shard_rank * env_flat.numel()
+            pg_shard = pg_flat.narrow(0, start, env_flat.numel()).reshape_as(env_grad)
+            return env_grad, pg_shard
+
+        if env_flat.numel() > pg_flat.numel() and env_flat.numel() % pg_flat.numel() == 0:
+            shard_count = env_flat.numel() // pg_flat.numel()
+            shard_rank = rank % shard_count
+            start = shard_rank * pg_flat.numel()
+            env_shard = env_flat.narrow(0, start, pg_flat.numel()).reshape_as(pg_grad)
+            return env_shard, pg_grad
+
+        raise RuntimeError(
+            f"PG/env grad shape mismatch for param idx {param_idx}: "
+            f"{tuple(pg_grad.shape)} vs {tuple(env_grad.shape)}"
+        )
+
     def _project_env_grad_to_pg(
         self,
         env_feedback_loss_scaled: torch.Tensor,
         pg_grad_norm_sq: torch.Tensor,
         retain_graph: bool,
+        pg_grads_cpu: dict = None,
     ):
         dot = torch.zeros((), device=env_feedback_loss_scaled.device, dtype=torch.float32)
         env_grad_norm_sq = torch.zeros((), device=env_feedback_loss_scaled.device, dtype=torch.float32)
+        pg_grad_present_param_count = torch.zeros((), device=env_feedback_loss_scaled.device, dtype=torch.float32)
+        pg_grad_missing_param_count = torch.zeros((), device=env_feedback_loss_scaled.device, dtype=torch.float32)
+        pg_grad_present_elem_count = torch.zeros((), device=env_feedback_loss_scaled.device, dtype=torch.float32)
+        pg_grad_missing_elem_count = torch.zeros((), device=env_feedback_loss_scaled.device, dtype=torch.float32)
         handles = []
 
-        def _make_hook(param):
+        def _make_hook(param_idx: int, param):
             def _hook(env_grad):
                 if env_grad is None:
                     return env_grad
                 env_grad_fp32 = env_grad.detach().float()
-                env_grad_norm_sq.add_(torch.sum(env_grad_fp32 * env_grad_fp32))
+                pg_grad_ref = None
                 pg_grad = param.grad
                 if pg_grad is not None:
-                    dot.add_(torch.sum(env_grad_fp32 * pg_grad.detach().float()))
+                    pg_grad_ref = pg_grad.detach().float()
+                if pg_grad_ref is None and pg_grads_cpu is not None:
+                    pg_grad_cpu = pg_grads_cpu.get(param_idx)
+                    if pg_grad_cpu is not None:
+                        pg_grad_ref = pg_grad_cpu.to(device=env_grad.device, dtype=torch.float32)
+                if pg_grad_ref is not None:
+                    env_for_dot, pg_for_dot = self._align_env_pg_for_dot(
+                        pg_grad=pg_grad_ref,
+                        env_grad=env_grad_fp32,
+                        param_idx=param_idx,
+                    )
+                    env_grad_norm_sq.add_(torch.sum(env_for_dot * env_for_dot))
+                    pg_grad_present_param_count.add_(1.0)
+                    pg_grad_present_elem_count.add_(float(env_for_dot.numel()))
+                    dot.add_(torch.sum(env_for_dot * pg_for_dot))
+                else:
+                    env_grad_norm_sq.add_(torch.sum(env_grad_fp32 * env_grad_fp32))
+                    pg_grad_missing_param_count.add_(1.0)
+                    pg_grad_missing_elem_count.add_(float(env_grad_fp32.numel()))
                 env_grad.zero_()
                 return env_grad
 
             return _hook
 
-        for param in self._actor_params:
-            handles.append(param.register_hook(_make_hook(param)))
+        for param_idx, param in enumerate(self._actor_params):
+            handles.append(param.register_hook(_make_hook(param_idx, param)))
 
         try:
             env_feedback_loss_scaled.backward(retain_graph=retain_graph)
@@ -297,6 +351,15 @@ class DataParallelPPOActor(BasePPOActor):
             dist.all_reduce(dot, op=dist.ReduceOp.SUM)
             dist.all_reduce(pg_grad_norm_sq, op=dist.ReduceOp.SUM)
             dist.all_reduce(env_grad_norm_sq, op=dist.ReduceOp.SUM)
+            dist.all_reduce(pg_grad_present_param_count, op=dist.ReduceOp.SUM)
+            dist.all_reduce(pg_grad_missing_param_count, op=dist.ReduceOp.SUM)
+            dist.all_reduce(pg_grad_present_elem_count, op=dist.ReduceOp.SUM)
+            dist.all_reduce(pg_grad_missing_elem_count, op=dist.ReduceOp.SUM)
+
+        pg_grad_param_total = (pg_grad_present_param_count + pg_grad_missing_param_count).clamp_min(1.0)
+        pg_grad_elem_total = (pg_grad_present_elem_count + pg_grad_missing_elem_count).clamp_min(1.0)
+        pg_grad_present_param_ratio = pg_grad_present_param_count / pg_grad_param_total
+        pg_grad_present_elem_ratio = pg_grad_present_elem_count / pg_grad_elem_total
 
         cosine_before = dot / torch.sqrt(
             pg_grad_norm_sq.clamp_min(self.env_feedback_grad_proj_eps)
@@ -307,7 +370,18 @@ class DataParallelPPOActor(BasePPOActor):
             alpha = torch.zeros_like(dot)
             cosine_after = torch.zeros_like(dot)
             aligned_after = 0.0
-            return alpha, dot, pg_grad_norm_sq, env_grad_norm_sq, cosine_before, cosine_after, aligned_after, 0.0
+            return (
+                alpha,
+                dot,
+                pg_grad_norm_sq,
+                env_grad_norm_sq,
+                cosine_before,
+                cosine_after,
+                aligned_after,
+                0.0,
+                pg_grad_present_param_ratio,
+                pg_grad_present_elem_ratio,
+            )
 
         alpha = dot / pg_grad_norm_sq.clamp_min(self.env_feedback_grad_proj_eps)
         for param in self._actor_params:
@@ -325,7 +399,18 @@ class DataParallelPPOActor(BasePPOActor):
             cosine_after = torch.zeros_like(alpha)
             aligned_after = 0.0
 
-        return alpha, dot, pg_grad_norm_sq, env_grad_norm_sq, cosine_before, cosine_after, aligned_after, 1.0
+        return (
+            alpha,
+            dot,
+            pg_grad_norm_sq,
+            env_grad_norm_sq,
+            cosine_before,
+            cosine_after,
+            aligned_after,
+            1.0,
+            pg_grad_present_param_ratio,
+            pg_grad_present_elem_ratio,
+        )
 
     def _compute_env_proj_stats_from_pg_cpu(
         self,
@@ -343,11 +428,17 @@ class DataParallelPPOActor(BasePPOActor):
                 if env_grad is None:
                     return env_grad
                 env_grad_fp32 = env_grad.detach().float()
-                env_grad_norm_sq.add_(torch.sum(env_grad_fp32 * env_grad_fp32))
                 pg_grad_cpu = pg_grads_cpu.get(param_idx)
                 if pg_grad_cpu is not None:
-                    pg_grad_fp32 = pg_grad_cpu.to(device=env_grad.device, dtype=torch.float32)
-                    dot.add_(torch.sum(env_grad_fp32 * pg_grad_fp32))
+                    env_for_dot, pg_for_dot = self._align_env_pg_for_dot(
+                        pg_grad=pg_grad_cpu.to(device=env_grad.device, dtype=torch.float32),
+                        env_grad=env_grad_fp32,
+                        param_idx=param_idx,
+                    )
+                    env_grad_norm_sq.add_(torch.sum(env_for_dot * env_for_dot))
+                    dot.add_(torch.sum(env_for_dot * pg_for_dot))
+                else:
+                    env_grad_norm_sq.add_(torch.sum(env_grad_fp32 * env_grad_fp32))
                 env_grad.zero_()
                 return env_grad
 
@@ -576,6 +667,8 @@ class DataParallelPPOActor(BasePPOActor):
                 env_feedback_proj_pg_norm_sq_legacy_compat = torch.zeros((), device=device)
                 env_feedback_proj_env_norm_sq_legacy_compat = torch.zeros((), device=device)
                 env_feedback_proj_cosine_before_legacy_compat = torch.zeros((), device=device)
+                env_feedback_proj_pg_grad_present_param_ratio = torch.zeros((), device=device)
+                env_feedback_proj_pg_grad_present_elem_ratio = torch.zeros((), device=device)
                 env_feedback_proj_aligned_after = 0.0
                 env_feedback_proj_pg_grad_offloaded = 0.0
                 env_feedback_proj_pg_grad_offload_mb = 0.0
@@ -791,6 +884,16 @@ class DataParallelPPOActor(BasePPOActor):
                             pg_loss_scaled = pg_loss * scale_factor
                             pg_loss_scaled.backward()
                             env_feedback_proj_pg_norm_sq = self._compute_grad_norm_sq(device=device)
+                            # FSDP (use_orig_params=False) may not expose pg grads via param.grad inside
+                            # env backward hooks. Snapshot PG grads to CPU for robust dot computation.
+                            pg_grads_cpu_for_proj, pg_offloaded_bytes_for_proj = self._copy_current_grads_to_cpu(
+                                clear_grads=False
+                            )
+                            if len(pg_grads_cpu_for_proj) > 0:
+                                env_feedback_proj_pg_grad_offloaded = 1.0
+                                env_feedback_proj_pg_grad_offload_mb = (
+                                    pg_offloaded_bytes_for_proj / (1024.0 * 1024.0)
+                                )
 
                             _, log_prob_env = self._forward_micro_batch(
                                 micro_batch=data,
@@ -808,10 +911,13 @@ class DataParallelPPOActor(BasePPOActor):
                                 env_feedback_proj_cosine_after,
                                 env_feedback_proj_aligned_after,
                                 env_feedback_proj_applied,
+                                env_feedback_proj_pg_grad_present_param_ratio,
+                                env_feedback_proj_pg_grad_present_elem_ratio,
                             ) = self._project_env_grad_to_pg(
                                 env_feedback_loss_scaled=env_feedback_loss_weighted_scaled,
                                 pg_grad_norm_sq=env_feedback_proj_pg_norm_sq,
                                 retain_graph=False,
+                                pg_grads_cpu=pg_grads_cpu_for_proj,
                             )
                             env_feedback_proj_alpha_abs = torch.abs(env_feedback_proj_alpha.detach())
                             env_feedback_proj_dot_abs = torch.abs(env_feedback_proj_dot.detach())
@@ -928,14 +1034,16 @@ class DataParallelPPOActor(BasePPOActor):
                     'actor/env_feedback_loss_weighted_scaled': (env_feedback_loss_weighted * scale_factor).detach().item(),
                     'actor/env_feedback_proj_enabled': float(self.project_env_feedback_grad_to_pg),
                     'actor/env_feedback_proj_applied': env_feedback_proj_applied,
-                    'actor/env_feedback_proj_alpha': env_feedback_proj_alpha.detach().item(),
-                    'actor/env_feedback_proj_alpha_abs': env_feedback_proj_alpha_abs.detach().item(),
+                    'actor/env_feedback_proj_alpha': env_feedback_proj_alpha.detach().item(), # averaged across all micro-batches
+                    'actor/env_feedback_proj_alpha_abs': env_feedback_proj_alpha_abs.detach().item(), # averaged acrosss all micro-batches
                     'actor/env_feedback_proj_dot': env_feedback_proj_dot.detach().item(),
                     'actor/env_feedback_proj_dot_abs': env_feedback_proj_dot_abs.detach().item(),
                     'actor/env_feedback_proj_pg_norm_sq': env_feedback_proj_pg_norm_sq.detach().item(),
                     'actor/env_feedback_proj_env_norm_sq': env_feedback_proj_env_norm_sq.detach().item(),
                     'actor/env_feedback_proj_cosine_before': env_feedback_proj_cosine_before.detach().item(),
                     'actor/env_feedback_proj_cosine_after': env_feedback_proj_cosine_after.detach().item(),
+                    'actor/env_feedback_proj_pg_grad_present_param_ratio': env_feedback_proj_pg_grad_present_param_ratio.detach().item(),
+                    'actor/env_feedback_proj_pg_grad_present_elem_ratio': env_feedback_proj_pg_grad_present_elem_ratio.detach().item(),
                     'actor/env_feedback_proj_alpha_legacy_compat': env_feedback_proj_alpha_legacy_compat.detach().item(),
                     'actor/env_feedback_proj_dot_legacy_compat': env_feedback_proj_dot_legacy_compat.detach().item(),
                     'actor/env_feedback_proj_pg_norm_sq_legacy_compat': env_feedback_proj_pg_norm_sq_legacy_compat.detach().item(),
@@ -977,6 +1085,8 @@ class DataParallelPPOActor(BasePPOActor):
             'actor/env_feedback_proj_env_norm_sq': 'actor_step/env_feedback_proj_env_norm_sq',
             'actor/env_feedback_proj_cosine_before': 'actor_step/env_feedback_proj_cosine_before',
             'actor/env_feedback_proj_cosine_after': 'actor_step/env_feedback_proj_cosine_after',
+            'actor/env_feedback_proj_pg_grad_present_param_ratio': 'actor_step/env_feedback_proj_pg_grad_present_param_ratio',
+            'actor/env_feedback_proj_pg_grad_present_elem_ratio': 'actor_step/env_feedback_proj_pg_grad_present_elem_ratio',
             'actor/env_feedback_proj_alpha_legacy_compat': 'actor_step/env_feedback_proj_alpha_legacy_compat',
             'actor/env_feedback_proj_dot_legacy_compat': 'actor_step/env_feedback_proj_dot_legacy_compat',
             'actor/env_feedback_proj_pg_norm_sq_legacy_compat': 'actor_step/env_feedback_proj_pg_norm_sq_legacy_compat',
