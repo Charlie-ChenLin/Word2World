@@ -89,3 +89,16 @@ This document tracks the cumulative changes on this branch relative to the earli
   - `env_feedback_grad_proj_impl=reordered_exact`
   - `env_feedback_grad_proj_target=pg_plus_other`
 
+## 7) Derived Branch Update: `feature/env-feedback-proj-accel-reordered-exact-alpha-clamp`
+
+- This derived branch adds one behavior change on top of the content above:
+  - clamp projection scalar to non-negative before applying it to gradients:
+    - `raw_alpha = <g_env, g_target> / ||g_target||^2`
+    - `alpha = max(raw_alpha, 0)`
+    - apply `g <- (1 + alpha) * g_target`
+- Effect:
+  - env feedback can increase target-direction update magnitude
+  - env feedback can no longer reverse the target direction when raw correlation is negative
+- Scope of clamp:
+  - applied in active projection path (`_project_env_grad_to_pg`)
+  - applied in legacy-compat stat computation (`_compute_env_proj_stats_from_pg_cpu`) for consistency

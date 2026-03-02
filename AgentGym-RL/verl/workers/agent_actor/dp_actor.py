@@ -394,7 +394,9 @@ class DataParallelPPOActor(BasePPOActor):
                 pg_grad_present_elem_ratio,
             )
 
-        alpha = dot / pg_grad_norm_sq.clamp_min(self.env_feedback_grad_proj_eps)
+        raw_alpha = dot / pg_grad_norm_sq.clamp_min(self.env_feedback_grad_proj_eps)
+        # Alpha-clamp variant on this branch: only allow non-negative projection scaling.
+        alpha = torch.clamp_min(raw_alpha, 0.0)
         for param in self._actor_params:
             if param.grad is None:
                 continue
@@ -480,7 +482,8 @@ class DataParallelPPOActor(BasePPOActor):
             aligned_after = 0.0
             return alpha, dot, pg_grad_norm_sq, env_grad_norm_sq, cosine_before, cosine_after, aligned_after, 0.0
 
-        alpha = dot / pg_grad_norm_sq.clamp_min(self.env_feedback_grad_proj_eps)
+        raw_alpha = dot / pg_grad_norm_sq.clamp_min(self.env_feedback_grad_proj_eps)
+        alpha = torch.clamp_min(raw_alpha, 0.0)
         if alpha.item() > self.env_feedback_grad_proj_eps:
             cosine_after = torch.ones_like(alpha)
             aligned_after = 1.0
