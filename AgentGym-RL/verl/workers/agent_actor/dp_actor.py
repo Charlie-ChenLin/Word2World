@@ -1218,6 +1218,39 @@ class DataParallelPPOActor(BasePPOActor):
             vals = metrics.get(src_key)
             if isinstance(vals, list) and len(vals) > 0:
                 metrics[dst_key] = float(sum(vals) / len(vals))
+
+        def _add_step_distribution_stats(src_key: str, dst_prefix: str):
+            vals = metrics.get(src_key)
+            if not (isinstance(vals, list) and len(vals) > 0):
+                return
+            vals_tensor = torch.tensor(vals, dtype=torch.float32)
+            metrics[f'{dst_prefix}_max'] = float(vals_tensor.max().item())
+            metrics[f'{dst_prefix}_min'] = float(vals_tensor.min().item())
+            metrics[f'{dst_prefix}_std'] = float(vals_tensor.std(unbiased=False).item())
+
+        _add_step_distribution_stats('actor/env_feedback_proj_alpha', 'actor_step/env_feedback_proj_alpha')
+        _add_step_distribution_stats('actor/env_feedback_proj_cosine_before', 'actor_step/env_feedback_proj_cosine_before')
+        _add_step_distribution_stats('actor/env_feedback_proj_cosine_after', 'actor_step/env_feedback_proj_cosine_after')
+
+        cosine_before_vals = metrics.get('actor/env_feedback_proj_cosine_before')
+        if isinstance(cosine_before_vals, list) and len(cosine_before_vals) > 0:
+            cosine_before_tensor = torch.tensor(cosine_before_vals, dtype=torch.float32)
+            cosine_before_pos_mask = cosine_before_tensor > 0
+            cosine_before_neg_mask = cosine_before_tensor < 0
+            metrics['actor_step/env_feedback_proj_cosine_before_pos_ratio'] = float(
+                cosine_before_pos_mask.float().mean().item()
+            )
+            metrics['actor_step/env_feedback_proj_cosine_before_pos_mean'] = (
+                float(cosine_before_tensor[cosine_before_pos_mask].mean().item())
+                if bool(cosine_before_pos_mask.any())
+                else 0.0
+            )
+            metrics['actor_step/env_feedback_proj_cosine_before_neg_mean'] = (
+                float(cosine_before_tensor[cosine_before_neg_mask].mean().item())
+                if bool(cosine_before_neg_mask.any())
+                else 0.0
+            )
+
         alpha_pos_vals = metrics.get('actor/env_feedback_proj_alpha_pos_count')
         alpha_valid_vals = metrics.get('actor/env_feedback_proj_alpha_valid_count')
         if (
