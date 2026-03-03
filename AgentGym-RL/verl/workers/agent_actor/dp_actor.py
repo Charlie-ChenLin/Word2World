@@ -84,6 +84,46 @@ class DataParallelPPOActor(BasePPOActor):
                 "fallback to pg"
             )
             self.env_feedback_grad_proj_target = 'pg'
+        self.env_feedback_grad_proj_algo = str(
+            self.config.get('env_feedback_grad_proj_algo', 'alpha_scale')
+        ).strip().lower()
+        valid_proj_algos = {'alpha_scale', 'pcgrad'}
+        if self.env_feedback_grad_proj_algo not in valid_proj_algos:
+            print(
+                f"[actor] invalid env_feedback_grad_proj_algo={self.env_feedback_grad_proj_algo}, "
+                "fallback to alpha_scale"
+            )
+            self.env_feedback_grad_proj_algo = 'alpha_scale'
+        self.env_feedback_pcgrad_lambda_max = float(
+            self.config.get('env_feedback_pcgrad_lambda_max', 0.2)
+        )
+        self.env_feedback_pcgrad_lambda_norm_ratio = float(
+            self.config.get('env_feedback_pcgrad_lambda_norm_ratio', 0.3)
+        )
+        self.env_feedback_pcgrad_eps = float(
+            self.config.get('env_feedback_pcgrad_eps', 1e-12)
+        )
+        self.env_feedback_pcgrad_log_extra_metrics = bool(
+            self.config.get('env_feedback_pcgrad_log_extra_metrics', True)
+        )
+        if (
+            self.env_feedback_grad_proj_algo == 'pcgrad'
+            and self.env_feedback_grad_proj_impl != 'reordered_exact'
+        ):
+            print(
+                f"[actor] pcgrad currently supports env_feedback_grad_proj_impl='reordered_exact' only, "
+                f"got {self.env_feedback_grad_proj_impl}; fallback to reordered_exact"
+            )
+            self.env_feedback_grad_proj_impl = 'reordered_exact'
+        if (
+            self.env_feedback_grad_proj_algo == 'pcgrad'
+            and self.env_feedback_grad_proj_target != 'pg'
+        ):
+            print(
+                f"[actor] pcgrad currently supports env_feedback_grad_proj_target='pg' only, "
+                f"got {self.env_feedback_grad_proj_target}; fallback to pg"
+            )
+            self.env_feedback_grad_proj_target = 'pg'
         self._actor_params = [param for param in self.actor_module.parameters() if param.requires_grad]
         print(
             f"Actor project_env_feedback_grad_to_pg={self.project_env_feedback_grad_to_pg} "
@@ -92,7 +132,12 @@ class DataParallelPPOActor(BasePPOActor):
             f"env_feedback_grad_proj_oom_fallback={self.env_feedback_grad_proj_oom_fallback} "
             f"env_feedback_grad_proj_legacy_compat_metrics={self.env_feedback_grad_proj_legacy_compat_metrics} "
             f"env_feedback_grad_proj_impl={self.env_feedback_grad_proj_impl} "
-            f"env_feedback_grad_proj_target={self.env_feedback_grad_proj_target}"
+            f"env_feedback_grad_proj_target={self.env_feedback_grad_proj_target} "
+            f"env_feedback_grad_proj_algo={self.env_feedback_grad_proj_algo} "
+            f"env_feedback_pcgrad_lambda_max={self.env_feedback_pcgrad_lambda_max} "
+            f"env_feedback_pcgrad_lambda_norm_ratio={self.env_feedback_pcgrad_lambda_norm_ratio} "
+            f"env_feedback_pcgrad_eps={self.env_feedback_pcgrad_eps} "
+            f"env_feedback_pcgrad_log_extra_metrics={self.env_feedback_pcgrad_log_extra_metrics}"
         )
 
     def _forward_micro_batch(
@@ -245,7 +290,10 @@ class DataParallelPPOActor(BasePPOActor):
         for param_idx, grad_cpu in offloaded_grads.items():
             param = self._actor_params[param_idx]
             grad_device = param.grad.device if param.grad is not None else param.device
-            grad_restore = grad_cpu.to(device=grad_device, dtype=grad_cpu.dtype)
+            # Grad dtype must match the destination grad tensor (or param dtype when grad is None),
+            # otherwise PyTorch raises on assignment under mixed precision / FSDP.
+            grad_dtype = param.grad.dtype if param.grad is not None else param.dtype
+            grad_restore = grad_cpu.to(device=grad_device, dtype=grad_dtype)
             target_numel = param.grad.numel() if param.grad is not None else param.numel()
             if grad_restore.numel() != target_numel:
                 # FSDP hook-captured grads can be full flattened tensors while param.grad holds
@@ -496,28 +544,28 @@ class DataParallelPPOActor(BasePPOActor):
 
         return alpha, dot, pg_grad_norm_sq, env_grad_norm_sq, cosine_before, cosine_after, aligned_after, 1.0
 
-    def _capture_pg_grads_to_cpu_without_accum(
+    def _capture_loss_grads_to_cpu_without_accum(
         self,
-        pg_loss_scaled: torch.Tensor,
+        loss_scaled: torch.Tensor,
         retain_graph: bool,
     ):
-        pg_grad_norm_sq = torch.zeros((), device=pg_loss_scaled.device, dtype=torch.float32)
-        pg_grads_cpu = {}
+        grad_norm_sq = torch.zeros((), device=loss_scaled.device, dtype=torch.float32)
+        grads_cpu = {}
         offloaded_bytes = 0
         handles = []
 
         def _make_hook(param_idx: int):
-            def _hook(pg_grad):
+            def _hook(grad):
                 nonlocal offloaded_bytes
-                if pg_grad is None:
-                    return pg_grad
-                pg_grad_fp32 = pg_grad.detach().float()
-                pg_grad_norm_sq.add_(torch.sum(pg_grad_fp32 * pg_grad_fp32))
-                pg_grad_cpu = pg_grad.detach().to(device='cpu', copy=True)
-                pg_grads_cpu[param_idx] = pg_grad_cpu
-                offloaded_bytes += pg_grad_cpu.numel() * pg_grad_cpu.element_size()
-                pg_grad.zero_()
-                return pg_grad
+                if grad is None:
+                    return grad
+                grad_fp32 = grad.detach().float()
+                grad_norm_sq.add_(torch.sum(grad_fp32 * grad_fp32))
+                grad_cpu = grad.detach().to(device='cpu', copy=True)
+                grads_cpu[param_idx] = grad_cpu
+                offloaded_bytes += grad_cpu.numel() * grad_cpu.element_size()
+                grad.zero_()
+                return grad
 
             return _hook
 
@@ -525,15 +573,96 @@ class DataParallelPPOActor(BasePPOActor):
             handles.append(param.register_hook(_make_hook(param_idx)))
 
         try:
-            pg_loss_scaled.backward(retain_graph=retain_graph)
+            loss_scaled.backward(retain_graph=retain_graph)
         finally:
             for handle in handles:
                 handle.remove()
 
         if dist.is_available() and dist.is_initialized():
-            dist.all_reduce(pg_grad_norm_sq, op=dist.ReduceOp.SUM)
+            dist.all_reduce(grad_norm_sq, op=dist.ReduceOp.SUM)
 
-        return pg_grads_cpu, offloaded_bytes, pg_grad_norm_sq
+        return grads_cpu, offloaded_bytes, grad_norm_sq
+
+    def _capture_pg_grads_to_cpu_without_accum(
+        self,
+        pg_loss_scaled: torch.Tensor,
+        retain_graph: bool,
+    ):
+        return self._capture_loss_grads_to_cpu_without_accum(
+            loss_scaled=pg_loss_scaled,
+            retain_graph=retain_graph,
+        )
+
+    def _compute_grad_dict_pair_stats(
+        self,
+        base_grads_cpu: dict,
+        ref_grads_cpu: dict,
+        device: torch.device,
+    ):
+        dot = torch.zeros((), device=device, dtype=torch.float32)
+        base_norm_sq = torch.zeros((), device=device, dtype=torch.float32)
+        ref_norm_sq = torch.zeros((), device=device, dtype=torch.float32)
+        base_grad_present_param_count = torch.zeros((), device=device, dtype=torch.float32)
+        base_grad_missing_param_count = torch.zeros((), device=device, dtype=torch.float32)
+        base_grad_present_elem_count = torch.zeros((), device=device, dtype=torch.float32)
+        base_grad_missing_elem_count = torch.zeros((), device=device, dtype=torch.float32)
+
+        all_param_indices = set(base_grads_cpu.keys()) | set(ref_grads_cpu.keys())
+        for param_idx in all_param_indices:
+            base_grad_cpu = base_grads_cpu.get(param_idx)
+            ref_grad_cpu = ref_grads_cpu.get(param_idx)
+            base_grad_fp32 = (
+                base_grad_cpu.to(device=device, dtype=torch.float32)
+                if base_grad_cpu is not None
+                else None
+            )
+            ref_grad_fp32 = (
+                ref_grad_cpu.to(device=device, dtype=torch.float32)
+                if ref_grad_cpu is not None
+                else None
+            )
+
+            if base_grad_fp32 is not None and ref_grad_fp32 is not None:
+                ref_for_dot, base_for_dot = self._align_env_pg_for_dot(
+                    pg_grad=base_grad_fp32,
+                    env_grad=ref_grad_fp32,
+                    param_idx=param_idx,
+                )
+                dot.add_(torch.sum(base_for_dot * ref_for_dot))
+                base_norm_sq.add_(torch.sum(base_for_dot * base_for_dot))
+                ref_norm_sq.add_(torch.sum(ref_for_dot * ref_for_dot))
+                base_grad_present_param_count.add_(1.0)
+                base_grad_present_elem_count.add_(float(base_for_dot.numel()))
+            elif base_grad_fp32 is not None:
+                base_norm_sq.add_(torch.sum(base_grad_fp32 * base_grad_fp32))
+                base_grad_missing_param_count.add_(1.0)
+                base_grad_missing_elem_count.add_(float(base_grad_fp32.numel()))
+            elif ref_grad_fp32 is not None:
+                ref_norm_sq.add_(torch.sum(ref_grad_fp32 * ref_grad_fp32))
+                base_grad_missing_param_count.add_(1.0)
+                base_grad_missing_elem_count.add_(float(ref_grad_fp32.numel()))
+
+        if dist.is_available() and dist.is_initialized():
+            dist.all_reduce(dot, op=dist.ReduceOp.SUM)
+            dist.all_reduce(base_norm_sq, op=dist.ReduceOp.SUM)
+            dist.all_reduce(ref_norm_sq, op=dist.ReduceOp.SUM)
+            dist.all_reduce(base_grad_present_param_count, op=dist.ReduceOp.SUM)
+            dist.all_reduce(base_grad_missing_param_count, op=dist.ReduceOp.SUM)
+            dist.all_reduce(base_grad_present_elem_count, op=dist.ReduceOp.SUM)
+            dist.all_reduce(base_grad_missing_elem_count, op=dist.ReduceOp.SUM)
+
+        base_grad_param_total = (base_grad_present_param_count + base_grad_missing_param_count).clamp_min(1.0)
+        base_grad_elem_total = (base_grad_present_elem_count + base_grad_missing_elem_count).clamp_min(1.0)
+        base_grad_present_param_ratio = base_grad_present_param_count / base_grad_param_total
+        base_grad_present_elem_ratio = base_grad_present_elem_count / base_grad_elem_total
+
+        return (
+            dot,
+            base_norm_sq,
+            ref_norm_sq,
+            base_grad_present_param_ratio,
+            base_grad_present_elem_ratio,
+        )
 
     def compute_log_prob(self, data: DataProto, train_mode: bool = False) -> torch.Tensor:
         """Compute the log probability of the responses given input_ids, attention_mask and position_ids
@@ -693,10 +822,23 @@ class DataParallelPPOActor(BasePPOActor):
                 env_feedback_proj_legacy_compat_valid = 0.0
                 env_feedback_proj_alpha_pos_count = 0.0
                 env_feedback_proj_alpha_valid_count = 0.0
+                env_feedback_pcgrad_dot_pg_env_before = torch.zeros((), device=device)
+                env_feedback_pcgrad_cos_pg_env_before = torch.zeros((), device=device)
+                env_feedback_pcgrad_dot_pg_env_after_conflict_fix = torch.zeros((), device=device)
+                env_feedback_pcgrad_lambda = torch.zeros((), device=device)
+                env_feedback_pcgrad_norm_pg = torch.zeros((), device=device)
+                env_feedback_pcgrad_norm_other = torch.zeros((), device=device)
+                env_feedback_pcgrad_norm_env = torch.zeros((), device=device)
+                env_feedback_pcgrad_norm_env_pos = torch.zeros((), device=device)
+                env_feedback_pcgrad_norm_final = torch.zeros((), device=device)
+                env_feedback_pcgrad_final_vs_pg_cosine = torch.zeros((), device=device)
+                env_feedback_pcgrad_conflict_applied = 0.0
+                env_feedback_pcgrad_env_inject_ratio = torch.zeros((), device=device)
                 microbatch_oom_skipped = 0.0
                 entropy_runtime_disabled_metric = 1.0 if entropy_runtime_disabled else 0.0
                 env_feedback_proj_impl_id = 0.0 if self.env_feedback_grad_proj_impl == 'legacy_cpu_offload' else 1.0
                 env_feedback_proj_target_id = 0.0 if self.env_feedback_grad_proj_target == 'pg' else 1.0
+                env_feedback_proj_algo_id = 0.0 if self.env_feedback_grad_proj_algo == 'alpha_scale' else 1.0
                 use_env_feedback_grad_proj = (
                     self.project_env_feedback_grad_to_pg
                     and (not proj_runtime_disabled)
@@ -905,9 +1047,8 @@ class DataParallelPPOActor(BasePPOActor):
                                 loss = policy_loss * scale_factor
                             else:
                                 # Reordered strict-exact projection path:
-                                # 1) build g_pg
-                                # 2) project env grad stats onto g_pg in-place
-                                # 3) add g_other = g_entropy + g_kl
+                                #   alpha_scale: historical scalar projection scaling
+                                #   pcgrad: PG-anchored conflict resolution + bounded aligned fusion
                                 _, log_prob_pg = self._forward_micro_batch(
                                     micro_batch=data,
                                     temperature=temperature,
@@ -980,79 +1121,275 @@ class DataParallelPPOActor(BasePPOActor):
                                         self._env_feedback_grad_proj_legacy_compat_runtime_disabled = True
                                         print("[actor] disable env_feedback_grad_proj_legacy_compat_metrics due to OOM")
                                         self._handle_microbatch_oom()
-
-                                pg_loss_scaled = pg_loss * scale_factor
-                                pg_loss_scaled.backward()
-                                env_feedback_proj_pg_norm_sq = self._compute_grad_norm_sq(device=device)
-                                # FSDP (use_orig_params=False) may not expose pg grads via param.grad inside
-                                # env backward hooks. Snapshot PG grads to CPU for robust dot computation.
-                                pg_grads_cpu_for_proj, pg_offloaded_bytes_for_proj = self._copy_current_grads_to_cpu(
-                                    clear_grads=False
-                                )
-                                if len(pg_grads_cpu_for_proj) > 0:
-                                    env_feedback_proj_pg_grad_offloaded = 1.0
-                                    env_feedback_proj_pg_grad_offload_mb = (
-                                        pg_offloaded_bytes_for_proj / (1024.0 * 1024.0)
+                                if self.env_feedback_grad_proj_algo == 'pcgrad':
+                                    pg_loss_scaled = pg_loss * scale_factor
+                                    (
+                                        pg_grads_cpu_for_proj,
+                                        pg_offloaded_bytes_for_proj,
+                                        env_feedback_proj_pg_norm_sq,
+                                    ) = self._capture_loss_grads_to_cpu_without_accum(
+                                        loss_scaled=pg_loss_scaled,
+                                        retain_graph=False,
                                     )
+                                    if len(pg_grads_cpu_for_proj) > 0:
+                                        env_feedback_proj_pg_grad_offloaded = 1.0
+                                        env_feedback_proj_pg_grad_offload_mb = (
+                                            pg_offloaded_bytes_for_proj / (1024.0 * 1024.0)
+                                        )
 
-                                _, log_prob_env = self._forward_micro_batch(
-                                    micro_batch=data,
-                                    temperature=temperature,
-                                    compute_entropy=False,
-                                )
-                                env_feedback_loss_proj = -verl_F.masked_mean(log_prob_env, env_feedback_mask)
-                                env_feedback_loss_weighted_scaled = env_feedback_loss_proj * env_feedback_coef * scale_factor
-                                (
-                                    env_feedback_proj_alpha,
-                                    env_feedback_proj_dot,
-                                    env_feedback_proj_pg_norm_sq,
-                                    env_feedback_proj_env_norm_sq,
-                                    env_feedback_proj_cosine_before,
-                                    env_feedback_proj_cosine_after,
-                                    env_feedback_proj_aligned_after,
-                                    env_feedback_proj_applied,
-                                    env_feedback_proj_pg_grad_present_param_ratio,
-                                    env_feedback_proj_pg_grad_present_elem_ratio,
-                                ) = self._project_env_grad_to_pg(
-                                    env_feedback_loss_scaled=env_feedback_loss_weighted_scaled,
-                                    pg_grad_norm_sq=env_feedback_proj_pg_norm_sq,
-                                    retain_graph=False,
-                                    pg_grads_cpu=pg_grads_cpu_for_proj,
-                                )
-                                env_feedback_proj_alpha_abs = torch.abs(env_feedback_proj_alpha.detach())
-                                env_feedback_proj_dot_abs = torch.abs(env_feedback_proj_dot.detach())
-
-                                kl_loss = torch.zeros((), device=device)
-                                other_policy_loss = torch.zeros((), device=device)
-                                need_other_policy = entropy_term_enabled or (
-                                    self.config.use_kl_loss and float(self.config.kl_loss_coef) != 0.0
-                                )
-                                if need_other_policy:
-                                    entropy_other, log_prob_other = self._forward_micro_batch(
+                                    _, log_prob_env = self._forward_micro_batch(
                                         micro_batch=data,
                                         temperature=temperature,
-                                        compute_entropy=entropy_term_enabled,
+                                        compute_entropy=False,
                                     )
-                                    if entropy_term_enabled:
-                                        entropy_loss = verl_F.masked_mean(entropy_other, response_mask)
-                                        other_policy_loss = other_policy_loss - entropy_loss * entropy_coeff_effective
+                                    env_feedback_loss_proj = -verl_F.masked_mean(log_prob_env, env_feedback_mask)
+                                    env_feedback_loss_weighted_scaled = env_feedback_loss_proj * env_feedback_coef * scale_factor
+                                    (
+                                        env_grads_cpu_for_proj,
+                                        _,
+                                        env_feedback_proj_env_norm_sq,
+                                    ) = self._capture_loss_grads_to_cpu_without_accum(
+                                        loss_scaled=env_feedback_loss_weighted_scaled,
+                                        retain_graph=False,
+                                    )
+                                    (
+                                        env_feedback_proj_dot,
+                                        env_feedback_proj_pg_norm_sq,
+                                        env_feedback_proj_env_norm_sq,
+                                        env_feedback_proj_pg_grad_present_param_ratio,
+                                        env_feedback_proj_pg_grad_present_elem_ratio,
+                                    ) = self._compute_grad_dict_pair_stats(
+                                        base_grads_cpu=pg_grads_cpu_for_proj,
+                                        ref_grads_cpu=env_grads_cpu_for_proj,
+                                        device=device,
+                                    )
+                                    env_feedback_proj_cosine_before = env_feedback_proj_dot / torch.sqrt(
+                                        env_feedback_proj_pg_norm_sq.clamp_min(self.env_feedback_grad_proj_eps)
+                                        * env_feedback_proj_env_norm_sq.clamp_min(self.env_feedback_grad_proj_eps)
+                                    )
+                                    env_feedback_proj_alpha = torch.clamp_min(
+                                        env_feedback_proj_dot / env_feedback_proj_pg_norm_sq.clamp_min(self.env_feedback_grad_proj_eps),
+                                        0.0,
+                                    )
+                                    env_feedback_proj_alpha_abs = torch.abs(env_feedback_proj_alpha.detach())
+                                    env_feedback_proj_dot_abs = torch.abs(env_feedback_proj_dot.detach())
+                                    env_feedback_proj_applied = 1.0
+                                    if env_feedback_proj_alpha.item() > self.env_feedback_grad_proj_eps:
+                                        env_feedback_proj_cosine_after = torch.ones_like(env_feedback_proj_alpha)
+                                        env_feedback_proj_aligned_after = 1.0
+                                    elif env_feedback_proj_alpha.item() < -self.env_feedback_grad_proj_eps:
+                                        env_feedback_proj_cosine_after = -torch.ones_like(env_feedback_proj_alpha)
+                                        env_feedback_proj_aligned_after = 0.0
+                                    else:
+                                        env_feedback_proj_cosine_after = torch.zeros_like(env_feedback_proj_alpha)
+                                        env_feedback_proj_aligned_after = 0.0
+
+                                    kl_loss = torch.zeros((), device=device)
+                                    other_policy_loss = torch.zeros((), device=device)
+                                    other_grads_cpu_for_proj = {}
+                                    other_norm_sq = torch.zeros((), device=device, dtype=torch.float32)
+                                    need_other_policy = entropy_term_enabled or (
+                                        self.config.use_kl_loss and float(self.config.kl_loss_coef) != 0.0
+                                    )
+                                    if need_other_policy:
+                                        entropy_other, log_prob_other = self._forward_micro_batch(
+                                            micro_batch=data,
+                                            temperature=temperature,
+                                            compute_entropy=entropy_term_enabled,
+                                        )
+                                        if entropy_term_enabled:
+                                            entropy_loss = verl_F.masked_mean(entropy_other, response_mask)
+                                            other_policy_loss = other_policy_loss - entropy_loss * entropy_coeff_effective
+                                        if self.config.use_kl_loss:
+                                            kld_other = core_algos.kl_penalty(logprob=log_prob_other,
+                                                                              ref_logprob=ref_log_prob,
+                                                                              kl_penalty=self.config.kl_loss_type)
+                                            kl_loss = masked_mean(kld_other, response_mask)
+                                            other_policy_loss = other_policy_loss + kl_loss * self.config.kl_loss_coef
+                                        (
+                                            other_grads_cpu_for_proj,
+                                            _,
+                                            other_norm_sq,
+                                        ) = self._capture_loss_grads_to_cpu_without_accum(
+                                            loss_scaled=other_policy_loss * scale_factor,
+                                            retain_graph=False,
+                                        )
+
                                     if self.config.use_kl_loss:
-                                        kld_other = core_algos.kl_penalty(logprob=log_prob_other,
-                                                                          ref_logprob=ref_log_prob,
-                                                                          kl_penalty=self.config.kl_loss_type)
-                                        kl_loss = masked_mean(kld_other, response_mask)
-                                        other_policy_loss = other_policy_loss + kl_loss * self.config.kl_loss_coef
-                                    (other_policy_loss * scale_factor).backward()
+                                        metrics['actor/kl_loss'] = kl_loss.detach().item()
+                                        metrics['actor/kl_coef'] = self.config.kl_loss_coef
 
-                                if self.config.use_kl_loss:
-                                    metrics['actor/kl_loss'] = kl_loss.detach().item()
-                                    metrics['actor/kl_coef'] = self.config.kl_loss_coef
+                                    (
+                                        dot_pg_other,
+                                        _,
+                                        _,
+                                        _,
+                                        _,
+                                    ) = self._compute_grad_dict_pair_stats(
+                                        base_grads_cpu=pg_grads_cpu_for_proj,
+                                        ref_grads_cpu=other_grads_cpu_for_proj,
+                                        device=device,
+                                    )
+                                    pcgrad_eps = max(self.env_feedback_pcgrad_eps, self.env_feedback_grad_proj_eps)
+                                    dot_pg_env = env_feedback_proj_dot
+                                    neg_dot_pg_env = torch.clamp_min(-dot_pg_env, 0.0)
+                                    pos_dot_pg_env = torch.clamp_min(dot_pg_env, 0.0)
+                                    conflict_scale = neg_dot_pg_env / env_feedback_proj_env_norm_sq.clamp_min(pcgrad_eps)
+                                    env_pos_scale = pos_dot_pg_env / env_feedback_proj_pg_norm_sq.clamp_min(pcgrad_eps)
+                                    env_pos_norm_sq = env_pos_scale * env_pos_scale * env_feedback_proj_pg_norm_sq
+                                    pg_norm = torch.sqrt(env_feedback_proj_pg_norm_sq.clamp_min(0.0))
+                                    env_norm = torch.sqrt(env_feedback_proj_env_norm_sq.clamp_min(0.0))
+                                    env_pos_norm = torch.sqrt(env_pos_norm_sq.clamp_min(0.0))
+                                    lambda_from_norm = (
+                                        self.env_feedback_pcgrad_lambda_norm_ratio
+                                        * pg_norm
+                                        / env_pos_norm.clamp_min(pcgrad_eps)
+                                    )
+                                    env_feedback_pcgrad_lambda = torch.minimum(
+                                        torch.tensor(
+                                            self.env_feedback_pcgrad_lambda_max,
+                                            device=device,
+                                            dtype=torch.float32,
+                                        ),
+                                        lambda_from_norm,
+                                    )
+                                    if (
+                                        pos_dot_pg_env.item() <= 0.0
+                                        or env_pos_norm.item() <= pcgrad_eps
+                                        or pg_norm.item() <= pcgrad_eps
+                                    ):
+                                        env_feedback_pcgrad_lambda = torch.zeros_like(env_feedback_pcgrad_lambda)
 
-                                policy_loss = pg_loss.detach() - entropy_loss.detach() * entropy_coeff_effective
-                                policy_loss = policy_loss + env_feedback_loss_weighted
-                                if self.config.use_kl_loss:
-                                    policy_loss = policy_loss + kl_loss.detach() * self.config.kl_loss_coef
-                                loss = policy_loss * scale_factor
+                                    inject_pg_scale = env_feedback_pcgrad_lambda * env_pos_scale
+                                    pg_scale = torch.ones_like(inject_pg_scale) + inject_pg_scale
+
+                                    self._clear_current_grads()
+                                    if len(pg_grads_cpu_for_proj) > 0:
+                                        self._accumulate_offloaded_grads_from_cpu(
+                                            offloaded_grads=pg_grads_cpu_for_proj,
+                                            scale=float(pg_scale.detach().item()),
+                                        )
+                                    if len(other_grads_cpu_for_proj) > 0:
+                                        self._accumulate_offloaded_grads_from_cpu(
+                                            offloaded_grads=other_grads_cpu_for_proj,
+                                            scale=1.0,
+                                        )
+                                    if conflict_scale.item() > 0.0 and len(env_grads_cpu_for_proj) > 0:
+                                        self._accumulate_offloaded_grads_from_cpu(
+                                            offloaded_grads=env_grads_cpu_for_proj,
+                                            scale=float(conflict_scale.detach().item()),
+                                        )
+
+                                    final_norm_sq = self._compute_grad_norm_sq(device=device)
+                                    if dist.is_available() and dist.is_initialized():
+                                        dist.all_reduce(final_norm_sq, op=dist.ReduceOp.SUM)
+                                    dot_pg_env_after = dot_pg_env + conflict_scale * env_feedback_proj_env_norm_sq
+                                    dot_final_pg = (
+                                        pg_scale * env_feedback_proj_pg_norm_sq
+                                        + dot_pg_other
+                                        + conflict_scale * dot_pg_env
+                                    )
+                                    env_feedback_pcgrad_final_vs_pg_cosine = dot_final_pg / torch.sqrt(
+                                        final_norm_sq.clamp_min(pcgrad_eps)
+                                        * env_feedback_proj_pg_norm_sq.clamp_min(pcgrad_eps)
+                                    )
+                                    inject_norm_sq = inject_pg_scale * inject_pg_scale * env_feedback_proj_pg_norm_sq
+                                    env_feedback_pcgrad_env_inject_ratio = torch.sqrt(
+                                        inject_norm_sq.clamp_min(0.0)
+                                    ) / pg_norm.clamp_min(pcgrad_eps)
+
+                                    env_feedback_pcgrad_dot_pg_env_before = dot_pg_env
+                                    env_feedback_pcgrad_cos_pg_env_before = env_feedback_proj_cosine_before
+                                    env_feedback_pcgrad_dot_pg_env_after_conflict_fix = dot_pg_env_after
+                                    env_feedback_pcgrad_norm_pg = pg_norm
+                                    env_feedback_pcgrad_norm_other = torch.sqrt(other_norm_sq.clamp_min(0.0))
+                                    env_feedback_pcgrad_norm_env = env_norm
+                                    env_feedback_pcgrad_norm_env_pos = env_pos_norm
+                                    env_feedback_pcgrad_norm_final = torch.sqrt(final_norm_sq.clamp_min(0.0))
+                                    env_feedback_pcgrad_conflict_applied = (
+                                        1.0 if neg_dot_pg_env.item() > pcgrad_eps else 0.0
+                                    )
+                                    if not self.env_feedback_pcgrad_log_extra_metrics:
+                                        env_feedback_pcgrad_norm_other = torch.zeros_like(env_feedback_pcgrad_norm_other)
+
+                                    policy_loss = pg_loss.detach() - entropy_loss.detach() * entropy_coeff_effective
+                                    policy_loss = policy_loss + env_feedback_loss_weighted
+                                    if self.config.use_kl_loss:
+                                        policy_loss = policy_loss + kl_loss.detach() * self.config.kl_loss_coef
+                                    loss = policy_loss * scale_factor
+                                else:
+                                    pg_loss_scaled = pg_loss * scale_factor
+                                    pg_loss_scaled.backward()
+                                    env_feedback_proj_pg_norm_sq = self._compute_grad_norm_sq(device=device)
+                                    # FSDP (use_orig_params=False) may not expose pg grads via param.grad inside
+                                    # env backward hooks. Snapshot PG grads to CPU for robust dot computation.
+                                    pg_grads_cpu_for_proj, pg_offloaded_bytes_for_proj = self._copy_current_grads_to_cpu(
+                                        clear_grads=False
+                                    )
+                                    if len(pg_grads_cpu_for_proj) > 0:
+                                        env_feedback_proj_pg_grad_offloaded = 1.0
+                                        env_feedback_proj_pg_grad_offload_mb = (
+                                            pg_offloaded_bytes_for_proj / (1024.0 * 1024.0)
+                                        )
+
+                                    _, log_prob_env = self._forward_micro_batch(
+                                        micro_batch=data,
+                                        temperature=temperature,
+                                        compute_entropy=False,
+                                    )
+                                    env_feedback_loss_proj = -verl_F.masked_mean(log_prob_env, env_feedback_mask)
+                                    env_feedback_loss_weighted_scaled = env_feedback_loss_proj * env_feedback_coef * scale_factor
+                                    (
+                                        env_feedback_proj_alpha,
+                                        env_feedback_proj_dot,
+                                        env_feedback_proj_pg_norm_sq,
+                                        env_feedback_proj_env_norm_sq,
+                                        env_feedback_proj_cosine_before,
+                                        env_feedback_proj_cosine_after,
+                                        env_feedback_proj_aligned_after,
+                                        env_feedback_proj_applied,
+                                        env_feedback_proj_pg_grad_present_param_ratio,
+                                        env_feedback_proj_pg_grad_present_elem_ratio,
+                                    ) = self._project_env_grad_to_pg(
+                                        env_feedback_loss_scaled=env_feedback_loss_weighted_scaled,
+                                        pg_grad_norm_sq=env_feedback_proj_pg_norm_sq,
+                                        retain_graph=False,
+                                        pg_grads_cpu=pg_grads_cpu_for_proj,
+                                    )
+                                    env_feedback_proj_alpha_abs = torch.abs(env_feedback_proj_alpha.detach())
+                                    env_feedback_proj_dot_abs = torch.abs(env_feedback_proj_dot.detach())
+
+                                    kl_loss = torch.zeros((), device=device)
+                                    other_policy_loss = torch.zeros((), device=device)
+                                    need_other_policy = entropy_term_enabled or (
+                                        self.config.use_kl_loss and float(self.config.kl_loss_coef) != 0.0
+                                    )
+                                    if need_other_policy:
+                                        entropy_other, log_prob_other = self._forward_micro_batch(
+                                            micro_batch=data,
+                                            temperature=temperature,
+                                            compute_entropy=entropy_term_enabled,
+                                        )
+                                        if entropy_term_enabled:
+                                            entropy_loss = verl_F.masked_mean(entropy_other, response_mask)
+                                            other_policy_loss = other_policy_loss - entropy_loss * entropy_coeff_effective
+                                        if self.config.use_kl_loss:
+                                            kld_other = core_algos.kl_penalty(logprob=log_prob_other,
+                                                                              ref_logprob=ref_log_prob,
+                                                                              kl_penalty=self.config.kl_loss_type)
+                                            kl_loss = masked_mean(kld_other, response_mask)
+                                            other_policy_loss = other_policy_loss + kl_loss * self.config.kl_loss_coef
+                                        (other_policy_loss * scale_factor).backward()
+
+                                    if self.config.use_kl_loss:
+                                        metrics['actor/kl_loss'] = kl_loss.detach().item()
+                                        metrics['actor/kl_coef'] = self.config.kl_loss_coef
+
+                                    policy_loss = pg_loss.detach() - entropy_loss.detach() * entropy_coeff_effective
+                                    policy_loss = policy_loss + env_feedback_loss_weighted
+                                    if self.config.use_kl_loss:
+                                        policy_loss = policy_loss + kl_loss.detach() * self.config.kl_loss_coef
+                                    loss = policy_loss * scale_factor
                         except RuntimeError as runtime_err:
                             is_oom = self._is_oom_error(runtime_err)
                             if not (self.env_feedback_grad_proj_oom_fallback and is_oom):
@@ -1163,8 +1500,23 @@ class DataParallelPPOActor(BasePPOActor):
                     'actor/env_feedback_proj_pg_grad_offload_mb': env_feedback_proj_pg_grad_offload_mb,
                     'actor/env_feedback_proj_impl': env_feedback_proj_impl_id,
                     'actor/env_feedback_proj_target': env_feedback_proj_target_id,
+                    'actor/env_feedback_proj_algo': env_feedback_proj_algo_id,
                     'actor/env_feedback_proj_skipped_low_mem': env_feedback_proj_skipped_low_mem,
                     'actor/env_feedback_proj_oom_fallback': env_feedback_proj_oom_fallback,
+                    'actor/env_feedback_pcgrad_dot_pg_env_before': env_feedback_pcgrad_dot_pg_env_before.detach().item(),
+                    'actor/env_feedback_pcgrad_cos_pg_env_before': env_feedback_pcgrad_cos_pg_env_before.detach().item(),
+                    'actor/env_feedback_pcgrad_dot_pg_env_after_conflict_fix': (
+                        env_feedback_pcgrad_dot_pg_env_after_conflict_fix.detach().item()
+                    ),
+                    'actor/env_feedback_pcgrad_lambda': env_feedback_pcgrad_lambda.detach().item(),
+                    'actor/env_feedback_pcgrad_norm_pg': env_feedback_pcgrad_norm_pg.detach().item(),
+                    'actor/env_feedback_pcgrad_norm_other': env_feedback_pcgrad_norm_other.detach().item(),
+                    'actor/env_feedback_pcgrad_norm_env': env_feedback_pcgrad_norm_env.detach().item(),
+                    'actor/env_feedback_pcgrad_norm_env_pos': env_feedback_pcgrad_norm_env_pos.detach().item(),
+                    'actor/env_feedback_pcgrad_norm_final': env_feedback_pcgrad_norm_final.detach().item(),
+                    'actor/env_feedback_pcgrad_final_vs_pg_cosine': env_feedback_pcgrad_final_vs_pg_cosine.detach().item(),
+                    'actor/env_feedback_pcgrad_conflict_applied': env_feedback_pcgrad_conflict_applied,
+                    'actor/env_feedback_pcgrad_env_inject_ratio': env_feedback_pcgrad_env_inject_ratio.detach().item(),
                     'actor/microbatch_oom_skipped': microbatch_oom_skipped,
                     'actor/entropy_runtime_disabled': entropy_runtime_disabled_metric,
                 }
@@ -1209,8 +1561,23 @@ class DataParallelPPOActor(BasePPOActor):
             'actor/env_feedback_proj_pg_grad_offload_mb': 'actor_step/env_feedback_proj_pg_grad_offload_mb',
             'actor/env_feedback_proj_impl': 'actor_step/env_feedback_proj_impl',
             'actor/env_feedback_proj_target': 'actor_step/env_feedback_proj_target',
+            'actor/env_feedback_proj_algo': 'actor_step/env_feedback_proj_algo',
             'actor/env_feedback_proj_skipped_low_mem': 'actor_step/env_feedback_proj_skipped_low_mem',
             'actor/env_feedback_proj_oom_fallback': 'actor_step/env_feedback_proj_oom_fallback',
+            'actor/env_feedback_pcgrad_dot_pg_env_before': 'actor_step/env_feedback_pcgrad_dot_pg_env_before',
+            'actor/env_feedback_pcgrad_cos_pg_env_before': 'actor_step/env_feedback_pcgrad_cos_pg_env_before',
+            'actor/env_feedback_pcgrad_dot_pg_env_after_conflict_fix': (
+                'actor_step/env_feedback_pcgrad_dot_pg_env_after_conflict_fix'
+            ),
+            'actor/env_feedback_pcgrad_lambda': 'actor_step/env_feedback_pcgrad_lambda',
+            'actor/env_feedback_pcgrad_norm_pg': 'actor_step/env_feedback_pcgrad_norm_pg',
+            'actor/env_feedback_pcgrad_norm_other': 'actor_step/env_feedback_pcgrad_norm_other',
+            'actor/env_feedback_pcgrad_norm_env': 'actor_step/env_feedback_pcgrad_norm_env',
+            'actor/env_feedback_pcgrad_norm_env_pos': 'actor_step/env_feedback_pcgrad_norm_env_pos',
+            'actor/env_feedback_pcgrad_norm_final': 'actor_step/env_feedback_pcgrad_norm_final',
+            'actor/env_feedback_pcgrad_final_vs_pg_cosine': 'actor_step/env_feedback_pcgrad_final_vs_pg_cosine',
+            'actor/env_feedback_pcgrad_conflict_applied': 'actor_step/env_feedback_pcgrad_conflict_applied',
+            'actor/env_feedback_pcgrad_env_inject_ratio': 'actor_step/env_feedback_pcgrad_env_inject_ratio',
             'actor/microbatch_oom_skipped': 'actor_step/microbatch_oom_skipped',
             'actor/entropy_runtime_disabled': 'actor_step/entropy_runtime_disabled',
         }
@@ -1231,6 +1598,15 @@ class DataParallelPPOActor(BasePPOActor):
         _add_step_distribution_stats('actor/env_feedback_proj_alpha', 'actor_step/env_feedback_proj_alpha')
         _add_step_distribution_stats('actor/env_feedback_proj_cosine_before', 'actor_step/env_feedback_proj_cosine_before')
         _add_step_distribution_stats('actor/env_feedback_proj_cosine_after', 'actor_step/env_feedback_proj_cosine_after')
+        _add_step_distribution_stats('actor/env_feedback_pcgrad_lambda', 'actor_step/env_feedback_pcgrad_lambda')
+        _add_step_distribution_stats(
+            'actor/env_feedback_pcgrad_final_vs_pg_cosine',
+            'actor_step/env_feedback_pcgrad_final_vs_pg_cosine',
+        )
+        _add_step_distribution_stats(
+            'actor/env_feedback_pcgrad_env_inject_ratio',
+            'actor_step/env_feedback_pcgrad_env_inject_ratio',
+        )
 
         cosine_before_vals = metrics.get('actor/env_feedback_proj_cosine_before')
         if isinstance(cosine_before_vals, list) and len(cosine_before_vals) > 0:
