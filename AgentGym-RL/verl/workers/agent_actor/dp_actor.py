@@ -549,34 +549,16 @@ class DataParallelPPOActor(BasePPOActor):
         loss_scaled: torch.Tensor,
         retain_graph: bool,
     ):
+        # Capture fresh grads from this loss only.
+        self._clear_current_grads()
+        loss_scaled.backward(retain_graph=retain_graph)
+
+        # Snapshot to CPU and clear in-model grads to avoid accidental accumulation.
+        grads_cpu, offloaded_bytes = self._copy_current_grads_to_cpu(clear_grads=True)
         grad_norm_sq = torch.zeros((), device=loss_scaled.device, dtype=torch.float32)
-        grads_cpu = {}
-        offloaded_bytes = 0
-        handles = []
-
-        def _make_hook(param_idx: int):
-            def _hook(grad):
-                nonlocal offloaded_bytes
-                if grad is None:
-                    return grad
-                grad_fp32 = grad.detach().float()
-                grad_norm_sq.add_(torch.sum(grad_fp32 * grad_fp32))
-                grad_cpu = grad.detach().to(device='cpu', copy=True)
-                grads_cpu[param_idx] = grad_cpu
-                offloaded_bytes += grad_cpu.numel() * grad_cpu.element_size()
-                grad.zero_()
-                return grad
-
-            return _hook
-
-        for param_idx, param in enumerate(self._actor_params):
-            handles.append(param.register_hook(_make_hook(param_idx)))
-
-        try:
-            loss_scaled.backward(retain_graph=retain_graph)
-        finally:
-            for handle in handles:
-                handle.remove()
+        for grad_cpu in grads_cpu.values():
+            grad_fp32 = grad_cpu.float()
+            grad_norm_sq.add_(torch.sum(grad_fp32 * grad_fp32).to(device=grad_norm_sq.device))
 
         if dist.is_available() and dist.is_initialized():
             dist.all_reduce(grad_norm_sq, op=dist.ReduceOp.SUM)
