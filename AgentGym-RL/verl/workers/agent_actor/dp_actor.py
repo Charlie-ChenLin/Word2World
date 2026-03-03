@@ -663,6 +663,31 @@ class DataParallelPPOActor(BasePPOActor):
             base_grad_present_elem_ratio,
         )
 
+    def _compute_dot_between_cpu_and_live_grads(
+        self,
+        base_grads_cpu: dict,
+        device: torch.device,
+    ) -> torch.Tensor:
+        dot = torch.zeros((), device=device, dtype=torch.float32)
+        for param_idx, base_grad_cpu in base_grads_cpu.items():
+            if base_grad_cpu is None:
+                continue
+            live_grad = self._actor_params[param_idx].grad
+            if live_grad is None:
+                continue
+            base_grad_fp32 = base_grad_cpu.float()
+            live_grad_fp32 = live_grad.detach().float()
+            live_for_dot, base_for_dot = self._align_env_pg_for_dot(
+                pg_grad=base_grad_fp32,
+                env_grad=live_grad_fp32,
+                param_idx=param_idx,
+            )
+            dot.add_(torch.sum(base_for_dot * live_for_dot))
+
+        if dist.is_available() and dist.is_initialized():
+            dist.all_reduce(dot, op=dist.ReduceOp.SUM)
+        return dot
+
     def compute_log_prob(self, data: DataProto, train_mode: bool = False) -> torch.Tensor:
         """Compute the log probability of the responses given input_ids, attention_mask and position_ids
 
@@ -1185,7 +1210,6 @@ class DataParallelPPOActor(BasePPOActor):
 
                                     kl_loss = torch.zeros((), device=device)
                                     other_policy_loss = torch.zeros((), device=device)
-                                    other_grads_cpu_for_proj = {}
                                     other_norm_sq = torch.zeros((), device=device, dtype=torch.float32)
                                     need_other_policy = entropy_term_enabled or (
                                         self.config.use_kl_loss and float(self.config.kl_loss_coef) != 0.0
@@ -1205,28 +1229,17 @@ class DataParallelPPOActor(BasePPOActor):
                                                                               kl_penalty=self.config.kl_loss_type)
                                             kl_loss = masked_mean(kld_other, response_mask)
                                             other_policy_loss = other_policy_loss + kl_loss * self.config.kl_loss_coef
-                                        (
-                                            other_grads_cpu_for_proj,
-                                            _,
-                                            other_norm_sq,
-                                        ) = self._capture_loss_grads_to_cpu_without_accum(
-                                            loss_scaled=other_policy_loss * scale_factor,
-                                            retain_graph=False,
-                                        )
+                                        (other_policy_loss * scale_factor).backward()
+                                        other_norm_sq = self._compute_grad_norm_sq(device=device)
+                                        if dist.is_available() and dist.is_initialized():
+                                            dist.all_reduce(other_norm_sq, op=dist.ReduceOp.SUM)
 
                                     if self.config.use_kl_loss:
                                         metrics['actor/kl_loss'] = kl_loss.detach().item()
                                         metrics['actor/kl_coef'] = self.config.kl_loss_coef
 
-                                    (
-                                        dot_pg_other,
-                                        _,
-                                        _,
-                                        _,
-                                        _,
-                                    ) = self._compute_grad_dict_pair_stats(
+                                    dot_pg_other = self._compute_dot_between_cpu_and_live_grads(
                                         base_grads_cpu=pg_grads_cpu_for_proj,
-                                        ref_grads_cpu=other_grads_cpu_for_proj,
                                         device=device,
                                     )
                                     pcgrad_eps = max(self.env_feedback_pcgrad_eps, self.env_feedback_grad_proj_eps)
@@ -1262,16 +1275,12 @@ class DataParallelPPOActor(BasePPOActor):
                                     inject_pg_scale = env_feedback_pcgrad_lambda * env_pos_scale
                                     pg_scale = torch.ones_like(inject_pg_scale) + inject_pg_scale
 
-                                    self._clear_current_grads()
+                                    if not need_other_policy:
+                                        self._clear_current_grads()
                                     if len(pg_grads_cpu_for_proj) > 0:
                                         self._accumulate_offloaded_grads_from_cpu(
                                             offloaded_grads=pg_grads_cpu_for_proj,
                                             scale=float(pg_scale.detach().item()),
-                                        )
-                                    if len(other_grads_cpu_for_proj) > 0:
-                                        self._accumulate_offloaded_grads_from_cpu(
-                                            offloaded_grads=other_grads_cpu_for_proj,
-                                            scale=1.0,
                                         )
                                     if conflict_scale.item() > 0.0 and len(env_grads_cpu_for_proj) > 0:
                                         self._accumulate_offloaded_grads_from_cpu(
