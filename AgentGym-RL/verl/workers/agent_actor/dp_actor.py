@@ -599,25 +599,26 @@ class DataParallelPPOActor(BasePPOActor):
         ref_grads_cpu: dict,
         device: torch.device,
     ):
-        dot = torch.zeros((), device=device, dtype=torch.float32)
-        base_norm_sq = torch.zeros((), device=device, dtype=torch.float32)
-        ref_norm_sq = torch.zeros((), device=device, dtype=torch.float32)
-        base_grad_present_param_count = torch.zeros((), device=device, dtype=torch.float32)
-        base_grad_missing_param_count = torch.zeros((), device=device, dtype=torch.float32)
-        base_grad_present_elem_count = torch.zeros((), device=device, dtype=torch.float32)
-        base_grad_missing_elem_count = torch.zeros((), device=device, dtype=torch.float32)
+        # Keep pairwise stats on CPU to avoid per-parameter CPU->GPU copies.
+        dot_cpu = 0.0
+        base_norm_sq_cpu = 0.0
+        ref_norm_sq_cpu = 0.0
+        base_grad_present_param_count_cpu = 0.0
+        base_grad_missing_param_count_cpu = 0.0
+        base_grad_present_elem_count_cpu = 0.0
+        base_grad_missing_elem_count_cpu = 0.0
 
         all_param_indices = set(base_grads_cpu.keys()) | set(ref_grads_cpu.keys())
         for param_idx in all_param_indices:
             base_grad_cpu = base_grads_cpu.get(param_idx)
             ref_grad_cpu = ref_grads_cpu.get(param_idx)
             base_grad_fp32 = (
-                base_grad_cpu.to(device=device, dtype=torch.float32)
+                base_grad_cpu.float()
                 if base_grad_cpu is not None
                 else None
             )
             ref_grad_fp32 = (
-                ref_grad_cpu.to(device=device, dtype=torch.float32)
+                ref_grad_cpu.float()
                 if ref_grad_cpu is not None
                 else None
             )
@@ -628,28 +629,44 @@ class DataParallelPPOActor(BasePPOActor):
                     env_grad=ref_grad_fp32,
                     param_idx=param_idx,
                 )
-                dot.add_(torch.sum(base_for_dot * ref_for_dot))
-                base_norm_sq.add_(torch.sum(base_for_dot * base_for_dot))
-                ref_norm_sq.add_(torch.sum(ref_for_dot * ref_for_dot))
-                base_grad_present_param_count.add_(1.0)
-                base_grad_present_elem_count.add_(float(base_for_dot.numel()))
+                dot_cpu += torch.sum(base_for_dot * ref_for_dot).item()
+                base_norm_sq_cpu += torch.sum(base_for_dot * base_for_dot).item()
+                ref_norm_sq_cpu += torch.sum(ref_for_dot * ref_for_dot).item()
+                base_grad_present_param_count_cpu += 1.0
+                base_grad_present_elem_count_cpu += float(base_for_dot.numel())
             elif base_grad_fp32 is not None:
-                base_norm_sq.add_(torch.sum(base_grad_fp32 * base_grad_fp32))
-                base_grad_missing_param_count.add_(1.0)
-                base_grad_missing_elem_count.add_(float(base_grad_fp32.numel()))
+                base_norm_sq_cpu += torch.sum(base_grad_fp32 * base_grad_fp32).item()
+                base_grad_missing_param_count_cpu += 1.0
+                base_grad_missing_elem_count_cpu += float(base_grad_fp32.numel())
             elif ref_grad_fp32 is not None:
-                ref_norm_sq.add_(torch.sum(ref_grad_fp32 * ref_grad_fp32))
-                base_grad_missing_param_count.add_(1.0)
-                base_grad_missing_elem_count.add_(float(ref_grad_fp32.numel()))
+                ref_norm_sq_cpu += torch.sum(ref_grad_fp32 * ref_grad_fp32).item()
+                base_grad_missing_param_count_cpu += 1.0
+                base_grad_missing_elem_count_cpu += float(ref_grad_fp32.numel())
 
+        stats = torch.tensor(
+            [
+                dot_cpu,
+                base_norm_sq_cpu,
+                ref_norm_sq_cpu,
+                base_grad_present_param_count_cpu,
+                base_grad_missing_param_count_cpu,
+                base_grad_present_elem_count_cpu,
+                base_grad_missing_elem_count_cpu,
+            ],
+            device=device,
+            dtype=torch.float32,
+        )
         if dist.is_available() and dist.is_initialized():
-            dist.all_reduce(dot, op=dist.ReduceOp.SUM)
-            dist.all_reduce(base_norm_sq, op=dist.ReduceOp.SUM)
-            dist.all_reduce(ref_norm_sq, op=dist.ReduceOp.SUM)
-            dist.all_reduce(base_grad_present_param_count, op=dist.ReduceOp.SUM)
-            dist.all_reduce(base_grad_missing_param_count, op=dist.ReduceOp.SUM)
-            dist.all_reduce(base_grad_present_elem_count, op=dist.ReduceOp.SUM)
-            dist.all_reduce(base_grad_missing_elem_count, op=dist.ReduceOp.SUM)
+            # Pack all scalar stats into one collective to reduce synchronization overhead.
+            dist.all_reduce(stats, op=dist.ReduceOp.SUM)
+
+        dot = stats[0]
+        base_norm_sq = stats[1]
+        ref_norm_sq = stats[2]
+        base_grad_present_param_count = stats[3]
+        base_grad_missing_param_count = stats[4]
+        base_grad_present_elem_count = stats[5]
+        base_grad_missing_elem_count = stats[6]
 
         base_grad_param_total = (base_grad_present_param_count + base_grad_missing_param_count).clamp_min(1.0)
         base_grad_elem_total = (base_grad_present_elem_count + base_grad_missing_elem_count).clamp_min(1.0)
