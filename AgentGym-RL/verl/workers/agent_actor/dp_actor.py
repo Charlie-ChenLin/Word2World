@@ -136,9 +136,10 @@ class DataParallelPPOActor(BasePPOActor):
             f"env_feedback_grad_proj_algo={self.env_feedback_grad_proj_algo} "
             f"env_feedback_pcgrad_lambda_max={self.env_feedback_pcgrad_lambda_max} "
             f"env_feedback_pcgrad_lambda_norm_ratio={self.env_feedback_pcgrad_lambda_norm_ratio} "
-            f"env_feedback_pcgrad_eps={self.env_feedback_pcgrad_eps} "
-            f"env_feedback_pcgrad_log_extra_metrics={self.env_feedback_pcgrad_log_extra_metrics}"
+                f"env_feedback_pcgrad_eps={self.env_feedback_pcgrad_eps} "
+                f"env_feedback_pcgrad_log_extra_metrics={self.env_feedback_pcgrad_log_extra_metrics}"
         )
+        self._pcgrad_lambda_max_tensor_cache = {}
 
     def _forward_micro_batch(
         self,
@@ -244,6 +245,18 @@ class DataParallelPPOActor(BasePPOActor):
             grad_norm = torch.nn.utils.clip_grad_norm_(self.actor_module.parameters(), max_norm=self.config.grad_clip)
         self.actor_optimizer.step()
         return grad_norm
+
+    def _get_pcgrad_lambda_max_tensor(self, device: torch.device) -> torch.Tensor:
+        cache_key = (device.type, device.index)
+        cached = self._pcgrad_lambda_max_tensor_cache.get(cache_key)
+        if cached is None:
+            cached = torch.tensor(
+                self.env_feedback_pcgrad_lambda_max,
+                device=device,
+                dtype=torch.float32,
+            )
+            self._pcgrad_lambda_max_tensor_cache[cache_key] = cached
+        return cached
 
     def _compute_grad_norm_sq(self, device: torch.device) -> torch.Tensor:
         grad_norm_sq = torch.zeros((), device=device, dtype=torch.float32)
@@ -555,10 +568,11 @@ class DataParallelPPOActor(BasePPOActor):
 
         # Snapshot to CPU and clear in-model grads to avoid accidental accumulation.
         grads_cpu, offloaded_bytes = self._copy_current_grads_to_cpu(clear_grads=True)
-        grad_norm_sq = torch.zeros((), device=loss_scaled.device, dtype=torch.float32)
+        grad_norm_sq_cpu = 0.0
         for grad_cpu in grads_cpu.values():
             grad_fp32 = grad_cpu.float()
-            grad_norm_sq.add_(torch.sum(grad_fp32 * grad_fp32).to(device=grad_norm_sq.device))
+            grad_norm_sq_cpu += torch.sum(grad_fp32 * grad_fp32).item()
+        grad_norm_sq = torch.tensor(grad_norm_sq_cpu, device=loss_scaled.device, dtype=torch.float32)
 
         if dist.is_available() and dist.is_initialized():
             dist.all_reduce(grad_norm_sq, op=dist.ReduceOp.SUM)
@@ -1258,18 +1272,15 @@ class DataParallelPPOActor(BasePPOActor):
                                         / env_pos_norm.clamp_min(pcgrad_eps)
                                     )
                                     env_feedback_pcgrad_lambda = torch.minimum(
-                                        torch.tensor(
-                                            self.env_feedback_pcgrad_lambda_max,
-                                            device=device,
-                                            dtype=torch.float32,
-                                        ),
+                                        self._get_pcgrad_lambda_max_tensor(device=device),
                                         lambda_from_norm,
                                     )
-                                    if (
-                                        pos_dot_pg_env.item() <= 0.0
-                                        or env_pos_norm.item() <= pcgrad_eps
-                                        or pg_norm.item() <= pcgrad_eps
-                                    ):
+                                    invalid_env_injection = (
+                                        (pos_dot_pg_env <= 0.0)
+                                        | (env_pos_norm <= pcgrad_eps)
+                                        | (pg_norm <= pcgrad_eps)
+                                    )
+                                    if bool(invalid_env_injection.item()):
                                         env_feedback_pcgrad_lambda = torch.zeros_like(env_feedback_pcgrad_lambda)
 
                                     inject_pg_scale = env_feedback_pcgrad_lambda * env_pos_scale
