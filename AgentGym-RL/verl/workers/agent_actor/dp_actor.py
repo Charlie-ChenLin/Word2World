@@ -682,7 +682,7 @@ class DataParallelPPOActor(BasePPOActor):
         base_grads_cpu: dict,
         device: torch.device,
     ) -> torch.Tensor:
-        dot = torch.zeros((), device=device, dtype=torch.float32)
+        dot_cpu = 0.0
         for param_idx, base_grad_cpu in base_grads_cpu.items():
             if base_grad_cpu is None:
                 continue
@@ -690,13 +690,15 @@ class DataParallelPPOActor(BasePPOActor):
             if live_grad is None:
                 continue
             base_grad_fp32 = base_grad_cpu.float()
-            live_grad_fp32 = live_grad.detach().float()
+            live_grad_fp32 = live_grad.detach().float().cpu()
             live_for_dot, base_for_dot = self._align_env_pg_for_dot(
                 pg_grad=base_grad_fp32,
                 env_grad=live_grad_fp32,
                 param_idx=param_idx,
             )
-            dot.add_(torch.sum(base_for_dot * live_for_dot))
+            dot_cpu += torch.sum(base_for_dot * live_for_dot).item()
+
+        dot = torch.tensor(dot_cpu, device=device, dtype=torch.float32)
 
         if dist.is_available() and dist.is_initialized():
             dist.all_reduce(dot, op=dist.ReduceOp.SUM)
