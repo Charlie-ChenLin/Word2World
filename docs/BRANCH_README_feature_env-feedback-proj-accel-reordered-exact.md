@@ -91,8 +91,24 @@ This document tracks the cumulative changes on this branch relative to the earli
     - `ENV_FEEDBACK_GRAD_PROJ_TARGET`
 - Updated `AgentGym-RL/verl/agent_trainer/config/ppo_trainer.yaml`:
   - added default `env_feedback_grad_proj_target: pg`
+  - added defaults:
+    - `pg_plus_other_loss_coef: 1.0`
+    - `pg_loss_coef: 1.0`
 
-## 6) Notes for Repro
+## 6) PPO Loss Scaling Knobs
+
+- Added two actor-side scalar controls:
+  - `actor_rollout_ref.actor.pg_plus_other_loss_coef` (default `1.0`)
+  - `actor_rollout_ref.actor.pg_loss_coef` (default `1.0`)
+- Effective no-env policy term now follows:
+  - `pg_plus_other_loss_coef * (pg_loss_coef * pg_loss + other_loss)`
+  - where `other_loss` includes entropy and KL terms.
+- Env-feedback weighted loss remains additive and is not multiplied by these two knobs.
+- Both knobs are plumbed to train script:
+  - `--pg_plus_other_loss_coef` / `PG_PLUS_OTHER_LOSS_COEF`
+  - `--pg_loss_coef` / `PG_LOSS_COEF`
+
+## 7) Notes for Repro
 
 - Env-feedback projection is active only when all are true:
   - `project_env_feedback_grad_to_pg=true`
@@ -101,4 +117,3 @@ This document tracks the cumulative changes on this branch relative to the earli
 - For `target=pg_plus_other`, use:
   - `env_feedback_grad_proj_impl=reordered_exact`
   - `env_feedback_grad_proj_target=pg_plus_other`
-

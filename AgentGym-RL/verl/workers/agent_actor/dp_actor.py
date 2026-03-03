@@ -56,6 +56,8 @@ class DataParallelPPOActor(BasePPOActor):
         self.use_ulysses_sp = self.ulysses_sequence_parallel_size > 1
 
         self.compute_entropy_from_logits = torch.compile(verl_F.entropy_from_logits, dynamic=True)
+        self.pg_plus_other_loss_coef = float(self.config.get('pg_plus_other_loss_coef', 1.0))
+        self.pg_loss_coef = float(self.config.get('pg_loss_coef', 1.0))
         self.project_env_feedback_grad_to_pg = bool(self.config.get('project_env_feedback_grad_to_pg', False))
         self.env_feedback_grad_proj_eps = float(self.config.get('env_feedback_grad_proj_eps', 1e-12))
         self.env_feedback_grad_proj_min_free_gb = float(self.config.get('env_feedback_grad_proj_min_free_gb', 0.0))
@@ -86,7 +88,9 @@ class DataParallelPPOActor(BasePPOActor):
             self.env_feedback_grad_proj_target = 'pg'
         self._actor_params = [param for param in self.actor_module.parameters() if param.requires_grad]
         print(
-            f"Actor project_env_feedback_grad_to_pg={self.project_env_feedback_grad_to_pg} "
+            f"Actor pg_plus_other_loss_coef={self.pg_plus_other_loss_coef} "
+            f"pg_loss_coef={self.pg_loss_coef} "
+            f"project_env_feedback_grad_to_pg={self.project_env_feedback_grad_to_pg} "
             f"env_feedback_grad_proj_eps={self.env_feedback_grad_proj_eps} "
             f"env_feedback_grad_proj_min_free_gb={self.env_feedback_grad_proj_min_free_gb} "
             f"env_feedback_grad_proj_oom_fallback={self.env_feedback_grad_proj_oom_fallback} "
@@ -653,7 +657,24 @@ class DataParallelPPOActor(BasePPOActor):
 
                 ref_log_prob = data['ref_log_prob'] if self.config.use_kl_loss else None
                 env_token_count = env_feedback_mask.sum()
+                response_token_count = response_mask.sum()
                 device = response_mask.device
+                env_feedback_mask_overlap_tokens = torch.sum(
+                    torch.logical_and(response_mask > 0, env_feedback_mask > 0)
+                )
+                env_feedback_mask_overlap_ratio_response = torch.zeros((), device=device)
+                env_feedback_mask_overlap_ratio_env = torch.zeros((), device=device)
+                if response_token_count.item() > 0:
+                    env_feedback_mask_overlap_ratio_response = (
+                        env_feedback_mask_overlap_tokens.float() / response_token_count.float()
+                    )
+                if env_token_count.item() > 0:
+                    env_feedback_mask_overlap_ratio_env = (
+                        env_feedback_mask_overlap_tokens.float() / env_token_count.float()
+                    )
+                env_feedback_mask_overlap_any = (
+                    1.0 if env_feedback_mask_overlap_tokens.item() > 0 else 0.0
+                )
 
                 # Initialize values so logging stays consistent across both branches.
                 entropy_loss = torch.zeros((), device=device)
@@ -724,15 +745,21 @@ class DataParallelPPOActor(BasePPOActor):
                                                                                  eos_mask=response_mask,
                                                                                  cliprange=clip_ratio)
                             entropy_loss = verl_F.masked_mean(entropy_other.detach(), response_mask)
-                            policy_no_env_loss_recomputed = pg_loss_other
+                            policy_other_loss_recomputed = torch.zeros((), device=device)
                             if entropy_term_enabled:
-                                policy_no_env_loss_recomputed = policy_no_env_loss_recomputed - entropy_loss * entropy_coeff_effective
+                                policy_other_loss_recomputed = policy_other_loss_recomputed - entropy_loss * entropy_coeff_effective
                             if self.config.use_kl_loss:
                                 kld_other = core_algos.kl_penalty(logprob=log_prob_other,
                                                                   ref_logprob=ref_log_prob,
                                                                   kl_penalty=self.config.kl_loss_type)
                                 kl_loss_other = masked_mean(kld_other, response_mask)
-                                policy_no_env_loss_recomputed = policy_no_env_loss_recomputed + kl_loss_other * self.config.kl_loss_coef
+                                policy_other_loss_recomputed = (
+                                    policy_other_loss_recomputed + kl_loss_other * self.config.kl_loss_coef
+                                )
+                            policy_no_env_loss_recomputed = (
+                                self.pg_plus_other_loss_coef
+                                * (self.pg_loss_coef * pg_loss_other + policy_other_loss_recomputed)
+                            )
                             policy_no_env_loss_scaled = policy_no_env_loss_recomputed * scale_factor
                             policy_no_env_loss_scaled.backward()
 
@@ -746,7 +773,10 @@ class DataParallelPPOActor(BasePPOActor):
                                                                                          advantages=advantages,
                                                                                          eos_mask=response_mask,
                                                                                          cliprange=clip_ratio)
-                            policy_loss = pg_loss.detach() - entropy_loss * entropy_coeff_effective
+                            policy_other_loss = -entropy_loss * entropy_coeff_effective
+                            policy_loss = self.pg_plus_other_loss_coef * (
+                                self.pg_loss_coef * pg_loss.detach() + policy_other_loss
+                            )
 
                             env_feedback_loss = -verl_F.masked_mean(log_prob, env_feedback_mask).detach()
                             env_feedback_loss_weighted = env_feedback_loss * env_feedback_coef
@@ -757,12 +787,16 @@ class DataParallelPPOActor(BasePPOActor):
                                                             ref_logprob=ref_log_prob,
                                                             kl_penalty=self.config.kl_loss_type)
                                 kl_loss = masked_mean(kld, response_mask).detach()
-                                policy_loss = policy_loss + kl_loss * self.config.kl_loss_coef
+                                policy_loss = policy_loss + (
+                                    self.pg_plus_other_loss_coef * kl_loss * self.config.kl_loss_coef
+                                )
                                 metrics['actor/kl_loss'] = kl_loss.item()
                                 metrics['actor/kl_coef'] = self.config.kl_loss_coef
 
                             loss = policy_loss * scale_factor
-                            pg_loss_scaled = pg_loss * scale_factor
+                            pg_loss_scaled = (
+                                pg_loss * self.pg_loss_coef * self.pg_plus_other_loss_coef * scale_factor
+                            )
                             (
                                 offloaded_pg_grads,
                                 offloaded_bytes,
@@ -846,7 +880,7 @@ class DataParallelPPOActor(BasePPOActor):
                                     env_feedback_loss = torch.zeros((), device=device)
                                 env_feedback_loss_weighted = env_feedback_loss * env_feedback_coef
 
-                                policy_no_env_loss = pg_loss - entropy_loss * entropy_coeff_effective
+                                policy_other_loss = -entropy_loss * entropy_coeff_effective
                                 kl_loss = torch.zeros((), device=device)
                                 if self.config.use_kl_loss:
                                     kld_base = core_algos.kl_penalty(
@@ -855,9 +889,12 @@ class DataParallelPPOActor(BasePPOActor):
                                         kl_penalty=self.config.kl_loss_type,
                                     )
                                     kl_loss = masked_mean(kld_base, response_mask)
-                                    policy_no_env_loss = policy_no_env_loss + kl_loss * self.config.kl_loss_coef
+                                    policy_other_loss = policy_other_loss + kl_loss * self.config.kl_loss_coef
                                     metrics['actor/kl_loss'] = kl_loss.detach().item()
                                     metrics['actor/kl_coef'] = self.config.kl_loss_coef
+                                policy_no_env_loss = self.pg_plus_other_loss_coef * (
+                                    self.pg_loss_coef * pg_loss + policy_other_loss
+                                )
 
                                 policy_no_env_loss_scaled = policy_no_env_loss * scale_factor
                                 policy_no_env_loss_scaled.backward()
@@ -937,7 +974,12 @@ class DataParallelPPOActor(BasePPOActor):
                                             eos_mask=response_mask,
                                             cliprange=clip_ratio,
                                         )
-                                        pg_loss_legacy_scaled = pg_loss_legacy * scale_factor
+                                        pg_loss_legacy_scaled = (
+                                            pg_loss_legacy
+                                            * self.pg_loss_coef
+                                            * self.pg_plus_other_loss_coef
+                                            * scale_factor
+                                        )
                                         (
                                             offloaded_pg_grads_legacy,
                                             _,
@@ -978,7 +1020,12 @@ class DataParallelPPOActor(BasePPOActor):
                                         print("[actor] disable env_feedback_grad_proj_legacy_compat_metrics due to OOM")
                                         self._handle_microbatch_oom()
 
-                                pg_loss_scaled = pg_loss * scale_factor
+                                pg_loss_scaled = (
+                                    pg_loss
+                                    * self.pg_loss_coef
+                                    * self.pg_plus_other_loss_coef
+                                    * scale_factor
+                                )
                                 pg_loss_scaled.backward()
                                 env_feedback_proj_pg_norm_sq = self._compute_grad_norm_sq(device=device)
                                 # FSDP (use_orig_params=False) may not expose pg grads via param.grad inside
@@ -1039,16 +1086,27 @@ class DataParallelPPOActor(BasePPOActor):
                                                                           kl_penalty=self.config.kl_loss_type)
                                         kl_loss = masked_mean(kld_other, response_mask)
                                         other_policy_loss = other_policy_loss + kl_loss * self.config.kl_loss_coef
-                                    (other_policy_loss * scale_factor).backward()
+                                    (
+                                        other_policy_loss
+                                        * self.pg_plus_other_loss_coef
+                                        * scale_factor
+                                    ).backward()
 
                                 if self.config.use_kl_loss:
                                     metrics['actor/kl_loss'] = kl_loss.detach().item()
                                     metrics['actor/kl_coef'] = self.config.kl_loss_coef
 
-                                policy_loss = pg_loss.detach() - entropy_loss.detach() * entropy_coeff_effective
-                                policy_loss = policy_loss + env_feedback_loss_weighted
+                                policy_other_loss_detached = -entropy_loss.detach() * entropy_coeff_effective
+                                policy_loss = self.pg_plus_other_loss_coef * (
+                                    self.pg_loss_coef * pg_loss.detach() + policy_other_loss_detached
+                                )
                                 if self.config.use_kl_loss:
-                                    policy_loss = policy_loss + kl_loss.detach() * self.config.kl_loss_coef
+                                    policy_loss = policy_loss + (
+                                        self.pg_plus_other_loss_coef
+                                        * kl_loss.detach()
+                                        * self.config.kl_loss_coef
+                                    )
+                                policy_loss = policy_loss + env_feedback_loss_weighted
                                 loss = policy_loss * scale_factor
                         except RuntimeError as runtime_err:
                             is_oom = self._is_oom_error(runtime_err)
@@ -1079,7 +1137,10 @@ class DataParallelPPOActor(BasePPOActor):
                                                                                      eos_mask=response_mask,
                                                                                      cliprange=clip_ratio)
                         entropy_loss = verl_F.masked_mean(entropy, response_mask)
-                        policy_loss = pg_loss - entropy_loss * entropy_coeff_effective
+                        policy_other_loss = -entropy_loss * entropy_coeff_effective
+                        policy_loss = self.pg_plus_other_loss_coef * (
+                            self.pg_loss_coef * pg_loss + policy_other_loss
+                        )
 
                         if env_token_count.item() > 0:
                             env_feedback_loss = -verl_F.masked_mean(log_prob, env_feedback_mask)
@@ -1093,7 +1154,9 @@ class DataParallelPPOActor(BasePPOActor):
                                                         ref_logprob=ref_log_prob,
                                                         kl_penalty=self.config.kl_loss_type)
                             kl_loss = masked_mean(kld, response_mask)
-                            policy_loss = policy_loss + kl_loss * self.config.kl_loss_coef
+                            policy_loss = policy_loss + (
+                                self.pg_plus_other_loss_coef * kl_loss * self.config.kl_loss_coef
+                            )
                             metrics['actor/kl_loss'] = kl_loss.detach().item()
                             metrics['actor/kl_coef'] = self.config.kl_loss_coef
 
@@ -1128,10 +1191,19 @@ class DataParallelPPOActor(BasePPOActor):
                     'actor/env_feedback_loss': env_feedback_loss.detach().item(),
                     'actor/env_feedback_loss_weighted': env_feedback_loss_weighted.detach().item(),
                     'actor/env_feedback_tokens': env_token_count.detach().item(),
+                    'actor/response_tokens': response_token_count.detach().item(),
+                    'actor/env_feedback_mask_overlap_tokens': env_feedback_mask_overlap_tokens.detach().item(),
+                    'actor/env_feedback_mask_overlap_ratio_response': env_feedback_mask_overlap_ratio_response.detach().item(),
+                    'actor/env_feedback_mask_overlap_ratio_env': env_feedback_mask_overlap_ratio_env.detach().item(),
+                    'actor/env_feedback_mask_overlap_any': env_feedback_mask_overlap_any,
                     'actor/env_feedback_coef': env_feedback_coef,
+                    'actor/pg_plus_other_loss_coef': self.pg_plus_other_loss_coef,
+                    'actor/pg_loss_coef': self.pg_loss_coef,
                     'actor/policy_loss': policy_loss.detach().item(),
                     'actor/loss': loss.detach().item(),
-                    'actor/pg_loss_scaled': (pg_loss * scale_factor).detach().item(),
+                    'actor/pg_loss_scaled': (
+                        pg_loss * self.pg_loss_coef * self.pg_plus_other_loss_coef * scale_factor
+                    ).detach().item(),
                     'actor/env_feedback_loss_scaled': (env_feedback_loss * scale_factor).detach().item(),
                     'actor/env_feedback_loss_weighted_scaled': (env_feedback_loss_weighted * scale_factor).detach().item(),
                     'actor/env_feedback_proj_enabled': float(self.project_env_feedback_grad_to_pg),
@@ -1178,6 +1250,13 @@ class DataParallelPPOActor(BasePPOActor):
             'actor/pg_loss': 'actor_step/pg_loss',
             'actor/env_feedback_loss': 'actor_step/env_feedback_loss',
             'actor/env_feedback_loss_weighted': 'actor_step/env_feedback_loss_weighted',
+            'actor/response_tokens': 'actor_step/response_tokens',
+            'actor/env_feedback_mask_overlap_tokens': 'actor_step/env_feedback_mask_overlap_tokens',
+            'actor/env_feedback_mask_overlap_ratio_response': 'actor_step/env_feedback_mask_overlap_ratio_response',
+            'actor/env_feedback_mask_overlap_ratio_env': 'actor_step/env_feedback_mask_overlap_ratio_env',
+            'actor/env_feedback_mask_overlap_any': 'actor_step/env_feedback_mask_overlap_any',
+            'actor/pg_plus_other_loss_coef': 'actor_step/pg_plus_other_loss_coef',
+            'actor/pg_loss_coef': 'actor_step/pg_loss_coef',
             'actor/pg_loss_scaled': 'actor_step/pg_loss_scaled',
             'actor/env_feedback_loss_scaled': 'actor_step/env_feedback_loss_scaled',
             'actor/env_feedback_loss_weighted_scaled': 'actor_step/env_feedback_loss_weighted_scaled',

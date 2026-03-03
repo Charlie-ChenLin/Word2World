@@ -37,6 +37,8 @@ All options override the defaults in this script. They can also be set via env v
   --project_name NAME
   --save_freq INT
   --grad_clip FLOAT
+  --pg_plus_other_loss_coef FLOAT
+  --pg_loss_coef FLOAT
   --env_feedback_loss_coef FLOAT
   --env_feedback_grad_proj_to_pg BOOL
   --env_feedback_grad_proj_eps FLOAT
@@ -86,6 +88,8 @@ rounds="${ROUNDS:-30}"
 project_name="${PROJECT_NAME:-xxx}"
 save_freq="${SAVE_FREQ:-50}"
 grad_clip="${GRAD_CLIP:-1.0}"
+pg_plus_other_loss_coef="${PG_PLUS_OTHER_LOSS_COEF:-1.0}"
+pg_loss_coef="${PG_LOSS_COEF:-1.0}"
 env_feedback_loss_coef="${ENV_FEEDBACK_LOSS_COEF:-1.0}"
 env_feedback_grad_proj_to_pg="${ENV_FEEDBACK_GRAD_PROJ_TO_PG:-false}"
 env_feedback_grad_proj_eps="${ENV_FEEDBACK_GRAD_PROJ_EPS:-1e-12}"
@@ -133,6 +137,8 @@ while [ $# -gt 0 ]; do
         --project_name) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; project_name="$2"; shift 2 ;;
         --save_freq) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; save_freq="$2"; shift 2 ;;
         --grad_clip) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; grad_clip="$2"; shift 2 ;;
+        --pg_plus_other_loss_coef) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; pg_plus_other_loss_coef="$2"; shift 2 ;;
+        --pg_loss_coef) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; pg_loss_coef="$2"; shift 2 ;;
         --env_feedback_loss_coef) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_loss_coef="$2"; shift 2 ;;
         --env_feedback_grad_proj_to_pg) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_grad_proj_to_pg="$2"; shift 2 ;;
         --env_feedback_grad_proj_eps) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_grad_proj_eps="$2"; shift 2 ;;
@@ -256,6 +262,8 @@ HYDRA_FULL_ERROR=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True PYTHONUNBUFF
     actor_rollout_ref.actor.ppo_mini_batch_size=${ppo_mini_batch_size} \
     actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=${ppo_micro_batch_size_per_gpu} \
     actor_rollout_ref.actor.grad_clip=${grad_clip} \
+    actor_rollout_ref.actor.pg_plus_other_loss_coef=${pg_plus_other_loss_coef} \
+    actor_rollout_ref.actor.pg_loss_coef=${pg_loss_coef} \
     actor_rollout_ref.actor.env_feedback_loss_coef=${env_feedback_loss_coef} \
     actor_rollout_ref.actor.project_env_feedback_grad_to_pg=${env_feedback_grad_proj_to_pg} \
     actor_rollout_ref.actor.env_feedback_grad_proj_eps=${env_feedback_grad_proj_eps} \
