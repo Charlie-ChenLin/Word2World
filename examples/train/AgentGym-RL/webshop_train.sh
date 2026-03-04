@@ -42,7 +42,12 @@ All options override the defaults in this script. They can also be set via env v
   --env_feedback_grad_proj_eps FLOAT
   --env_feedback_grad_proj_impl NAME
   --env_feedback_grad_proj_target NAME
+  --env_feedback_grad_proj_algo NAME
   --env_feedback_grad_proj_legacy_compat_metrics BOOL
+  --env_feedback_pcgrad_lambda_max FLOAT
+  --env_feedback_pcgrad_lambda_norm_ratio FLOAT
+  --env_feedback_pcgrad_eps FLOAT
+  --env_feedback_pcgrad_log_extra_metrics BOOL
   --schedule_env_feedback_loss_coef BOOL
   --final_env_feedback_loss_coef FLOAT
   --scheduling_algo NAME
@@ -91,7 +96,12 @@ env_feedback_grad_proj_to_pg="${ENV_FEEDBACK_GRAD_PROJ_TO_PG:-false}"
 env_feedback_grad_proj_eps="${ENV_FEEDBACK_GRAD_PROJ_EPS:-1e-12}"
 env_feedback_grad_proj_impl="${ENV_FEEDBACK_GRAD_PROJ_IMPL:-reordered_exact}"
 env_feedback_grad_proj_target="${ENV_FEEDBACK_GRAD_PROJ_TARGET:-pg}"
+env_feedback_grad_proj_algo="${ENV_FEEDBACK_GRAD_PROJ_ALGO:-alpha_scale}"
 env_feedback_grad_proj_legacy_compat_metrics="${ENV_FEEDBACK_GRAD_PROJ_LEGACY_COMPAT_METRICS:-false}"
+env_feedback_pcgrad_lambda_max="${ENV_FEEDBACK_PCGRAD_LAMBDA_MAX:-0.2}"
+env_feedback_pcgrad_lambda_norm_ratio="${ENV_FEEDBACK_PCGRAD_LAMBDA_NORM_RATIO:-0.3}"
+env_feedback_pcgrad_eps="${ENV_FEEDBACK_PCGRAD_EPS:-1e-12}"
+env_feedback_pcgrad_log_extra_metrics="${ENV_FEEDBACK_PCGRAD_LOG_EXTRA_METRICS:-true}"
 schedule_env_feedback_loss_coef="${SCHEDULE_ENV_FEEDBACK_LOSS_COEF:-false}"
 final_env_feedback_loss_coef="${FINAL_ENV_FEEDBACK_LOSS_COEF:-}"
 scheduling_algo="${SCHEDULING_ALGO:-linear}"
@@ -138,7 +148,12 @@ while [ $# -gt 0 ]; do
         --env_feedback_grad_proj_eps) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_grad_proj_eps="$2"; shift 2 ;;
         --env_feedback_grad_proj_impl) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_grad_proj_impl="$2"; shift 2 ;;
         --env_feedback_grad_proj_target) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_grad_proj_target="$2"; shift 2 ;;
+        --env_feedback_grad_proj_algo) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_grad_proj_algo="$2"; shift 2 ;;
         --env_feedback_grad_proj_legacy_compat_metrics) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_grad_proj_legacy_compat_metrics="$2"; shift 2 ;;
+        --env_feedback_pcgrad_lambda_max) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_pcgrad_lambda_max="$2"; shift 2 ;;
+        --env_feedback_pcgrad_lambda_norm_ratio) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_pcgrad_lambda_norm_ratio="$2"; shift 2 ;;
+        --env_feedback_pcgrad_eps) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_pcgrad_eps="$2"; shift 2 ;;
+        --env_feedback_pcgrad_log_extra_metrics) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; env_feedback_pcgrad_log_extra_metrics="$2"; shift 2 ;;
         --schedule_env_feedback_loss_coef) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; schedule_env_feedback_loss_coef="$2"; shift 2 ;;
         --final_env_feedback_loss_coef) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; final_env_feedback_loss_coef="$2"; shift 2 ;;
         --scheduling_algo) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; scheduling_algo="$2"; shift 2 ;;
@@ -158,6 +173,7 @@ normalize_bool() {
     esac
 }
 env_feedback_grad_proj_to_pg="$(normalize_bool "${env_feedback_grad_proj_to_pg}")"
+env_feedback_pcgrad_log_extra_metrics="$(normalize_bool "${env_feedback_pcgrad_log_extra_metrics}")"
 schedule_env_feedback_loss_coef="$(normalize_bool "${schedule_env_feedback_loss_coef}")"
 if [ -z "${final_env_feedback_loss_coef}" ]; then
     final_env_feedback_loss_coef="${env_feedback_loss_coef}"
@@ -179,6 +195,13 @@ if [ ! -f "${VENV_AGENTGYM_RL}/bin/activate" ]; then
     exit 1
 fi
 source "${VENV_AGENTGYM_RL}/bin/activate"
+
+# Ensure local repo package takes precedence over editable installs in the venv.
+if [ -n "${PYTHONPATH:-}" ]; then
+    export PYTHONPATH="${REPO_ROOT}/AgentGym-RL:${PYTHONPATH}"
+else
+    export PYTHONPATH="${REPO_ROOT}/AgentGym-RL"
+fi
 
 # Offline training (no internet access; only talks to local env server).
 # NOTE: This requires `AGENT_MODEL_PATH` to point to a fully local HF model dir.
@@ -222,6 +245,17 @@ if [ -n "${total_training_steps}" ]; then
     extra_trainer_overrides+=("trainer.total_training_steps=${total_training_steps}")
 fi
 
+python3 - <<'PY'
+import importlib.util
+import os
+spec = importlib.util.find_spec("verl")
+origin = None if spec is None else spec.origin
+locations = None if spec is None else list(spec.submodule_search_locations or [])
+print(f"[webshop_train.sh] PYTHONPATH={os.environ.get('PYTHONPATH', '')}")
+print(f"[webshop_train.sh] verl origin={origin}")
+print(f"[webshop_train.sh] verl locations={locations}")
+PY
+
 HYDRA_FULL_ERROR=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True PYTHONUNBUFFERED=1 WANDB_MODE=offline python3 -m verl.agent_trainer.main_ppo  \
     hydra.job.chdir=False \
     hydra.run.dir="${HYDRA_RUN_DIR}" \
@@ -261,7 +295,12 @@ HYDRA_FULL_ERROR=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True PYTHONUNBUFF
     actor_rollout_ref.actor.env_feedback_grad_proj_eps=${env_feedback_grad_proj_eps} \
     actor_rollout_ref.actor.env_feedback_grad_proj_impl=${env_feedback_grad_proj_impl} \
     actor_rollout_ref.actor.env_feedback_grad_proj_target=${env_feedback_grad_proj_target} \
+    actor_rollout_ref.actor.env_feedback_grad_proj_algo=${env_feedback_grad_proj_algo} \
     actor_rollout_ref.actor.env_feedback_grad_proj_legacy_compat_metrics=${env_feedback_grad_proj_legacy_compat_metrics} \
+    actor_rollout_ref.actor.env_feedback_pcgrad_lambda_max=${env_feedback_pcgrad_lambda_max} \
+    actor_rollout_ref.actor.env_feedback_pcgrad_lambda_norm_ratio=${env_feedback_pcgrad_lambda_norm_ratio} \
+    actor_rollout_ref.actor.env_feedback_pcgrad_eps=${env_feedback_pcgrad_eps} \
+    actor_rollout_ref.actor.env_feedback_pcgrad_log_extra_metrics=${env_feedback_pcgrad_log_extra_metrics} \
     actor_rollout_ref.actor.env_feedback_loss_coef_schedule.enabled=${schedule_env_feedback_loss_coef} \
     actor_rollout_ref.actor.env_feedback_loss_coef_schedule.final_env_feedback_loss_coef=${final_env_feedback_loss_coef} \
     actor_rollout_ref.actor.env_feedback_loss_coef_schedule.scheduling_algo=${scheduling_algo} \
