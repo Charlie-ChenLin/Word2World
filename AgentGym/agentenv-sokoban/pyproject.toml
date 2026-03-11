@@ -1,0 +1,24 @@
+[project]
+name = "agentenv_sokoban"
+version = "0.0.1"
+description = "Sokoban environment server for AgentGym/Word2World"
+authors = [
+    {name = "Word2World Team"},
+]
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "numpy",
+    "gym==0.26.2",
+    "gym_sokoban==0.0.6",
+    "matplotlib",
+]
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project.scripts]
+sokoban = "agentenv_sokoban:launch"

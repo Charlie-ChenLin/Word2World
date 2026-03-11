@@ -247,6 +247,12 @@ class vLLMRollout(BaseRollout):
         global_steps = prompts.meta_info.get('global_steps', None)
         max_rounds = prompts.meta_info.get('max_rounds', 10)
         cur_device = prompts.batch["input_ids"].device
+        validate_meta = prompts.meta_info.get("validate", False)
+        rollout_split_meta = prompts.meta_info.get("rollout_split", None)
+        if isinstance(validate_meta, str):
+            is_validate = validate_meta.strip().lower() in ("1", "true", "yes", "y", "t")
+        else:
+            is_validate = bool(validate_meta)
 
         do_sample = prompts.meta_info.get('do_sample', True)
         if not do_sample:
@@ -264,6 +270,13 @@ class vLLMRollout(BaseRollout):
         batch_size *= self.config.n
         rollout_handler_ls = self.preprocess_prompt_to_rollout_handler(prompts, n=self.config.n)
         env_clients = [init_env_client(self.agentgym_config) for _ in range(batch_size)]
+        for env_client in env_clients:
+            set_rollout_split = getattr(env_client, "set_rollout_split", None)
+            if rollout_split_meta is not None and callable(set_rollout_split):
+                set_rollout_split(rollout_split_meta)
+            set_validation_mode = getattr(env_client, "set_validation_mode", None)
+            if callable(set_validation_mode):
+                set_validation_mode(is_validate)
         time.sleep(self.config.send_interval) # take a break before sendng request
         all_done_flag = False
         for idx, rollout_handler in enumerate(rollout_handler_ls):
@@ -298,6 +311,11 @@ class vLLMRollout(BaseRollout):
                         rollout_handler_ls[idx].rule_score = info["rule_task_score"]
                     if "won" in info:
                         rollout_handler_ls[idx].won = info["won"]
+                    if "invalid_action_count" in info:
+                        try:
+                            rollout_handler_ls[idx].invalid_action_count = int(info["invalid_action_count"])
+                        except Exception:
+                            rollout_handler_ls[idx].invalid_action_count = None
                 rollout_handler_ls[idx].add_user_message(self.tokenizer, state)
                 return step_output.done
             except Exception as e:
@@ -337,10 +355,11 @@ class vLLMRollout(BaseRollout):
         # process ids
         rollout_bar.close()
         response_ids, response_attention_mask, response_position_ids, response_loss_mask, response_env_mask = [], [], [], [], []
-        scores, raw_scores, rule_scores, wins, messages = [], [], [], [], []
+        scores, raw_scores, rule_scores, wins, invalid_action_ratios, messages = [], [], [], [], [], []
         has_rule_reward_info = False
+        has_invalid_action_info = False
 
-        for rollout_handler in rollout_handler_ls:
+        for idx, rollout_handler in enumerate(rollout_handler_ls):
             # check length
             rollout_handler.truncate_output_ids()
             assert len(rollout_handler.input_ids) == len(rollout_handler.attention_mask) == len(rollout_handler.position_ids) == len(rollout_handler.loss_mask) == len(rollout_handler.env_mask), f"""Rollout Handler has different length of {len(rollout_handler.input_ids)=},
@@ -356,10 +375,20 @@ class vLLMRollout(BaseRollout):
             raw_scores.append(rollout_handler.raw_score if rollout_handler.raw_score is not None else 0.0)
             rule_scores.append(rollout_handler.rule_score if rollout_handler.rule_score is not None else 0.0)
             wins.append(float(rollout_handler.won) if rollout_handler.won is not None else 0.0)
+            task_round = float(task_rounds[idx]) if idx < len(task_rounds) else 0.0
+            invalid_count = (
+                float(rollout_handler.invalid_action_count)
+                if rollout_handler.invalid_action_count is not None
+                else 0.0
+            )
+            invalid_ratio = (invalid_count / task_round) if task_round > 0 else 0.0
+            invalid_action_ratios.append(invalid_ratio)
             if (rollout_handler.raw_score is not None
                     or rollout_handler.rule_score is not None
                     or rollout_handler.won is not None):
                 has_rule_reward_info = True
+            if rollout_handler.invalid_action_count is not None:
+                has_invalid_action_info = True
             messages.append(rollout_handler.messages)
 
         # pad to length
@@ -461,6 +490,10 @@ class vLLMRollout(BaseRollout):
             batch_dict['raw_task_scores'] = raw_reward_tensor
             batch_dict['rule_task_scores'] = rule_reward_tensor
             batch_dict['task_wins'] = torch.tensor(wins, dtype=torch.float32).to(input_ids.device)
+        if has_invalid_action_info:
+            batch_dict['invalid_action_ratios'] = torch.tensor(
+                invalid_action_ratios, dtype=torch.float32
+            ).to(input_ids.device)
 
         batch = TensorDict(batch_dict, batch_size=batch_size)
 

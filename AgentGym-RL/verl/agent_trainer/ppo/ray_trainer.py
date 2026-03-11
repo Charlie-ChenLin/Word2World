@@ -381,6 +381,12 @@ def compute_data_metrics(batch, use_critic=True):
             'critic/success_rate/mean':
                 torch.mean(task_wins).detach().item(),
         })
+    if 'invalid_action_ratios' in batch.batch:
+        invalid_action_ratios = batch.batch['invalid_action_ratios'].float()
+        metrics.update({
+            'critic/invalid_action_ratio/mean':
+                torch.mean(invalid_action_ratios).detach().item(),
+        })
     return metrics
 
 

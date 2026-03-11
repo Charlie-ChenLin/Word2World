@@ -18,6 +18,7 @@ declare -a TASKS=(
   textcraft
   babyai
   searchqa
+  sokoban
 )
 
 for task in "${TASKS[@]}"; do
@@ -46,6 +47,9 @@ for task in "${TASKS[@]}"; do
       ;;
     searchqa)
       script="$PROJECT_ROOT/scripts/env_setup/uv_searchqa_apptainer.sh"
+      ;;
+    sokoban)
+      script="$PROJECT_ROOT/scripts/env_setup/uv_sokoban_apptainer.sh"
       ;;
     *)
       echo "[WARN] Unknown task: $task"

@@ -50,6 +50,7 @@ class RolloutHandler:
         raw_score: Optional[float] = None,
         rule_score: Optional[float] = None,
         won: Optional[bool] = None,
+        invalid_action_count: Optional[int] = None,
     ):
         self.messages = messages
         self.task_name = task_name
@@ -76,6 +77,7 @@ class RolloutHandler:
         self.raw_score = raw_score
         self.rule_score = rule_score
         self.won = won
+        self.invalid_action_count = invalid_action_count
         self.format_config: dict = {
             "qwen": {
                 "assistat_prefix_msg": "\n<|im_start|>assistant\n",

@@ -12,6 +12,7 @@ from agentenv.envs import (
     MovieTask,
     SciworldTask,
     SheetTask,
+    SokobanTask,
     SqlGymTask,
     TextCraftTask,
     TodoTask,
@@ -78,6 +79,7 @@ def main():
         "todo": TodoTask,
         "movie": MovieTask,
         "sheet": SheetTask,
+        "sokoban": SokobanTask,
         "academia": AcademiaTask,
         "babyai": BabyAITask,
     }

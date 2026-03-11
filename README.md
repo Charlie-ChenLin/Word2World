@@ -21,6 +21,7 @@ Code and data for **"*From Word to World*: Can Large Language Models be Implicit
 - **Environment setup**: see [Env Setup](#env-setup)
 - **Download data**: see [Data Download](#data-download)
 - **Evaluate**: see [Evaluation](#evaluation)
+- **External agentic benchmarks**: see [scripts/interact_with_real_env/EXTERNAL_AGENTIC_TASKS.md](scripts/interact_with_real_env/EXTERNAL_AGENTIC_TASKS.md)
 - **Train world models**: see [Training World Models](#training-world-models)
 
 ## 📑 Table of Contents

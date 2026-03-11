@@ -12,6 +12,7 @@ All options override the defaults in this script. They can also be set via env v
   --agent_model_path PATH
   --train_file PATH
   --kl_coef FLOAT
+  --entropy_coeff FLOAT
   --policy_learning_rate FLOAT
   --rollout_sample_num INT
   --train_batch_size INT
@@ -56,6 +57,7 @@ pure_agent_model_name="${PURE_AGENT_MODEL_NAME:-Qwen2.5-3B-Instruct}"
 agent_model_path="${AGENT_MODEL_PATH:-/mnt/shared-storage-user/formalverification-shared/openai-community/Qwen/${pure_agent_model_name}}"
 train_file="${TRAIN_FILE:-${DATA_ROOT:-data}/train/webshop_train.json}"
 kl_coef="${KL_COEF:-0.001}"
+entropy_coeff="${ENTROPY_COEF:-0.001}"
 policy_learning_rate="${POLICY_LR:-1e-6}"
 rollout_sample_num="${ROLLOUT_N:-8}"
 train_batch_size="${TRAIN_BATCH_SIZE:-8}"
@@ -98,6 +100,7 @@ while [ $# -gt 0 ]; do
         --agent_model_path) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; agent_model_path="$2"; shift 2 ;;
         --train_file) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; train_file="$2"; shift 2 ;;
         --kl_coef) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; kl_coef="$2"; shift 2 ;;
+        --entropy_coeff) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; entropy_coeff="$2"; shift 2 ;;
         --policy_learning_rate|--lr) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; policy_learning_rate="$2"; shift 2 ;;
         --rollout_sample_num|--rollout_n) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; rollout_sample_num="$2"; shift 2 ;;
         --train_batch_size) [ $# -ge 2 ] || { echo "Missing arg for $1" >&2; usage; exit 1; }; train_batch_size="$2"; shift 2 ;;
@@ -225,6 +228,7 @@ HYDRA_FULL_ERROR=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True PYTHONUNBUFF
     actor_rollout_ref.actor.use_kl_loss=True \
     actor_rollout_ref.actor.kl_loss_coef=${kl_coef} \
     actor_rollout_ref.actor.kl_loss_type=low_var_kl \
+    actor_rollout_ref.actor.entropy_coeff=${entropy_coeff} \
     actor_rollout_ref.rollout.gpu_memory_utilization=${rollout_gpu_mem_util} \
     actor_rollout_ref.rollout.n=${rollout_sample_num} \
     actor_rollout_ref.rollout.max_model_len=${max_model_len} \

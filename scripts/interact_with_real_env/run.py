@@ -1,6 +1,8 @@
 import asyncio
+import importlib
 import json
 import os
+import re
 import time
 from dataclasses import dataclass, field
 
@@ -26,6 +28,26 @@ from agentenv.envs import (
     WordleTask,
     TextworldTask,
 )
+
+
+BUILTIN_TASK_CLASSES = {
+    "webshop": WebshopTask,
+    "alfworld": AlfWorldTask,
+    "babyai": BabyAITask,
+    "sciworld": SciworldTask,
+    "textcraft": TextCraftTask,
+    "webarena": WebarenaTask,
+    "sqlgym": SqlGymTask,
+    "maze": MazeTask,
+    "wordle": WordleTask,
+    "weather": WeatherTask,
+    "todo": TodoTask,
+    "movie": MovieTask,
+    "sheet": SheetTask,
+    "academia": AcademiaTask,
+    "searchqa": SearchQATask,
+    "textworld": TextworldTask,
+}
 
 
 @dataclass
@@ -54,38 +76,103 @@ class EvalArguments:
     env_server_base: str = field(default=None)
     # data_len: int = field(default=200)
     timeout: int = field(default=2400)
+    task_class_path: str = field(
+        default="",
+        metadata={
+            "help": "Optional import path for external task class, e.g. package.module:TaskClass"
+        },
+    )
+    task_client_args_json: str = field(
+        default="",
+        metadata={
+            "help": "Optional extra env client args as JSON string or @/path/to/json"
+        },
+    )
+
+
+def _load_task_class(task_name: str, task_class_path: str = ""):
+    if task_class_path:
+        if ":" in task_class_path:
+            module_name, class_name = task_class_path.split(":", 1)
+        else:
+            module_name, class_name = task_class_path.rsplit(".", 1)
+        task_module = importlib.import_module(module_name)
+        return getattr(task_module, class_name)
+
+    task_class = BUILTIN_TASK_CLASSES.get(task_name.lower())
+    if task_class is None:
+        supported = ", ".join(sorted(BUILTIN_TASK_CLASSES.keys()))
+        raise ValueError(
+            f"Unsupported task name: {task_name}. "
+            f"Supported built-ins: {supported}. "
+            "For external tasks, set --task_class_path."
+        )
+    return task_class
+
+
+def _parse_json_arg(value: str, arg_name: str) -> dict:
+    value = (value or "").strip()
+    if not value:
+        return {}
+
+    if value.startswith("@"):
+        with open(value[1:], "r", encoding="utf-8") as f:
+            parsed = json.load(f)
+    else:
+        parsed = json.loads(value)
+
+    if not isinstance(parsed, dict):
+        raise ValueError(f"{arg_name} must be a JSON object, got: {type(parsed)}")
+    return parsed
+
+
+def _extract_data_idxs(test_data, inference_file: str) -> list[int]:
+    # Keep legacy handling for alfworld train mappings.
+    if "alfworld_train" in inference_file:
+        return list(range(len(test_data)))
+
+    data_idxs: list[int] = []
+    for i, item in enumerate(test_data):
+        if isinstance(item, int):
+            data_idxs.append(item)
+            continue
+        if isinstance(item, dict):
+            for key in ("data_idx", "idx", "index"):
+                val = item.get(key)
+                if isinstance(val, int):
+                    data_idxs.append(val)
+                    break
+            else:
+                item_id = item.get("item_id")
+                if item_id is not None:
+                    match = re.search(r"(\d+)$", str(item_id))
+                    if match:
+                        data_idxs.append(int(match.group(1)))
+                        continue
+                # Fall back to row index for non-numeric ids (e.g., external benchmarks).
+                data_idxs.append(i)
+            continue
+        # Unknown schema; safely fall back to row index.
+        data_idxs.append(i)
+    return data_idxs
 
 
 def _build_evaluator(args):
+    extra_env_args = _parse_json_arg(
+        args.get("task_client_args_json", ""),
+        arg_name="task_client_args_json",
+    )
     env_args = {
         "env_server_base": args["env_server_base"],
         "data_len": args["data_len"],
         "timeout": args["timeout"],
     }
+    env_args.update(extra_env_args)
 
-    # task_name - task dict
-    task_classes = {
-        "webshop": WebshopTask,
-        "alfworld": AlfWorldTask,
-        "babyai": BabyAITask,
-        "sciworld": SciworldTask,
-        "textcraft": TextCraftTask,
-        "webarena": WebarenaTask,
-        "sqlgym": SqlGymTask,
-        "maze": MazeTask,
-        "wordle": WordleTask,
-        "weather": WeatherTask,
-        "todo": TodoTask,
-        "movie": MovieTask,
-        "sheet": SheetTask,
-        "academia": AcademiaTask,
-        "searchqa": SearchQATask,
-        "textworld": TextworldTask,
-    }
-
-    task_class = task_classes.get(args["task_name"].lower(), None)
-    if task_class is None:
-        raise ValueError(f"Unsupported task name: {args['task_name']}")
+    task_class = _load_task_class(
+        task_name=args["task_name"],
+        task_class_path=args.get("task_class_path", ""),
+    )
 
     api_class = AzureAPIAgent if args["api_key"] == "azure" else APIAgent
     evaluator = Evaluator(
@@ -155,12 +242,7 @@ async def main(args):
     with open(DATA_PATH, "r") as file:
         test_data = json.load(file)
 
-    # Preserve order
-    if "alfworld_train" in args["inference_file"]:
-        # AgentGym/agentenv-alfworld/configs/mappings_train.json
-        all_data_idxs = [i for i in range(len(test_data))]
-    else:
-        all_data_idxs = [int(item["item_id"].split("_")[-1]) for item in test_data]
+    all_data_idxs = _extract_data_idxs(test_data, args["inference_file"])
 
     # Infer data_len from dataset indices so env length matches
     args["data_len"] = (max(all_data_idxs) + 1) if len(all_data_idxs) > 0 else 0
